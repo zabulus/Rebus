@@ -5,6 +5,11 @@ using Rebus.Bus;
 namespace Rebus
 {
     /// <summary>
+    /// Delegate type that can listen to when the bus starts.
+    /// </summary>
+    public delegate void BusStartedEventHandler(IBus bus);
+
+    /// <summary>
     /// Delegate type that can listen to whenever the bus sends a logical message.
     /// </summary>
     public delegate void MessageSentEventHandler(IBus advancedBus, string destination, object message);
@@ -50,6 +55,11 @@ namespace Rebus
     /// </summary>
     public interface IRebusEvents
     {
+        /// <summary>
+        /// Event that will be raised upon bus startup
+        /// </summary>
+        event BusStartedEventHandler BusStarted;
+
         /// <summary>
         /// Event that will be raised immediately after receiving a transport 
         /// message, before any other actions are executed.

@@ -17,6 +17,11 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
+        /// Event that will be raised upon bus startup
+        /// </summary>
+        public event BusStartedEventHandler BusStarted;
+
+        /// <summary>
         /// Event that will be raised immediately when the bus is used to send a logical message.
         /// </summary>
         public event MessageSentEventHandler MessageSent;
@@ -75,6 +80,14 @@ namespace Rebus.Configuration
         internal void TransferToBus(IBus bus)
         {
             var rebusEvents = bus.Advanced.Events;
+
+            if (BusStarted != null)
+            {
+                foreach (var listener in BusStarted.GetInvocationList().Cast<BusStartedEventHandler>())
+                {
+                    rebusEvents.BusStarted += listener;
+                }
+            }
 
             if (MessageContextEstablished != null)
             {

@@ -210,6 +210,8 @@ namespace Rebus.Bus
             get { return routing; }
         }
 
+        public IRebusDiagnostics Diagnostics { get; private set; }
+
         /// <summary>
         /// Sends a reply back to the sender of the message currently being handled. Can only
         /// be called when a <see cref="MessageContext"/> has been established, which happens
@@ -370,6 +372,8 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
 
             SetNumberOfWorkers(numberOfWorkers);
             started = true;
+
+            RaiseBusStarted();
 
             log.Info("Bus started");
         }
@@ -638,6 +642,11 @@ element)"));
                     }
                 }
             }
+        }
+
+        void RaiseBusStarted()
+        {
+            events.RaiseBusStarted(this);
         }
 
         void RaiseMessageContextEstablished(IMessageContext messageContext)

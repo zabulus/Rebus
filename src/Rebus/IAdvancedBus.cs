@@ -21,5 +21,10 @@ namespace Rebus
         /// Gives access to Rebus' routing operations.
         /// </summary>
         IRebusRouting Routing { get; }
+
+        /// <summary>
+        /// Gives access to Rebus' diagnostics operations.
+        /// </summary>
+        IRebusDiagnostics Diagnostics { get; }
     }
 }

@@ -80,6 +80,9 @@
     <Compile Include="Guard.cs" />
     <Compile Include="IDuplexTransport.cs" />
     <Compile Include="IMutateMessages.cs" />
+    <Compile Include="IRebusDiagnostics.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ITransactionContext.cs" />
     <Compile Include="MultipleSagaHandlersException.cs" />
     <Compile Include="Persistence\SqlServer\SqlConnectionHelpers.cs" />
@@ -198,6 +201,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="FleetKeeper\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />
