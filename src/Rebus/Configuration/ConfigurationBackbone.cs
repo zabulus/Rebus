@@ -94,7 +94,7 @@ namespace Rebus.Configuration
             eventsConfigurers.Add(eventsConfigurer);
         }
 
-        internal void TransferEvents(IAdvancedBus advancedBus)
+        internal void TransferEvents(IBus advancedBus)
         {
             foreach (var eventsConfigurer in eventsConfigurers)
             {
