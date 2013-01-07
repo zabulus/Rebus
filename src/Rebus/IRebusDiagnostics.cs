@@ -8,5 +8,6 @@ namespace Rebus
     public interface IRebusDiagnostics
     {
         void ReturnErroneousMessagesToSourceQueue(params Guid[] messageIds);
+        int QueueStats();
     }
 }
