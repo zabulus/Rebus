@@ -4,6 +4,10 @@
 		"selected_items":
 		[
 			[
+				"padd",
+				"padding"
+			],
+			[
 				"fi",
 				"fixedItem"
 			],
@@ -510,15 +514,78 @@
 			[
 				"write",
 				"isWriteable"
-			],
-			[
-				"enum",
-				"enumValues"
 			]
 		]
 	},
 	"buffers":
 	[
+		{
+			"file": "Client/index.html",
+			"settings":
+			{
+				"buffer_size": 655,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Client/js/utils.js",
+			"settings":
+			{
+				"buffer_size": 572,
+				"line_ending": "Windows",
+				"name": "window.utils = {"
+			}
+		},
+		{
+			"file": "Client/js/main.js",
+			"settings":
+			{
+				"buffer_size": 1756,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"contents": "Searching 10 files for \"som-\"\n\n0 matches across 0 files\n\n\nSearching 10 files for \"som\"\n\nC:\\workspace\\Rebus\\src\\Rebus.FleetKeeper\\Client\\libs\\backbone.js:\n  928    var methods = ['forEach', 'each', 'map', 'collect', 'reduce', 'foldl',\n  929      'inject', 'reduceRight', 'foldr', 'find', 'detect', 'filter', 'select',\n  930:     'reject', 'every', 'all', 'some', 'any', 'include', 'contains', 'invoke',\n  931      'max', 'min', 'sortedIndex', 'toArray', 'size', 'first', 'head', 'take',\n  932      'initial', 'rest', 'tail', 'last', 'without', 'indexOf', 'shuffle',\n  ...\n 1239          location.replace(href + '#' + fragment);\n 1240        } else {\n 1241:         // Some browsers require that `hash` contains a leading #.\n 1242          location.hash = '#' + fragment;\n 1243        }\n ....\n 1403    // models to the server. You will be passed the type of request, and the\n 1404    // model in question. By default, makes a RESTful Ajax request\n 1405:   // to the model's `url()`. Some possible customizations could be:\n 1406    //\n 1407    // * Use `setTimeout` to batch rapid-fire updates into a single request.\n\nC:\\workspace\\Rebus\\src\\Rebus.FleetKeeper\\Client\\libs\\jquery-1.8.3.js:\n   31  	_$ = window.$,\n   32  \n   33: 	// Save a reference to some core methods\n   34  	core_push = Array.prototype.push,\n   35  	core_slice = Array.prototype.slice,\n   ..\n  304  	}\n  305  \n  306: 	// Handle case when target is a string or something (possible in deep copy)\n  307  	if ( typeof target !== \"object\" && !jQuery.isFunction(target) ) {\n  308  		target = {};\n  ...\n 1260  	div.innerHTML = \"  <link/><table></table><a href='/a'>a</a><input type='checkbox'/>\";\n 1261  \n 1262: 	// Support tests won't run in some limited or non-browser environments\n 1263  	all = div.getElementsByTagName(\"*\");\n 1264  	a = div.getElementsByTagName(\"a\")[ 0 ];\n ....\n 2470  	get: function( elem, name ) {\n 2471  		// Align boolean attributes with corresponding properties\n 2472: 		// Fall back to attribute presence where some booleans are not supported\n 2473  		var attrNode,\n 2474  			property = jQuery.prop( elem, name );\n ....\n 2497  };\n 2498  \n 2499: // IE6/7 do not support getting/setting some attributes with get/setAttribute\n 2500  if ( !getSetAttribute ) {\n 2501  \n ....\n 2554  \n 2555  \n 2556: // Some attributes require a special call on IE\n 2557  if ( !jQuery.support.hrefNormalized ) {\n 2558  	jQuery.each([ \"href\", \"src\", \"width\", \"height\" ], function( i, name ) {\n ....\n 2805  			}\n 2806  \n 2807: 			// Remove generic event handler if we removed something and no more handlers exist\n 2808  			// (avoids potential for endless recursion during removal of special event handlers)\n 2809  			if ( eventType.length === 0 && origCount !== eventType.length ) {\n ....\n 3077  	},\n 3078  \n 3079: 	// Includes some event props shared by KeyEvent and MouseEvent\n 3080  	// *** attrChange attrName relatedNode srcElement  are not normalized, non-W3C, deprecated, will be removed in 1.8 ***\n 3081  	props: \"attrChange attrName relatedNode srcElement altKey bubbles cancelable ctrlKey currentTarget eventPhase metaKey relatedTarget shiftKey target timeStamp view which\".split(\" \"),\n ....\n 3133  		}\n 3134  \n 3135: 		// Create a writable copy of the event object and normalize some properties\n 3136  		var i, prop,\n 3137  			originalEvent = event,\n ....\n 3214  };\n 3215  \n 3216: // Some plugins are using, but it's undocumented/deprecated and will be removed.\n 3217  // The 1.7 special event interface should provide all the hooks needed now.\n 3218  jQuery.event.handle = jQuery.event.dispatch;\n ....\n 3460  	jQuery.each({ focus: \"focusin\", blur: \"focusout\" }, function( orig, fix ) {\n 3461  \n 3462: 		// Attach a single capturing handler while someone wants focusin/focusout\n 3463  		var attaches = 0,\n 3464  			handler = function( event ) {\n ....\n 3758  		\"*((?:-\\\\d)?\\\\d*)\" + whitespace + \"*\\\\)|)(?=[^-]|$)\",\n 3759  \n 3760: 	// Leading and non-escaped trailing whitespace, capturing some non-whitespace characters preceding the latter\n 3761  	rtrim = new RegExp( \"^\" + whitespace + \"+|((?:^|[^\\\\\\\\])(?:\\\\\\\\.)*)\" + whitespace + \"+$\", \"g\" ),\n 3762  \n ....\n 3794  	// Support\n 3795  \n 3796: 	// Used for testing something on an element\n 3797  	assert = function( fn ) {\n 3798  		var div = document.createElement(\"div\");\n ....\n 3825  		div.innerHTML = \"<select></select>\";\n 3826  		var type = typeof div.lastChild.getAttribute(\"multiple\");\n 3827: 		// IE8 returns a string for some attributes even when not present\n 3828  		return type !== \"boolean\" && type !== \"string\";\n 3829  	}),\n ....\n 4618  		}\n 4619  \n 4620: 		// Otherwise they're somewhere else in the tree so we need\n 4621  		// to build up a full list of the parentNodes for comparison\n 4622  		while ( cur ) {\n ....\n 4642  		}\n 4643  \n 4644: 		// We ended someplace up the tree so do a sibling check\n 4645  		return i === al ?\n 4646  			siblingCheck( a, bp[i], -1 ) :\n ....\n 5206  			div.innerHTML = \"<select><option selected=''></option></select>\";\n 5207  \n 5208: 			// IE8 - Some boolean attributes are not treated correctly\n 5209  			if ( !div.querySelectorAll(\"[selected]\").length ) {\n 5210  				rbuggyQSA.push( \"\\\\[\" + whitespace + \"*(?:checked|disabled|ismap|multiple|readonly|selected|value)\" );\n ....\n 6245  			// IE copies events bound via attachEvent when using cloneNode.\n 6246  			// Calling detachEvent on the clone will also remove the events\n 6247: 			// from the original. In order to get around this, we use some\n 6248  			// proprietary methods to clear the events. Thanks to MooTools\n 6249  			// guys for this hotness.\n ....\n 6835  			}\n 6836  \n 6837: 			// A tribute to the \"awesome hack by Dean Edwards\"\n 6838  			// Chrome < 17 and Safari 5.0 uses \"computed value\" instead of \"used value\" for margin-right\n 6839  			// Safari 5.1.7 (at least) returns percentage for a larger set of values, but width seems to be reliably pixels\n 6840: 			// this is against the CSSOM draft spec: http://dev.w3.org/csswg/cssom/#resolved-values\n 6841  			if ( rnumnonpx.test( ret ) && rmargin.test( name ) ) {\n 6842  				width = style.width;\n ....\n 6867  		}\n 6868  \n 6869: 		// From the awesome hack by Dean Edwards\n 6870  		// http://erik.eae.net/archives/2007/07/27/18.54.15/#comment-102291\n 6871  \n ....\n 6954  		isBorderBox = jQuery.support.boxSizing && jQuery.css( elem, \"boxSizing\" ) === \"border-box\";\n 6955  \n 6956: 	// some non-html elements return undefined for offsetWidth, so check for null/undefined\n 6957  	// svg - https://bugzilla.mozilla.org/show_bug.cgi?id=649285\n 6958  	// MathML - https://bugzilla.mozilla.org/show_bug.cgi?id=491668\n ....\n 8502  									if ( !status && s.isLocal && !s.crossDomain ) {\n 8503  										status = responses.text ? 200 : 404;\n 8504: 									// IE - #1450: sometimes returns 1223 when it should be 204\n 8505  									} else if ( status === 1223 ) {\n 8506  										status = 204;\n ....\n 8579  \n 8580  					do {\n 8581: 						// If previous iteration zeroed out, double until we get *something*\n 8582  						// Use a string for doubling factor so we don't accidentally see scale as unchanged below\n 8583  						scale = scale || \".5\";\n\nC:\\workspace\\Rebus\\src\\Rebus.FleetKeeper\\Client\\libs\\underscore.js:\n   37      nativeFilter       = ArrayProto.filter,\n   38      nativeEvery        = ArrayProto.every,\n   39:     nativeSome         = ArrayProto.some,\n   40      nativeIndexOf      = ArrayProto.indexOf,\n   41      nativeLastIndexOf  = ArrayProto.lastIndexOf,\n   ..\n  199  \n  200    // Determine if at least one element in the object matches a truth test.\n  201:   // Delegates to **ECMAScript 5**'s native `some` if available.\n  202    // Aliased as `any`.\n  203:   var any = _.some = _.any = function(obj, iterator, context) {\n  204      iterator || (iterator = _.identity);\n  205      var result = false;\n  206      if (obj == null) return result;\n  207:     if (nativeSome && obj.some === nativeSome) return obj.some(iterator, context);\n  208      each(obj, function(value, index, list) {\n  209        if (result || (result = iterator.call(context, value, index, list))) return breaker;\n  ...\n  939    };\n  940  \n  941:   // Add some isType methods: isArguments, isFunction, isString, isNumber, isDate, isRegExp.\n  942    each(['Arguments', 'Function', 'String', 'Number', 'Date', 'RegExp'], function(name) {\n  943      _['is' + name] = function(obj) {\n\n37 matches across 3 files\n\n\nSearching 10 files for \"/som\"\n\n0 matches across 0 files\n",
+			"settings":
+			{
+				"buffer_size": 8432,
+				"line_ending": "Windows",
+				"name": "Find Results",
+				"scratch": true
+			}
+		},
+		{
+			"file": "Client/js/endpoints.js",
+			"settings":
+			{
+				"buffer_size": 1471,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Client/js/endpoint.js",
+			"settings":
+			{
+				"buffer_size": 584,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Client/js/header.js",
+			"settings":
+			{
+				"buffer_size": 896,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Client/css/styles.css",
+			"settings":
+			{
+				"buffer_size": 48,
+				"line_ending": "Windows"
+			}
+		}
 	],
 	"build_system": "",
 	"command_palette":
@@ -616,6 +683,8 @@
 	},
 	"file_history":
 	[
+		"/C/workspace/Rebus/src/Rebus.FleetKeeper/Client/templates/Header.html",
+		"/C/Users/asgerhallas/Dropbox/Applications/Sublime Text 2/Data/Packages/User/Preferences.sublime-settings",
 		"/C/workspace/Energy10/Src/Energy10.Web/Client/application/utils/formatDate.coffee",
 		"/C/workspace/Energy10/Src/Energy10.Web/Client/styles/functions/unselectable.styl",
 		"/C/workspace/Energy10/Src/Energy10.Web/Client/styles/layouts/application/index.styl",
@@ -741,9 +810,7 @@
 		"/C/workspace/Energy10/Src/Energy10.Web/Client/application/infrastructure/Validator.coffee",
 		"/C/workspace/Energy10/Src/Energy10.Web/Client/application/models/sections/Section.coffee",
 		"/C/workspace/Energy10/Src/Energy10.Web/Client/application/models/pages/BuildingRegulationApproval.coffee",
-		"/C/workspace/Energy10/Src/Energy10.Web/Client/application/views/pages/BuildingRegulationApprovalView.coffee",
-		"/C/workspace/Energy10/Src/Energy10.Web/Client/application/views/pages/PropertiesView.coffee",
-		"/C/workspace/Energy10/Src/Energy10.Web/Client/application/models/pages/HotWaterChargingPumps.coffee"
+		"/C/workspace/Energy10/Src/Energy10.Web/Client/application/views/pages/BuildingRegulationApprovalView.coffee"
 	],
 	"find":
 	{
@@ -751,7 +818,7 @@
 	},
 	"find_in_files":
 	{
-		"height": 0.0,
+		"height": 90.0,
 		"where_history":
 		[
 			"<open folders>,*.styl,*.coffee,*.js,-*.coffee.js,-*.dependencies.js",
@@ -771,6 +838,12 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"/som",
+			"som",
+			"som-",
+			"routing",
+			"\">",
+			"js",
 			"unselectable",
 			"user-select",
 			"formatDate",
@@ -892,13 +965,7 @@
 			"'newid'",
 			"argsDescription",
 			"PasswordToShort",
-			"InvalidPostalCode",
-			"message:",
-			"oldImpersonatedUsername",
-			"listenToUser",
-			"listenToCompany",
-			"ClipboardChanged",
-			"OnBehalfOf"
+			"InvalidPostalCode"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -945,8 +1012,392 @@
 	"groups":
 	[
 		{
+			"selected": 3,
 			"sheets":
 			[
+				{
+					"buffer": 0,
+					"file": "Client/index.html",
+					"settings":
+					{
+						"buffer_size": 655,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								514,
+								514
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/HTML/HTML.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "Client/js/utils.js",
+					"settings":
+					{
+						"buffer_size": 572,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								572,
+								572
+							]
+						],
+						"settings":
+						{
+							"auto_name": "window.utils = {",
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 4,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "Client/js/main.js",
+					"settings":
+					{
+						"buffer_size": 1756,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								451,
+								451
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"settings":
+					{
+						"buffer_size": 8432,
+						"regions":
+						{
+							"match":
+							{
+								"flags": 112,
+								"regions":
+								[
+									[
+										355,
+										358
+									],
+									[
+										667,
+										670
+									],
+									[
+										981,
+										984
+									],
+									[
+										1247,
+										1250
+									],
+									[
+										1425,
+										1428
+									],
+									[
+										1701,
+										1704
+									],
+									[
+										1996,
+										1999
+									],
+									[
+										2170,
+										2173
+									],
+									[
+										2281,
+										2284
+									],
+									[
+										2535,
+										2538
+									],
+									[
+										2788,
+										2791
+									],
+									[
+										3250,
+										3253
+									],
+									[
+										3355,
+										3358
+									],
+									[
+										3718,
+										3721
+									],
+									[
+										3959,
+										3962
+									],
+									[
+										4185,
+										4188
+									],
+									[
+										4449,
+										4452
+									],
+									[
+										4611,
+										4614
+									],
+									[
+										4790,
+										4793
+									],
+									[
+										5011,
+										5014
+									],
+									[
+										5459,
+										5462
+									],
+									[
+										5633,
+										5636
+									],
+									[
+										5920,
+										5923
+									],
+									[
+										5962,
+										5965
+									],
+									[
+										6129,
+										6132
+									],
+									[
+										6366,
+										6369
+									],
+									[
+										6747,
+										6750
+									],
+									[
+										6973,
+										6976
+									],
+									[
+										7310,
+										7313
+									],
+									[
+										7336,
+										7339
+									],
+									[
+										7598,
+										7601
+									],
+									[
+										7669,
+										7672
+									],
+									[
+										7862,
+										7865
+									],
+									[
+										7874,
+										7877
+									],
+									[
+										7889,
+										7892
+									],
+									[
+										7906,
+										7909
+									],
+									[
+										8123,
+										8126
+									]
+								],
+								"scope": ""
+							}
+						},
+						"selection":
+						[
+							[
+								8376,
+								8376
+							]
+						],
+						"settings":
+						{
+							"detect_indentation": false,
+							"output_tag": 3,
+							"result_base_dir": "",
+							"result_file_regex": "^([A-Za-z\\\\/<].*):$",
+							"result_line_regex": "^ +([0-9]+):",
+							"scroll_past_end": true,
+							"syntax": "Packages/Default/Find Results.hidden-tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 2744.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "Client/js/endpoints.js",
+					"settings":
+					{
+						"buffer_size": 1471,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								108,
+								108
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "Client/js/endpoint.js",
+					"settings":
+					{
+						"buffer_size": 584,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								39,
+								39
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "Client/js/header.js",
+					"settings":
+					{
+						"buffer_size": 896,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								896,
+								896
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 7,
+					"file": "Client/css/styles.css",
+					"settings":
+					{
+						"buffer_size": 48,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								29,
+								29
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/CSS/CSS.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
 			]
 		}
 	],

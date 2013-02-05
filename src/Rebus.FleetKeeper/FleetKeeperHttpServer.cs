@@ -23,29 +23,39 @@ namespace Rebus.FleetKeeper
             subscription = Observable.FromAsync(listener.GetContextAsync)
                                      .Repeat()
                                      .Retry()
+                                     .Publish()
+                                     .RefCount()
                                      .Subscribe(context =>
                                      {
+                                         Console.WriteLine(context.Request.RawUrl);
+
                                          switch (context.Request.RawUrl)
                                          {
-                                             case "/":
-                                                 File(context, "..\\..\\Client\\index.html");
-                                                 break;
                                              case "/stream":
                                                  break;
                                              default:
-                                                 File(context, "..\\..\\Client" + context.Request.RawUrl);
+                                                 var found = File(context, "..\\..\\Client" + context.Request.RawUrl)
+                                                             || File(context, "..\\..\\Client\\index.html");
+                                                 
+                                                 if(!found)
+                                                     throw new Exception();
+                                                    
                                                  break;
                                          }
                                      });
         }
 
-        static void File(HttpListenerContext context, string filename)
+        static bool File(HttpListenerContext context, string filename)
         {
+            if (!System.IO.File.Exists(filename))
+                return false;
+
             var bytes = System.IO.File.ReadAllBytes(filename);
             var hasBOM = bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
             var skip = (hasBOM) ? 3 : 0;
             context.Response.OutputStream.Write(bytes, skip, bytes.Length - skip);
             context.Response.Close();
+            return true;
         }
 
         public void Dispose()
