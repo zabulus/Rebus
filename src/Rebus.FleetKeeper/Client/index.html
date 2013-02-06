@@ -10,11 +10,53 @@
     <div class="header"></div>
     <div class="main"></div>
 
+    <script type="text/template" id="header_template">
+      <div class="navbar navbar-static-top">
+        <div class="navbar-inner">
+          <div class="container pull-left">
+            <div class="brand" href="#">Rebus FleetKeeper</div>
+            <div class="nav-collapse collapse">
+              <ul class="nav">
+                <li><a href="/">Endpoints</a></li>
+                <li><a href="/routing">Routing</a></li>
+                <li><a href="/about">About</a></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </script>
+
+    <script type="text/template" id="endpoints_template">
+      <div class="row">
+        <div class="span3">
+          <h2>Heading</h2>
+          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+          <p><a class="btn" href="#">View details &raquo;</a></p>
+        </div>
+        <div class="span3">
+          <h2>Heading</h2>
+          <p>Donec id elit non mi porta gravida at eget metus. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus. Etiam porta sem malesuada magna mollis euismod. Donec sed odio dui. </p>
+          <p><a class="btn" href="#">View details &raquo;</a></p>
+       </div>
+        <div class="span3">
+          <h2>Heading</h2>
+          <p>Donec sed odio dui. Cras justo odio, dapibus ac facilisis in, egestas eget qum. Vestibulum id ligula porta felis euismod semper. Fusce dapibus, tellus ac cursus commodo, tortor mauris condimentum nibh, ut fermentum massa justo sit amet risus.</p>
+          <p><a class="btn" href="#">View details &raquo;</a></p>
+        </div>
+      </div>
+      <hr>
+      <footer>
+        <p>&copy; Company 2012</p>
+      </footer>
+    </script>
+
     <script src="libs/jquery-1.8.3.js"></script>
     <script src="libs/underscore.js"></script>
     <script src="libs/backbone.js"></script>
     <script src="libs/bootstrap.js"></script>
     <script src="js/main.js"></script>
+    <script src="js/application.js"></script>
     <script src="js/header.js"></script>
     <script src="js/endpoints.js"></script>
   </body>

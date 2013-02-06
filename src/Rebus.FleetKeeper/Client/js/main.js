@@ -1,44 +1,7 @@
-﻿App = {
-  views: {},
-  init: function() {
-    var router = new App.Router();
-    Backbone.history.start({pushState:true});
-  }
-}
-
-App.Router = Backbone.Router.extend({
-  routes: {
-    "": "endpoints",
-    "routing": "routing",
-    "about": "about"
-  },
-
-  initialize: function () {
-    this.headerView = new App.views.Header({el: '.header'});
-
-    this.on("all", function(event) {
-      var routes = this.routes;
-      var route = event.split(':')[1];
-      path = _.find(routes, function(x) { return routes[x] == route; });
-      this.headerView.selectMenuItem('/' + path);
-    }, this);
-  },
-
-  endpoints: function () {
-    this.endpointsView = new App.views.Endpoints({el: '.main'});
-  },
-
-  routing: function () {
-    alert('not impl.')
-  },
-
-  about: function () {
-    alert('not impl.')
-  }
-});
-
+﻿// Bootstrap the app!
 $(function() {
-  App.init();
+  var router = new Application.Router();
+  Backbone.history.start({pushState:true});
 
   // All navigation that is relative should be passed through the navigate
   // method, to be processed by the router.  If the link has a data-bypass

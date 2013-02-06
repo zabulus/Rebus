@@ -53,6 +53,7 @@ namespace Rebus.FleetKeeper
             var bytes = System.IO.File.ReadAllBytes(filename);
             var hasBOM = bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF;
             var skip = (hasBOM) ? 3 : 0;
+
             context.Response.OutputStream.Write(bytes, skip, bytes.Length - skip);
             context.Response.Close();
             return true;

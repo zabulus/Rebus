@@ -79,7 +79,28 @@
       <Name>Rebus</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Content Include="Client\css\bootstrap-responsive.css" />
+    <Content Include="Client\css\bootstrap-responsive.min.css" />
+    <Content Include="Client\css\bootstrap.css" />
+    <Content Include="Client\css\bootstrap.min.css" />
+    <Content Include="Client\css\styles.css" />
+    <Content Include="Client\favicon.ico" />
+    <Content Include="Client\img\glyphicons-halflings-white.png" />
+    <Content Include="Client\img\glyphicons-halflings.png" />
+    <Content Include="Client\index.html" />
+    <Content Include="Client\js\endpoint.js" />
+    <Content Include="Client\js\endpoints.js" />
+    <Content Include="Client\js\header.js" />
+    <Content Include="Client\js\main.js" />
+    <Content Include="Client\js\utils.js" />
+    <Content Include="Client\libs\backbone.js" />
+    <Content Include="Client\libs\bootstrap.js" />
+    <Content Include="Client\libs\bootstrap.min.js" />
+    <Content Include="Client\libs\jquery-1.8.3.js" />
+    <Content Include="Client\libs\underscore.js" />
+    <Content Include="Client\templates\Header.html" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <PropertyGroup>

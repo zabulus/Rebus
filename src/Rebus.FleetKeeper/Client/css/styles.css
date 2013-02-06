@@ -1,4 +1,15 @@
+.navbar .brand
+{
+  font-size:inherit;
+  color: #2C80B8
+}
+.navbar-inner
+{
+  background-image: none;
+}
+
 .navbar-inner .container
 {
-  margin-left:20px;
+  margin-top: 1px;
+  margin-left:0px;
 }
