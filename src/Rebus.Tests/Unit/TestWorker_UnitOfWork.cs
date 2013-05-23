@@ -25,7 +25,9 @@ namespace Rebus.Tests.Unit
             handlerActivatorForTesting = new HandlerActivatorForTesting();
 
             unitOfWorkManager = new UnitOfWorkManagerForTesting();
-            worker = new Worker(new ErrorTracker("error") {MaxRetries = 1},
+            var errorTracker = new ErrorTracker("error");
+            errorTracker.SetMaxRetries(1);
+            worker = new Worker(errorTracker,
                                 receiveMessages,
                                 handlerActivatorForTesting,
                                 new InMemorySubscriptionStorage(),

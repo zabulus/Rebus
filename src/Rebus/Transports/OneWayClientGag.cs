@@ -54,7 +54,23 @@ namespace Rebus.Transports
         /// <summary>
         /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
         /// </summary>
+        public string GetErrorQueueAddress(object failedMessage)
+        {
+            throw GagException();
+        }
+
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
         public PoisonMessageInfo GetPoisonMessageInfo(string id)
+        {
+            throw GagException();
+        }
+
+        /// <summary>
+        /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
+        /// </summary>
+        public void AddErrorQueueAddressResolver(Func<object, string> messageToErrorQueueAddress)
         {
             throw GagException();
         }
@@ -70,7 +86,7 @@ namespace Rebus.Transports
         /// <summary>
         /// The <see cref="OneWayClientGag"/> must not accidentally be used, so this operation will throw a <see cref="InvalidOperationException"/>
         /// </summary>
-        public string ErrorQueueAddress { get { throw GagException(); } }
+        public string DefaultErrorQueueAddress { get { throw GagException(); } }
 
         static InvalidOperationException GagException()
         {

@@ -40,15 +40,27 @@ namespace Rebus.Bus
         void TrackDeliveryFail(string id, Exception exception);
 
         /// <summary>
-        /// Returns the fully qualified address of the error queue to which messages should be forwarded in
+        /// Returns the fully qualified (default) address of the error queue to which messages should be forwarded in
         /// the event that they exceed the accepted number of failed delivery attempts.
         /// </summary>
-        string ErrorQueueAddress { get; }
+        string DefaultErrorQueueAddress { get; }
+
+        /// <summary>
+        /// Gets the error queue address to use for the specified message that has failed too many times. The default
+        /// error queue address will be used in case null is returned.
+        /// </summary>
+        string GetErrorQueueAddress(object failedMessage);
 
         /// <summary>
         /// Retrieves the poison message information collected so far for the message with the specfied id.
         /// </summary>
         PoisonMessageInfo GetPoisonMessageInfo(string id);
+
+        /// <summary>
+        /// Adds an additional error queue address resolver that will be asked for an error queue address when a message fails.
+        /// If null is returned, the default error queue address is used.
+        /// </summary>
+        void AddErrorQueueAddressResolver(Func<object, string> messageToErrorQueueAddress);
     }
 
     /// <summary>

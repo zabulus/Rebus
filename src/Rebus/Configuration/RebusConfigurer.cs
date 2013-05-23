@@ -44,6 +44,15 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
+        /// Invokes the configurer that allows for configuring various behavioral aspects of the bus
+        /// </summary>
+        public RebusConfigurer Behavior(Action<RebusBehaviorConfigurer> configurer)
+        {
+            configurer(new RebusBehaviorConfigurer(Backbone));
+            return this;
+        }
+
+        /// <summary>
         /// Invokes the configurer that allows for configuring how Rebus sends and received messages
         /// </summary>
         public RebusConfigurer Transport(Action<RebusTransportConfigurer> configure)

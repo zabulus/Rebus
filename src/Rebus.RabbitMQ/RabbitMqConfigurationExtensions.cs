@@ -1,4 +1,5 @@
-﻿using System.Configuration;
+﻿using System;
+using System.Configuration;
 using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Transports;
@@ -99,7 +100,9 @@ A more full example configuration snippet can be seen here:
 
             configurer.UseSender(queue);
             configurer.UseReceiver(queue);
-            configurer.UseErrorTracker(new ErrorTracker(errorQueueName));
+            
+            var errorTracker = new ErrorTracker(errorQueueName);
+            configurer.UseErrorTracker(errorTracker);
             
             return new RabbitMqOptions(queue, configurer);
         }

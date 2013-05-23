@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using NUnit.Framework;
 using RabbitMQ.Client;
@@ -94,30 +93,6 @@ namespace Rebus.Tests.Transports.Rabbit
                 catch
                 {
                 }
-            }
-        }
-
-        class FakeContainerAdapter : IContainerAdapter
-        {
-            readonly IActivateHandlers handlerActivator;
-
-            public FakeContainerAdapter(IActivateHandlers handlerActivator)
-            {
-                this.handlerActivator = handlerActivator;
-            }
-
-            public IEnumerable<IHandleMessages<T>> GetHandlerInstancesFor<T>()
-            {
-                return handlerActivator.GetHandlerInstancesFor<T>();
-            }
-
-            public void Release(IEnumerable handlerInstances)
-            {
-                handlerActivator.Release(handlerInstances);
-            }
-
-            public void SaveBusInstances(IBus bus)
-            {
             }
         }
     }

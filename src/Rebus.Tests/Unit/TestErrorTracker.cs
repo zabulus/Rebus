@@ -30,7 +30,7 @@ namespace Rebus.Tests.Unit
         {
             // arrange
             const string messageId = "bim!";
-            errorTracker.MaxRetries = 1000;
+            errorTracker.SetMaxRetries(1000);
 
             // act
             2000.Times(() => errorTracker.TrackDeliveryFail(messageId, new OmfgExceptionThisIsBad("w00t!")));

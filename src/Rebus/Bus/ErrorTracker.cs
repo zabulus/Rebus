@@ -22,7 +22,8 @@ namespace Rebus.Bus
         }
 
         readonly ConcurrentDictionary<string, TrackedMessage> trackedMessages = new ConcurrentDictionary<string, TrackedMessage>();
-        readonly string errorQueueAddress;
+        readonly List<Func<object, string>> errorQueueAddressResolvers = new List<Func<object, string>>();
+        readonly string defaultErrorQueueAddress;
 
         TimeSpan timeoutSpan;
         Timer timer;
@@ -32,15 +33,18 @@ namespace Rebus.Bus
         /// </summary>
         /// <param name="timeoutSpan">How long messages will be supervised by the ErrorTracker</param>
         /// <param name="timeoutCheckInterval">This is the interval that will last between checking whether delivery attempts have been tracked for too long</param>
-        /// <param name="errorQueueAddress">This is the address of the error queue to which messages should be forwarded whenever they are deemed poisonous</param>
-        public ErrorTracker(TimeSpan timeoutSpan, TimeSpan timeoutCheckInterval, string errorQueueAddress)
+        /// <param name="defaultErrorQueueAddress">This is the address of the error queue to which messages should be forwarded whenever they are deemed poisonous</param>
+        public ErrorTracker(TimeSpan timeoutSpan, TimeSpan timeoutCheckInterval, string defaultErrorQueueAddress)
         {
-            this.errorQueueAddress = errorQueueAddress;
+            this.defaultErrorQueueAddress = defaultErrorQueueAddress;
+            
             StartTimeoutTracker(timeoutSpan, timeoutCheckInterval);
 
-            MaxRetries = Math.Max(0, RebusConfigurationSection
-                                         .GetConfigurationValueOrDefault(s => s.MaxRetries, 5)
-                                         .GetValueOrDefault(5));
+            var maxRetriesFromConfig = RebusConfigurationSection
+                .GetConfigurationValueOrDefault(s => s.MaxRetries, 5)
+                .GetValueOrDefault(5);
+
+            SetMaxRetries(maxRetriesFromConfig);
         }
 
         /// <summary>
@@ -49,6 +53,19 @@ namespace Rebus.Bus
         public ErrorTracker(string errorQueueAddress)
             : this(TimeSpan.FromDays(1), TimeSpan.FromMinutes(5), errorQueueAddress)
         {
+        }
+
+        /// <summary>
+        /// Sets the maximum number of attempts that should be made when delivering a message that fails
+        /// </summary>
+        public void SetMaxRetries(int maxRetries)
+        {
+            if (maxRetries < 0)
+            {
+                throw new ArgumentException(string.Format("Cannot set max retries to {0} - must be non-negative", maxRetries));
+            }
+
+            MaxRetries = maxRetries;
         }
 
         void StartTimeoutTracker(TimeSpan timeoutSpanToUse, TimeSpan timeoutCheckInterval)
@@ -98,9 +115,9 @@ namespace Rebus.Bus
         /// <summary>
         /// Gets the globally addressable address of the error queue
         /// </summary>
-        public string ErrorQueueAddress
+        public string DefaultErrorQueueAddress
         {
-            get { return errorQueueAddress; }
+            get { return defaultErrorQueueAddress; }
         }
 
         /// <summary>
@@ -127,6 +144,24 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Gets the error queue address to use for the specified message that has failed too many times. The default
+        /// error queue address will be used in case null is returned.
+        /// </summary>
+        public string GetErrorQueueAddress(object failedMessage)
+        {
+            foreach (var resolver in errorQueueAddressResolvers)
+            {
+                var address = resolver(failedMessage);
+
+                if (address == null) continue;
+                
+                return address;
+            }
+
+            return DefaultErrorQueueAddress;
+        }
+
+        /// <summary>
         /// Retrieves information about caught exceptions for the message with the
         /// given id.
         /// </summary>
@@ -137,6 +172,15 @@ namespace Rebus.Bus
             var trackedMessage = GetOrAdd(id);
 
             return trackedMessage.GetPoisonMessageInfo();
+        }
+
+        /// <summary>
+        /// Adds an additional error queue address resolver that will be asked for an error queue address when a message fails.
+        /// If null is returned, the default error queue address is used.
+        /// </summary>
+        public void AddErrorQueueAddressResolver(Func<object, string> messageToErrorQueueAddress)
+        {
+            errorQueueAddressResolvers.Add(messageToErrorQueueAddress);
         }
 
         /// <summary>
@@ -154,7 +198,7 @@ namespace Rebus.Bus
         /// <summary>
         /// Indicates how many times a message will be retried before it is moved to the error queue
         /// </summary>
-        public int MaxRetries { get; internal set; }
+        public int MaxRetries { get; private set; }
 
         TrackedMessage GetOrAdd(string id)
         {

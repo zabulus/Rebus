@@ -578,12 +578,12 @@ element)"));
 
             try
             {
-                sendMessages.Send(errorTracker.ErrorQueueAddress, transportMessageToSend, GetTransactionContext());
+                sendMessages.Send(errorTracker.DefaultErrorQueueAddress, transportMessageToSend, GetTransactionContext());
             }
             catch (Exception e)
             {
                 log.Error(e, "An error occurred while attempting to move message with id {0} to the error queue '{1}'",
-                          receivedTransportMessage.Id, errorTracker.ErrorQueueAddress);
+                          receivedTransportMessage.Id, errorTracker.DefaultErrorQueueAddress);
 
                 // what to do? we need to throw again, or the message will not be rolled back and will thus be lost
                 // - but we want to avoid thrashing, so we just log the badness and relax a little bit - that's

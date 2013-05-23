@@ -188,6 +188,7 @@
     <Compile Include="Integration\Factories\RabbitBusFactory.cs" />
     <Compile Include="Integration\SagaDataPersisterForTesting.cs" />
     <Compile Include="Bugs\SubscribingToMessagesNotInBCLOrExecutingAssembly.cs" />
+    <Compile Include="Integration\TestAlternativeErrorQueueAddress.cs" />
     <Compile Include="Integration\TestAutoCorrelation.cs" />
     <Compile Include="Integration\TestBusAndDispatcherWithMongoSaga.cs" />
     <Compile Include="Integration\TestCommitRollback.cs" />
@@ -256,6 +257,7 @@
     <Compile Include="Serialization\Json\TestJsonMessageSerializer.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelEncryptionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\TestRijndaelHelper.cs" />
+    <Compile Include="FakeContainerAdapter.cs" />
     <Compile Include="Transports\Rabbit\RabbitMqFixtureBase.cs" />
     <Compile Include="Serialization\TestDictionarySerializer.cs" />
     <Compile Include="Transports\Msmq\TestMsmqMessageQueue.cs" />
