@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.BusHub</id>
+    <version>0.0.1</version>
+    <title>Rebus.BusHub</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Provides Rebus configuration extensions to hook a Rebus endpoint up with the Bus Hub</description>
+    <copyright>Copyright 2012</copyright>
+    <tags>rebus management monitoring</tags>
+    <dependencies>
+      <dependency id="Rebus" version="0.0.1" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\deploy\**\Rebus.BusHub.dll" target="lib" />
+  </files>
+</package>
