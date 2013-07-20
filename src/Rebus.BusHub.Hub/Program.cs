@@ -1,44 +1,41 @@
 ﻿using System;
-using System.Configuration;
-using System.Reflection;
-using Microsoft.Owin.Hosting;
-using log4net;
+using System.IO;
+using Topshelf;
+using Topshelf.Runtime;
+using log4net.Config;
 
 namespace Rebus.BusHub.Hub
 {
     class Program
     {
-        static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-        static IDisposable webApp;
-
         static void Main()
         {
-            var url = ConfigurationManager.AppSettings["listenUri"];
+            XmlConfigurator.ConfigureAndWatch(new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log4net.config")));
 
-            if (string.IsNullOrEmpty(url))
-            {
-                throw new ArgumentException(@"No URL specified! You need to configure the SignalR hub URL in app.config, e.g. like this:
+            HostFactory
+                .Run(s =>
+                {
+                    const string text = "Rebus BusHub Service";
 
-  <appSettings>
-    <add key=""listenUri"" value=""http://+:10000/""/>
-  </appSettings>
+                    s.SetDescription("Rebus Bus Hub Service - Install named instance by adding '/instance:\"myInstance\"' when installing.");
+                    s.SetDisplayName(text);
+                    s.SetInstanceName("default");
+                    s.SetServiceName("rebus_bushub_service");
 
-      ");
-            }
+                    s.Service<BusHubService>(c =>
+                    {
+                        c.ConstructUsing(CreateBusHubService);
+                        c.WhenStarted(t => t.Start());
+                        c.WhenStopped(t => t.Stop());
+                    });
 
-            try
-            {
-                Log.Info("Starting...");
-                webApp = WebApplication.Start<Startup>(url);
-                Log.InfoFormat("Server running on {0}", url);
-            }
-            catch (Exception e)
-            {
-                throw new ApplicationException(
-                    string.Format("An error occurred while attempting to open SignalR hub on {0}",
-                                  url), e);
-            }
+                    s.DependsOnMsmq();
+                });
+        }
 
+        static BusHubService CreateBusHubService(HostSettings settings)
+        {
+            return new BusHubService();
         }
     }
 }
