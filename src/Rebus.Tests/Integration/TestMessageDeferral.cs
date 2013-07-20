@@ -209,14 +209,10 @@ Sent, but not received messages:
 
         public IEnumerator<T> GetEnumerator()
         {
-            List<T> toReturn;
-
             lock (listAccessLock)
             {
-                toReturn = innerList.ToList();
+                return new List<T>(innerList).GetEnumerator();
             }
-
-            return toReturn.GetEnumerator();
         }
 
         public void Add(T item)
@@ -241,6 +237,17 @@ Sent, but not received messages:
         IEnumerator IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
+        }
+
+        public T this[int index]
+        {
+            get
+            {
+                lock (listAccessLock)
+                {
+                    return innerList[index];
+                }
+            }
         }
     }
 }

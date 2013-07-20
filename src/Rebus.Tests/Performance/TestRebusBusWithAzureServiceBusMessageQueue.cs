@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Threading;
-using System.Timers;
 using System.Transactions;
 using NUnit.Framework;
 using Rebus.Bus;
@@ -56,6 +55,7 @@ namespace Rebus.Tests.Performance
         [TestCase(10)]
         [TestCase(100)]
         [TestCase(1000, Ignore = TestCategories.IgnoreLongRunningTests)]
+        [TestCase(5000, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(10000, Ignore = TestCategories.IgnoreLongRunningTests)]
         [TestCase(20000, Ignore = TestCategories.IgnoreLongRunningTests)]
         public void CanSendAndReceiveManyMessagesReliably(int numberOfMessages)
@@ -85,6 +85,7 @@ namespace Rebus.Tests.Performance
 
                         if (receivedMessages.Count >= numberOfMessages)
                         {
+                            Console.WriteLine("Setting the reset event!");
                             resetEvent.Set();
                         }
                     });
@@ -100,6 +101,8 @@ namespace Rebus.Tests.Performance
 
                 var theRest = messages.Skip(batchSize)
                                       .ToList();
+
+                Console.WriteLine("Sending the first {0} messages in batches", firstBatch.Count);
 
                 foreach (var msgBatch in firstBatch.Partition(100))
                 {
@@ -128,21 +131,50 @@ namespace Rebus.Tests.Performance
                         }
                         catch (Exception e)
                         {
+                            Console.WriteLine("An error occurred while sending batch of {0} msgs: {1}",
+                                              msgBatch.Count, e);
+
                             attempts++;
 
                             if (attempts >= 5)
                             {
                                 throw;
                             }
+
+                            Thread.Sleep(1.Seconds());
                         }
                     } while (!complete);
                 }
 
+                Console.WriteLine("Sending the next {0} messages one at a time", theRest.Count);
+
                 foreach (var msg in theRest)
                 {
-                    rebusRouting.Send(QueueName2, msg);
+                    var attempts = 0;
+                    var complete = false;
 
-                    sentMessageIds.Add(msg.Id);
+                    do
+                    {
+                        try
+                        {
+                            rebusRouting.Send(QueueName2, msg);
+                            sentMessageIds.Add(msg.Id);
+                            complete = true;
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine("An error occurred while attempting to send single message: {0}", e);
+
+                            attempts++;
+
+                            if (attempts >= 5)
+                            {
+                                throw;
+                            }
+
+                            Thread.Sleep(1.Seconds());
+                        }
+                    } while (!complete);
                 }
 
                 var totalSeconds = stopwatch.Elapsed.TotalSeconds;
@@ -160,10 +192,18 @@ namespace Rebus.Tests.Performance
                                 numberOfMessages, timeout, FormatReport(sentMessageIds, receivedMessages));
                 }
 
+                Console.WriteLine("Waiting some extra time for possible duplicates to arrive");
+
                 // wait and see if we have duplicates
                 Thread.Sleep(2.Seconds());
 
+                Console.WriteLine("Checking stuff");
+                
                 receivedMessages.Count.ShouldBe(numberOfMessages);
+
+                Console.WriteLine("Checking {0} messages", sentMessageIds.Count);
+
+                var formattedReport = FormatReport(sentMessageIds, receivedMessages);
 
                 foreach (var id in sentMessageIds)
                 {
@@ -173,9 +213,13 @@ namespace Rebus.Tests.Performance
                                 @"Expected exactly 1 message with ID {0}, but there was {1}!!
 
 {2}",
-                                id, messagesWithThatId, FormatReport(sentMessageIds, receivedMessages));
+                                id, messagesWithThatId, formattedReport);
                 }
+
+                Console.WriteLine("All done!");
             }
+
+            Console.WriteLine("Disposed!!");
         }
 
         string FormatReport(ConcurrentList<Guid> sentMessageIds, ConcurrentList<SomeNumberedMessage> receivedMessages)

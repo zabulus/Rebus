@@ -41,3 +41,12 @@
 
 * Removed (default) transaction scope around message handlers, made it configurable with `.Behavior(b => b.HandleMessagesInsideTransactionScope())`
 * Added hybrid saga persister that can use different concrete persisters depending on the type of saga data
+
+## 0.34.0
+
+* Added (finally!) an icon for NuGet to display along with all Rebus packages
+* New and improved Azure Service Bus topic-based transport implementation
+
+## 0.34.1
+
+* Better error handling when deferring messages
