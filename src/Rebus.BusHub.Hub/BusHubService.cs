@@ -1,33 +1,23 @@
 ﻿using System;
-using System.Configuration;
 using System.Reflection;
 using Microsoft.Owin.Hosting;
 using log4net;
 
 namespace Rebus.BusHub.Hub
 {
-    class BusHubService
+    public class BusHubService
     {
         static IDisposable webApp;
-
         static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        readonly string url;
+
+        public BusHubService(string url)
+        {
+            this.url = url;
+        }
 
         public void Start()
         {
-            var url = ConfigurationManager.AppSettings["listenUri"];
-
-            if (string.IsNullOrEmpty(url))
-            {
-                throw new ArgumentException(
-                    @"No URL specified! You need to configure the SignalR hub URL in app.config, e.g. like this:
-
-  <appSettings>
-    <add key=""listenUri"" value=""http://+:10000/""/>
-  </appSettings>
-
-      ");
-            }
-
             try
             {
                 Log.InfoFormat("Starting up on {0}...", url);
@@ -48,7 +38,10 @@ namespace Rebus.BusHub.Hub
         {
             Log.Info("Shutting down server...");
 
-            webApp.Dispose();
+            if (webApp != null)
+            {
+                webApp.Dispose();
+            }
 
             Log.Info("Server stopped!");
         }

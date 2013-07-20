@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.IO;
 using Topshelf;
 using Topshelf.Runtime;
@@ -21,6 +22,7 @@ namespace Rebus.BusHub.Hub
                     s.SetDisplayName(text);
                     s.SetInstanceName("default");
                     s.SetServiceName("rebus_bushub_service");
+                    s.UseLog4Net();
 
                     s.Service<BusHubService>(c =>
                     {
@@ -35,7 +37,21 @@ namespace Rebus.BusHub.Hub
 
         static BusHubService CreateBusHubService(HostSettings settings)
         {
-            return new BusHubService();
+            var url = ConfigurationManager.AppSettings["listenUri"];
+
+            if (string.IsNullOrEmpty(url))
+            {
+                throw new ArgumentException(
+                    @"No URL specified! You need to configure the SignalR hub URL in app.config, e.g. like this:
+
+  <appSettings>
+    <add key=""listenUri"" value=""http://+:10000/""/>
+  </appSettings>
+
+      ");
+            }
+
+            return new BusHubService(url);
         }
     }
 }
