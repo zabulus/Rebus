@@ -85,9 +85,17 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rebus.BusHub.Client\Rebus.BusHub.Client.csproj">
+      <Project>{3F6AAC9E-4E03-4BE5-981A-2A2DDCD0852E}</Project>
+      <Name>Rebus.BusHub.Client</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus.BusHub.Hub\Rebus.BusHub.Hub.csproj">
       <Project>{57EAC3BD-712F-4205-907D-0E597455C9D8}</Project>
       <Name>Rebus.BusHub.Hub</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.BusHub.Messages\Rebus.BusHub.Messages.csproj">
+      <Project>{BB251AA5-79CC-4D73-86D7-89D2B985505A}</Project>
+      <Name>Rebus.BusHub.Messages</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
