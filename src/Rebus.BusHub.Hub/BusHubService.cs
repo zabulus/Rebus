@@ -7,13 +7,19 @@ namespace Rebus.BusHub.Hub
 {
     public class BusHubService
     {
-        static IDisposable webApp;
         static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
         readonly string url;
 
-        public BusHubService(string url)
+        public static IMessageHandler[] MessageHandlers { get; private set; }
+
+        IDisposable webApp;
+
+        public BusHubService(string url, IMessageHandler[] messageHandlers)
         {
             this.url = url;
+            
+            MessageHandlers = messageHandlers;
         }
 
         public void Start()

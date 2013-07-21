@@ -1,22 +1,26 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.BusHub.Client;
 using Rebus.BusHub.Hub;
 using Rebus.BusHub.Messages;
+using Shouldly;
+using System.Linq;
 
 namespace Rebus.BusHub.Tests
 {
     [TestFixture]
     public class BasicBusHubTests : FixtureFor<BusHubService>
     {
-        BusHubClient client;
+        TestMessageHandler testMessageHandler;
 
         protected override BusHubService SetUpInstance()
         {
-            client = new BusHubClient("http://localhost:24000");
-            
-            return new BusHubService("http://+:24000/");
+            testMessageHandler = new TestMessageHandler();
+            var service = new BusHubService("http://+:24000/", new IMessageHandler[] { testMessageHandler });
+
+            return service;
         }
 
         [Test]
@@ -26,15 +30,34 @@ namespace Rebus.BusHub.Tests
             {
                 instance.Start();
 
-                client.Send(new Heartbeat());
+                using (var client = new BusHubClient("http://localhost:24000"))
+                {
+                    client.Send(new Heartbeat());
+                }
 
                 Thread.Sleep(TimeSpan.FromSeconds(1));
 
-                Assert.Fail("verify that the bus hub got the heartbeat");
+                testMessageHandler.ReceivedMessages.Count.ShouldBe(1);
+                testMessageHandler.ReceivedMessages.Single().ShouldBeTypeOf<Heartbeat>();
             }
             finally
             {
                 instance.Stop();
+            }
+        }
+
+        class TestMessageHandler : IMessageHandler
+        {
+            public TestMessageHandler()
+            {
+                ReceivedMessages = new List<object>();
+            }
+
+            public List<object> ReceivedMessages { get; set; }
+
+            public void Handle(object message)
+            {
+                ReceivedMessages.Add(message);
             }
         }
     }

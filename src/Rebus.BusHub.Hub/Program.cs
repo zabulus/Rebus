@@ -51,7 +51,7 @@ namespace Rebus.BusHub.Hub
       ");
             }
 
-            return new BusHubService(url);
+            return new BusHubService(url, new IMessageHandler[0]);
         }
     }
 }

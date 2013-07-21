@@ -1,11 +1,15 @@
 ﻿using System;
 using Microsoft.AspNet.SignalR.Client.Hubs;
+using Newtonsoft.Json;
 using Rebus.BusHub.Messages;
 
 namespace Rebus.BusHub.Client
 {
     public class BusHubClient : IDisposable
     {
+        static readonly JsonSerializerSettings SerializerSettings =
+            new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};
+
         readonly HubConnection connection;
         readonly IHubProxy hubProxy;
 
@@ -24,7 +28,7 @@ namespace Rebus.BusHub.Client
 
         object Deserialize(string str)
         {
-            throw new NotImplementedException();
+            return JsonConvert.DeserializeObject(str, SerializerSettings);
         }
 
         void ReceiveMessage(object message)
@@ -32,9 +36,11 @@ namespace Rebus.BusHub.Client
             
         }
 
-        object Serialize(BusHubMessage message)
+        string Serialize(BusHubMessage message)
         {
-            throw new NotImplementedException();
+            var str = JsonConvert.SerializeObject(message, SerializerSettings);
+
+            return str;
         }
 
         public void Dispose()
