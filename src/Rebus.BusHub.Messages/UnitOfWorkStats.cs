@@ -13,6 +13,12 @@ namespace Rebus.BusHub.Messages
 
     public class LogicalMessageStats
     {
+        public LogicalMessageStats(string messageType, TimeSpan elapsed)
+        {
+            MessageType = messageType;
+            Elapsed = elapsed;
+        }
+
         public string MessageType { get; set; }
         public TimeSpan Elapsed { get; set; }
     }

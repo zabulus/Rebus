@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using Rebus.Bus;
 using Rebus.BusHub.Messages;
-using System.Linq;
 
 namespace Rebus.BusHub.Client.Jobs
 {
@@ -10,6 +9,9 @@ namespace Rebus.BusHub.Client.Jobs
     {
         const string UowKey = "current-bushub-stats-uow";
 
+        /// <summary>
+        /// Possibly come up with a better way to do this
+        /// </summary>
         [ThreadStatic]
         static int messageBodyLength;
 
@@ -52,13 +54,7 @@ namespace Rebus.BusHub.Client.Jobs
                         SendMessage(new UnitOfWorkStats
                                         {
                                             Elapsed = uow.Elapsed,
-                                            LogicalMessages = uow.Messages
-                                                                 .Select(m => new LogicalMessageStats
-                                                                                  {
-                                                                                      Elapsed = m.Elapsed,
-                                                                                      MessageType = m.MessageType
-                                                                                  })
-                                                                 .ToArray(),
+                                            LogicalMessages = uow.Messages.ToArray(),
                                             BodyLengthBytes = messageBodyLength
                                         });
 
@@ -73,17 +69,11 @@ namespace Rebus.BusHub.Client.Jobs
 
     public class StatsCollectingUnitOfWork : IUnitOfWork
     {
-        readonly List<LogicalMessageInfo> messages = new List<LogicalMessageInfo>();
-
-        public class LogicalMessageInfo
-        {
-            public string MessageType { get; set; }
-            public TimeSpan Elapsed { get; set; }
-        }
+        readonly List<LogicalMessageStats> messages = new List<LogicalMessageStats>();
 
         DateTime currentMessageProcessingStartTime;
 
-        public List<LogicalMessageInfo> Messages
+        public List<LogicalMessageStats> Messages
         {
             get { return messages; }
         }
@@ -117,11 +107,10 @@ namespace Rebus.BusHub.Client.Jobs
 
         public void MessageWasHandled(object message)
         {
-            messages.Add(new LogicalMessageInfo
-                             {
-                                 Elapsed = DateTime.UtcNow - currentMessageProcessingStartTime,
-                                 MessageType = message.GetType().FullName,
-                             });
+            var elapsed = DateTime.UtcNow - currentMessageProcessingStartTime;
+            var messageType = message.GetType().FullName;
+            var stats = new LogicalMessageStats(messageType, elapsed);
+            messages.Add(stats);
         }
 
         public void SetBodyLength(int length)
