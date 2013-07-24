@@ -46,7 +46,7 @@ namespace Rebus.BusHub.Tests
             }
         }
 
-        class TestMessageHandler : IMessageHandler
+        class TestMessageHandler : IMessageHandler<Heartbeat>
         {
             public TestMessageHandler()
             {
@@ -55,7 +55,7 @@ namespace Rebus.BusHub.Tests
 
             public List<object> ReceivedMessages { get; set; }
 
-            public void Handle(object message)
+            public void Handle(Heartbeat message)
             {
                 ReceivedMessages.Add(message);
             }

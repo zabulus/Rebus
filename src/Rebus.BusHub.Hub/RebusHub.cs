@@ -1,7 +1,9 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using log4net;
+using System.Linq;
 
 namespace Rebus.BusHub.Hub
 {
@@ -11,6 +13,8 @@ namespace Rebus.BusHub.Hub
 
         static readonly JsonSerializerSettings SerializerSettings =
             new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};
+
+        static readonly MethodInfo DispatchMethodInfo = typeof(RebusHub).GetMethod("Dispatch", BindingFlags.Instance|BindingFlags.NonPublic);
 
         public override Task OnConnected()
         {
@@ -36,11 +40,39 @@ namespace Rebus.BusHub.Hub
         public void MessageToHub(string str)
         {
             var message = JsonConvert.DeserializeObject(str, SerializerSettings);
-            
-            foreach (var handler in BusHubService.MessageHandlers)
+            var messageType = message.GetType();
+
+            try
             {
-                handler.Handle(message);
+                DispatchMethodInfo.MakeGenericMethod(messageType)
+                                  .Invoke(this, new[] {message});
+            }
+            catch (TargetInvocationException tae)
+            {
+                throw new ApplicationException(string.Format("An error occurred while dispatching message {0}", message), tae);
             }
         }
+
+        // ReSharper disable UnusedMember.Local
+        void Dispatch<TMessage>(TMessage message)
+        {
+            var relevantMessageHandlers = BusHubService
+                .MessageHandlers.OfType<IMessageHandler<TMessage>>()
+                .ToList();
+
+            foreach (var handler in relevantMessageHandlers)
+            {
+                try
+                {
+                    handler.Handle(message);
+                }
+                catch (Exception e)
+                {
+                    throw new ApplicationException(
+                        string.Format("An error occurred while dispatching to handler {0}", handler), e);
+                }
+            }
+        }
+        // ReSharper restore UnusedMember.Local
     }
 }
