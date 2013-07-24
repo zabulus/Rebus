@@ -10,5 +10,7 @@ namespace Rebus.BusHub.Messages
         }
 
         public DateTime ClientTimeUtc { get; set; }
+
+        public string ClientId { get; set; }
     }
 }

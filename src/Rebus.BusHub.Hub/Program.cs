@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Configuration;
 using System.IO;
+using Rebus.BusHub.Hub.Handlers;
 using Topshelf;
 using Topshelf.Runtime;
 using log4net.Config;
@@ -51,7 +52,10 @@ namespace Rebus.BusHub.Hub
       ");
             }
 
-            return new BusHubService(url, new IMessageHandler[0]);
+            return new BusHubService(url, new[]
+                                              {
+                                                  new SaveToMongo(),
+                                              });
         }
     }
 }

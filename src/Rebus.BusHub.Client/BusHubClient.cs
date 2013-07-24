@@ -1,6 +1,7 @@
 ﻿using System;
 using Microsoft.AspNet.SignalR.Client.Hubs;
 using Newtonsoft.Json;
+using Rebus.BusHub.Client.Jobs;
 using Rebus.BusHub.Messages;
 using Rebus.Logging;
 
@@ -23,8 +24,16 @@ namespace Rebus.BusHub.Client
         readonly HubConnection connection;
         readonly IHubProxy hubProxy;
 
+        readonly Job[] jobs =
+            new Job[]
+                {
+                    new NotifyClientIsOnline(),
+                    new SendHeartbeat(), 
+                };
+
         public BusHubClient(string busHubUri, string inputQueueAddress)
         {
+            ClientId = Guid.NewGuid();
             InputQueueAddress = inputQueueAddress;
 
             log.Info("Establishing hub connection to {0}", busHubUri);
@@ -39,15 +48,30 @@ namespace Rebus.BusHub.Client
             log.Info("Started!");
         }
 
-        public void Start()
+        public Guid ClientId { get; private set; }
+
+        public void Initialize(IRebusEvents events)
         {
             log.Info("Starting bus hub client");
+
+            foreach (var job in jobs)
+            {
+                log.Debug("Initializing job {0}", job);
+                job.MessageSent += message => MessageSentByJob(job, message);
+                job.Initialize(events, this);
+            }
         }
 
         public void Send(BusHubMessage message)
         {
             log.Debug("Sending bus hub message: {0}", message);
+            message.ClientId = ClientId.ToString();
             hubProxy.Invoke("MessageToHub", Serialize(message));
+        }
+
+        void MessageSentByJob(Job job, BusHubMessage message)
+        {
+            Send(message);
         }
 
         object Deserialize(string str)
@@ -69,6 +93,15 @@ namespace Rebus.BusHub.Client
 
         public void Dispose()
         {
+            foreach (var job in jobs)
+            {
+                var disposable = job as IDisposable;
+                if (disposable == null) continue;
+
+                log.Debug("Disposing job {0}", job);
+                disposable.Dispose();
+            }
+
             log.Info("Disposing connection to bus hub");
             connection.Stop();
         }

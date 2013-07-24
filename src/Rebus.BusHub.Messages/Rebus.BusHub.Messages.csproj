@@ -40,6 +40,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusHubMessage.cs" />
+    <Compile Include="ClientIsOnline.cs" />
     <Compile Include="Heartbeat.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

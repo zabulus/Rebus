@@ -14,7 +14,7 @@ namespace Rebus.BusHub.Client
                      // WARNING: we rely on the fact that decorators are applied before the events are transferred to the bus
                      configurer.Events(e =>
                          {
-                             e.BusStarted += bus => client.Start();
+                             e.BusStarted += bus => client.Initialize(e);
                              e.BusStopped += bus => client.Dispose();
                          });
                  });
