@@ -43,6 +43,7 @@
     <Compile Include="ClientIsOffline.cs" />
     <Compile Include="ClientIsOnline.cs" />
     <Compile Include="Heartbeat.cs" />
+    <Compile Include="MessageSent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnitOfWorkStats.cs" />
   </ItemGroup>

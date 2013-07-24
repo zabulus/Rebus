@@ -32,6 +32,7 @@ namespace Rebus.BusHub.Client
                     new NotifyClientIsOnline(),
                     new SendHeartbeat(),
                     new SendMessageHandlingStats(),
+                    new SendMessageSendingStats(),
                     new NotifyClientIsOffline(),
                 };
 

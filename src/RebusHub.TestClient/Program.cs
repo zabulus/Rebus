@@ -8,7 +8,7 @@ namespace RebusHub.TestClient
 {
     class Program : IHandleMessages<string>
     {
-        static readonly Random random = new Random();
+        static readonly Random Random = new Random();
 
         static void Main()
         {
@@ -28,7 +28,8 @@ namespace RebusHub.TestClient
                 {
                     Console.WriteLine(@"Press 
 
-    a) to send a message
+    a) to send a message to self
+    b) to send batch messages to self
     q) to quit
 
 ");
@@ -38,7 +39,7 @@ namespace RebusHub.TestClient
                     switch (char.ToLower(key.KeyChar))
                     {
                         case 'a':
-                            adapter.Bus.Send("hello world!! " + new string('*', random.Next(10) + 1));
+                            adapter.Bus.Send("hello world!! " + new string('*', Random.Next(10) + 1));
                             break;
 
                         case 'b':
