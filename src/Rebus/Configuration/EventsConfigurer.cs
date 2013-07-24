@@ -84,9 +84,14 @@ namespace Rebus.Configuration
         }
 
         /// <summary>
-        /// Event that is raised when the bus is disposed
+        /// Event that is raised when the bus is started
         /// </summary>
-        public event BusDisposalEventHandler BusDisposed;
+        public event BusStartTopEventHandler BusStarted;
+
+        /// <summary>
+        /// Event that is raised when the bus is stopped
+        /// </summary>
+        public event BusStartTopEventHandler BusStopped;
 
         internal void TransferToBus(IBus bus)
         {
@@ -100,11 +105,19 @@ namespace Rebus.Configuration
                 }
             }
 
-            if (BusDisposed != null)
+            if (BusStarted != null)
             {
-                foreach (var listener in BusDisposed.GetInvocationList().Cast<BusDisposalEventHandler>())
+                foreach (var listener in BusStarted.GetInvocationList().Cast<BusStartTopEventHandler>())
                 {
-                    rebusEvents.BusDisposed += listener;
+                    rebusEvents.BusStarted += listener;
+                }
+            }
+
+            if (BusStopped != null)
+            {
+                foreach (var listener in BusStopped.GetInvocationList().Cast<BusStartTopEventHandler>())
+                {
+                    rebusEvents.BusStopped += listener;
                 }
             }
 

@@ -39,6 +39,11 @@ namespace Rebus.BusHub.Client
             log.Info("Started!");
         }
 
+        public void Start()
+        {
+            log.Info("Starting bus hub client");
+        }
+
         public void Send(BusHubMessage message)
         {
             log.Debug("Sending bus hub message: {0}", message);

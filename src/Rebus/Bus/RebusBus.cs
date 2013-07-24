@@ -411,8 +411,9 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
             InitializeServicesThatMustBeInitialized();
 
             log.Info("Initializing bus with {0} workers", numberOfWorkers);
-
             SetNumberOfWorkers(numberOfWorkers);
+
+            events.RaiseBusStarted(this);
             started = true;
 
             log.Info("Bus started");

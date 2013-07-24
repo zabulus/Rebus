@@ -30,7 +30,9 @@ namespace Rebus.Bus
 
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
-        public event BusDisposalEventHandler BusDisposed = delegate { };
+        public event BusStartTopEventHandler BusStarted = delegate { };
+        
+        public event BusStartTopEventHandler BusStopped = delegate { };
 
         public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
         {
@@ -82,9 +84,14 @@ namespace Rebus.Bus
             UncorrelatedMessage(bus, message, saga);
         }
 
+        internal void RaiseBusStarted(IBus bus)
+        {
+            BusStarted(bus);
+        }
+
         internal void RaiseBusDisposed(IBus bus)
         {
-            BusDisposed(bus);
+            BusStopped(bus);
         }
     }
 }
