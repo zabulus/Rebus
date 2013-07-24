@@ -29,6 +29,7 @@ namespace Rebus.BusHub.Client
                 {
                     new NotifyClientIsOnline(),
                     new SendHeartbeat(), 
+                    new NotifyClientIsOffline(), 
                 };
 
         public BusHubClient(string busHubUri, string inputQueueAddress)
@@ -49,6 +50,8 @@ namespace Rebus.BusHub.Client
         }
 
         public Guid ClientId { get; private set; }
+
+        public event Action BeforeDispose = delegate { }; 
 
         public void Initialize(IRebusEvents events)
         {
@@ -93,6 +96,8 @@ namespace Rebus.BusHub.Client
 
         public void Dispose()
         {
+            BeforeDispose();
+
             foreach (var job in jobs)
             {
                 var disposable = job as IDisposable;
