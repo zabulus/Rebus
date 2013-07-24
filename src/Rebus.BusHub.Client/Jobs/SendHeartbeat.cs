@@ -7,7 +7,6 @@ namespace Rebus.BusHub.Client.Jobs
     public class SendHeartbeat : Job, IDisposable
     {
         readonly Timer timer = new Timer();
-        string inputQueueAddress;
 
         public SendHeartbeat()
         {
@@ -17,8 +16,6 @@ namespace Rebus.BusHub.Client.Jobs
 
         public override void Initialize(IRebusEvents events, IBusHubClient client)
         {
-            inputQueueAddress = client.InputQueueAddress;
-            
             timer.Start();
         }
 

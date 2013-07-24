@@ -7,7 +7,7 @@ namespace Rebus.BusHub.Client.Jobs
 {
     public class SendMessageSendingStats : Job, IUnitOfWorkManager
     {
-        const string StatsKey = "current-bushub-sending-stats-uow";
+        const string StatsKey = "SendMessageSendingStats-uow";
 
         public override void Initialize(IRebusEvents events, IBusHubClient client)
         {
