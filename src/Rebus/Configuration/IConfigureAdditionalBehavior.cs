@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace Rebus.Configuration
 {
     /// <summary>
@@ -11,6 +13,7 @@ namespace Rebus.Configuration
         public ConfigureAdditionalBehavior()
         {
             HandleMessagesInTransactionScope = false;
+            TrackedItems = new List<object>();
         }
 
         /// <summary>
@@ -18,5 +21,10 @@ namespace Rebus.Configuration
         /// Defaults to false.
         /// </summary>
         public bool HandleMessagesInTransactionScope { get; set; }
+
+        /// <summary>
+        /// Keeps a bunch of objects 
+        /// </summary>
+        public List<object> TrackedItems { get; set; }
     }
 }

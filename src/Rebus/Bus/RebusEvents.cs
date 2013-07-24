@@ -30,6 +30,8 @@ namespace Rebus.Bus
 
         public ICollection<IMutateMessages> MessageMutators { get; private set; }
 
+        public event BusDisposalEventHandler BusDisposed = delegate { };
+
         public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
         {
             unitOfWorkManagers.Add(unitOfWorkManager);
@@ -78,6 +80,11 @@ namespace Rebus.Bus
         internal void RaiseUncorrelatedMessage(IBus bus, object message, Saga saga)
         {
             UncorrelatedMessage(bus, message, saga);
+        }
+
+        internal void RaiseBusDisposed(IBus bus)
+        {
+            BusDisposed(bus);
         }
     }
 }

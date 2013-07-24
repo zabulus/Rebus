@@ -179,6 +179,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
                 public event AfterMessageEventHandler AfterMessage;
                 public event UncorrelatedMessageEventHandler UncorrelatedMessage;
                 public event MessageContextEstablishedEventHandler MessageContextEstablished;
+                public event BusDisposalEventHandler BusDisposed;
                 public ICollection<IMutateMessages> MessageMutators { get; private set; }
                 public void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager)
                 {

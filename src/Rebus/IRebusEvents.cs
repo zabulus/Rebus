@@ -46,6 +46,11 @@ namespace Rebus
     public delegate void MessageContextEstablishedEventHandler(IBus bus, IMessageContext messageContext);
 
     /// <summary>
+    /// Delegate type that can listen to when the bus is disposed
+    /// </summary>
+    public delegate void BusDisposalEventHandler(IBus bus);
+
+    /// <summary>
     /// Groups the different event hooks that Rebus exposes.
     /// </summary>
     public interface IRebusEvents
@@ -111,5 +116,10 @@ namespace Rebus
         /// Adds a unit of work manager that will be allowed to create a unit of work for each incoming message
         /// </summary>
         void AddUnitOfWorkManager(IUnitOfWorkManager unitOfWorkManager);
+
+        /// <summary>
+        /// Event that is raised when the bus is disposed
+        /// </summary>
+        event BusDisposalEventHandler BusDisposed;
     }
 }

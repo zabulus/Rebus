@@ -83,6 +83,11 @@ namespace Rebus.Configuration
             unitOfWorkManagers.Add(unitOfWorkManager);
         }
 
+        /// <summary>
+        /// Event that is raised when the bus is disposed
+        /// </summary>
+        public event BusDisposalEventHandler BusDisposed;
+
         internal void TransferToBus(IBus bus)
         {
             var rebusEvents = bus.Advanced.Events;
@@ -92,6 +97,14 @@ namespace Rebus.Configuration
                 foreach (var listener in MessageContextEstablished.GetInvocationList().Cast<MessageContextEstablishedEventHandler>())
                 {
                     rebusEvents.MessageContextEstablished += listener;
+                }
+            }
+
+            if (BusDisposed != null)
+            {
+                foreach (var listener in BusDisposed.GetInvocationList().Cast<BusDisposalEventHandler>())
+                {
+                    rebusEvents.BusDisposed += listener;
                 }
             }
 

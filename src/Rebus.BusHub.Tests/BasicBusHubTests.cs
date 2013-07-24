@@ -30,7 +30,7 @@ namespace Rebus.BusHub.Tests
             {
                 instance.Start();
 
-                using (var client = new BusHubClient("http://localhost:24000"))
+                using (var client = new BusHubClient("http://localhost:24000", "someAddress"))
                 {
                     client.Send(new Heartbeat());
                 }
