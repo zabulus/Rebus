@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.AspNet.SignalR.Client.Hubs;
 using Newtonsoft.Json;
 using Rebus.BusHub.Client.Jobs;
 using Rebus.BusHub.Messages;
 using Rebus.Logging;
+using System.Linq;
 
 namespace Rebus.BusHub.Client
 {
-    public class BusHubClient : IDisposable
+    public class BusHubClient : IDisposable, IBusHubClient
     {
         static ILog log;
 
@@ -19,17 +21,18 @@ namespace Rebus.BusHub.Client
         public string InputQueueAddress { get; private set; }
 
         static readonly JsonSerializerSettings SerializerSettings =
-            new JsonSerializerSettings {TypeNameHandling = TypeNameHandling.All};
+            new JsonSerializerSettings { TypeNameHandling = TypeNameHandling.All };
 
         readonly HubConnection connection;
         readonly IHubProxy hubProxy;
 
-        readonly Job[] jobs =
-            new Job[]
+        readonly List<Job> jobs =
+            new List<Job>
                 {
                     new NotifyClientIsOnline(),
-                    new SendHeartbeat(), 
-                    new NotifyClientIsOffline(), 
+                    new SendHeartbeat(),
+                    new SendMessageHandlingStats(),
+                    new NotifyClientIsOffline(),
                 };
 
         public BusHubClient(string busHubUri, string inputQueueAddress)
@@ -39,7 +42,7 @@ namespace Rebus.BusHub.Client
 
             log.Info("Establishing hub connection to {0}", busHubUri);
             connection = new HubConnection(busHubUri);
-            
+
             log.Info("Creating hub proxy");
             hubProxy = connection.CreateHubProxy("RebusHub");
             hubProxy.On("MessageToClient", (string str) => ReceiveMessage(Deserialize(str)));
@@ -51,18 +54,18 @@ namespace Rebus.BusHub.Client
 
         public Guid ClientId { get; private set; }
 
-        public event Action BeforeDispose = delegate { }; 
+        public event Action BeforeDispose = delegate { };
 
         public void Initialize(IRebusEvents events)
         {
             log.Info("Starting bus hub client");
 
-            foreach (var job in jobs)
-            {
-                log.Debug("Initializing job {0}", job);
-                job.MessageSent += message => MessageSentByJob(job, message);
-                job.Initialize(events, this);
-            }
+            jobs.ForEach(job =>
+                {
+                    log.Debug("Initializing job {0}", job);
+                    job.MessageSent += message => MessageSentByJob(job, message);
+                    job.Initialize(events, this);
+                });
         }
 
         public void Send(BusHubMessage message)
@@ -84,7 +87,7 @@ namespace Rebus.BusHub.Client
 
         void ReceiveMessage(object message)
         {
-            
+
         }
 
         string Serialize(BusHubMessage message)
@@ -98,14 +101,13 @@ namespace Rebus.BusHub.Client
         {
             BeforeDispose();
 
-            foreach (var job in jobs)
-            {
-                var disposable = job as IDisposable;
-                if (disposable == null) continue;
-
-                log.Debug("Disposing job {0}", job);
-                disposable.Dispose();
-            }
+            jobs.OfType<IDisposable>()
+                .ToList()
+                .ForEach(job =>
+                    {
+                        log.Debug("Disposing job {0}", job);
+                        job.Dispose();
+                    });
 
             log.Info("Disposing connection to bus hub");
             connection.Stop();

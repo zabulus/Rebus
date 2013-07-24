@@ -49,9 +49,11 @@
   <ItemGroup>
     <Compile Include="BusHubClient.cs" />
     <Compile Include="BusHubConfigurationExtensions.cs" />
+    <Compile Include="IBusHubClient.cs" />
     <Compile Include="Job.cs" />
     <Compile Include="Jobs\NotifyClientIsOffline.cs" />
     <Compile Include="Jobs\NotifyClientIsOnline.cs" />
+    <Compile Include="Jobs\SendMessageHandlingStats.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Jobs\SendHeartbeat.cs" />
   </ItemGroup>

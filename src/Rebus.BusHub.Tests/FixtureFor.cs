@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using NUnit.Framework;
+using Rhino.Mocks;
 using log4net.Config;
 
 namespace Rebus.BusHub.Tests
@@ -29,5 +30,10 @@ namespace Rebus.BusHub.Tests
         protected abstract TSut SetUpInstance();
 
         protected virtual void TearDownInstance() { }
+
+        protected static TMock Mock<TMock>() where TMock : class
+        {
+            return MockRepository.GenerateMock<TMock>();
+        }
     }
 }

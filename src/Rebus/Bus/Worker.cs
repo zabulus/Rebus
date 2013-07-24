@@ -265,9 +265,10 @@ namespace Rebus.Bus
                     context = MessageContext.Establish(message.Headers);
                     MessageContextEstablished(context);
 
-                    var unitsOfWork = unitOfWorkManagers.Select(u => u.Create())
-                                    .Where(u => !ReferenceEquals(null, u))
-                                    .ToArray(); //< remember to invoke the chain here :)
+                    var unitsOfWork = unitOfWorkManagers
+                        .Select(u => u.Create())
+                        .Where(u => !ReferenceEquals(null, u))
+                        .ToArray(); //< remember to invoke the chain here :)
 
                     try
                     {

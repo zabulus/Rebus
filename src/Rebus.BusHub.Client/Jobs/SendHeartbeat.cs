@@ -15,9 +15,9 @@ namespace Rebus.BusHub.Client.Jobs
             timer.Interval = TimeSpan.FromSeconds(3).TotalMilliseconds;
         }
 
-        public override void Initialize(IRebusEvents events, BusHubClient busHubClient)
+        public override void Initialize(IRebusEvents events, IBusHubClient client)
         {
-            inputQueueAddress = busHubClient.InputQueueAddress;
+            inputQueueAddress = client.InputQueueAddress;
             
             timer.Start();
         }
