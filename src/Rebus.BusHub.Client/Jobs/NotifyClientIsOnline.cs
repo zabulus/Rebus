@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Reflection;
 using Rebus.BusHub.Messages;
 
 namespace Rebus.BusHub.Client.Jobs
@@ -9,7 +8,7 @@ namespace Rebus.BusHub.Client.Jobs
     {
         public override void Initialize(IRebusEvents events, IBusHubClient client)
         {
-            var entryAssembly = Assembly.GetEntryAssembly();
+            var entryAssembly = client.GetEntryAssembly();
 
             string executablePath;
             string codebasePath;

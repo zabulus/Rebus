@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace Rebus.BusHub.Client
 {
@@ -7,5 +8,6 @@ namespace Rebus.BusHub.Client
         string InputQueueAddress { get; }
         Guid ClientId { get; }
         event Action BeforeDispose;
+        Assembly GetEntryAssembly();
     }
 }

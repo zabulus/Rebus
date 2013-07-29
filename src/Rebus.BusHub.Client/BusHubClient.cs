@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Microsoft.AspNet.SignalR.Client.Hubs;
 using Newtonsoft.Json;
 using Rebus.BusHub.Client.Jobs;
@@ -56,6 +57,11 @@ namespace Rebus.BusHub.Client
         public Guid ClientId { get; private set; }
 
         public event Action BeforeDispose = delegate { };
+        
+        public Assembly GetEntryAssembly()
+        {
+            return Assembly.GetEntryAssembly();
+        }
 
         public void Initialize(IRebusEvents events)
         {

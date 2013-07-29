@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Reflection;
 using NUnit.Framework;
 using Rebus.BusHub.Client;
 using Rebus.BusHub.Client.Jobs;
 using Rebus.BusHub.Messages;
 using Shouldly;
 using System.Linq;
+using Rhino.Mocks;
 
 namespace Rebus.BusHub.Tests.Jobs
 {
@@ -20,11 +22,15 @@ namespace Rebus.BusHub.Tests.Jobs
             return job;
         }
 
-        [Test]
+        [Test, Description("Hard to test right because the entry assembly is ")]
         public void GetsItRight()
         {
             // act
-            instance.Initialize(Mock<IRebusEvents>(), Mock<IBusHubClient>());
+            var busHubClient = Mock<IBusHubClient>();
+            var testAssemblyJustForTesting = Assembly.GetExecutingAssembly();
+            busHubClient.Stub(c => c.GetEntryAssembly()).Return(testAssemblyJustForTesting);
+
+            instance.Initialize(Mock<IRebusEvents>(), busHubClient);
 
             // assert
             messages.Count.ShouldBe(1);
@@ -32,10 +38,12 @@ namespace Rebus.BusHub.Tests.Jobs
             
             var message = (ClientIsOnline) messages.Single();
 
-            message.FileName.ShouldContain("n/a");
-            message.EntryPointAssemblyVersion.ShouldContain("n/a");
-            message.ExecutablePath.ShouldContain("n/a");
-            message.CodebasePath.ShouldContain("n/a");
+            // this one varies depending on how the tests are run
+            //message.FileName.ShouldContain("n/a");
+            //message.FileName.ShouldContain("JetBrains.ReSharper.TaskRunner.CLR4.MSIL");
+            message.EntryPointAssemblyVersion.ShouldContain("1.0.0.1");
+            message.ExecutablePath.ShouldContain("Rebus.BusHub.Tests");
+            message.CodebasePath.ShouldContain("Rebus.BusHub.Tests");
         }
     }
 }
