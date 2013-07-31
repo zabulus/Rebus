@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Rebus.BusHub.Messages;
+using System.Linq;
 
 namespace Rebus.BusHub.Client.Jobs
 {
@@ -8,25 +9,6 @@ namespace Rebus.BusHub.Client.Jobs
     {
         public override void Initialize(IRebusEvents events, IBusHubClient client)
         {
-            var entryAssembly = client.GetEntryAssembly();
-
-            string executablePath;
-            string codebasePath;
-            string entryPointAssemblyVersion;
-            
-            if (entryAssembly != null)
-            {
-                executablePath = entryAssembly.Location;
-                codebasePath = entryAssembly.CodeBase;
-                entryPointAssemblyVersion = entryAssembly.GetName().Version.ToString();
-            }
-            else
-            {
-                executablePath = "n/a";
-                codebasePath = "n/a";
-                entryPointAssemblyVersion = "n/a";
-            }
-
             var currentProcess = Process.GetCurrentProcess();
             var processStartInfo = currentProcess.StartInfo;
             var fileName = !string.IsNullOrWhiteSpace(processStartInfo.FileName)
@@ -35,14 +17,31 @@ namespace Rebus.BusHub.Client.Jobs
 
             var arguments = processStartInfo.Arguments;
 
+            var entryAssembly = client.GetEntryAssembly();
+
+            var loadedAssemblies = AppDomain.CurrentDomain.GetAssemblies()
+                                            .Select(a =>
+                                                {
+                                                    var assemblyName = a.GetName();
+
+                                                    return
+                                                        new LoadedAssembly
+                                                            {
+                                                                Name = assemblyName.Name,
+                                                                Location = a.IsDynamic ? "(dynamic)" : a.Location,
+                                                                Codebase = a.IsDynamic ? "(dynamic)" : a.CodeBase,
+                                                                Version = assemblyName.Version.ToString(),
+                                                                IsEntryAssembly = a == entryAssembly
+                                                            };
+                                                })
+                                            .ToArray();
+
             SendMessage(new ClientIsOnline(client.InputQueueAddress,
-                                           executablePath,
-                                           codebasePath,
                                            Environment.MachineName,
                                            Environment.OSVersion.ToString(),
-                                           entryPointAssemblyVersion,
                                            fileName,
-                                           arguments));
+                                           arguments,
+                                           loadedAssemblies));
         }
     }
 }

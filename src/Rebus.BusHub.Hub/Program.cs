@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using Rebus.BusHub.Hub.Handlers;
@@ -10,6 +11,12 @@ namespace Rebus.BusHub.Hub
 {
     class Program
     {
+        static readonly List<IMessageHandler> Handlers =
+            new List<IMessageHandler>
+                {
+                    new SaveToMongo(),
+                };
+
         static void Main()
         {
             XmlConfigurator.ConfigureAndWatch(new FileInfo(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "log4net.config")));
@@ -52,10 +59,7 @@ namespace Rebus.BusHub.Hub
       ");
             }
 
-            return new BusHubService(url, new[]
-                                              {
-                                                  new SaveToMongo(),
-                                              });
+            return new BusHubService(url, Handlers);
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.Owin.Hosting;
 using log4net;
@@ -11,11 +12,11 @@ namespace Rebus.BusHub.Hub
         
         readonly string url;
 
-        public static IMessageHandler[] MessageHandlers { get; private set; }
+        public static IEnumerable<IMessageHandler> MessageHandlers { get; private set; }
 
         IDisposable webApp;
 
-        public BusHubService(string url, IMessageHandler[] messageHandlers)
+        public BusHubService(string url, IEnumerable<IMessageHandler> messageHandlers)
         {
             this.url = url;
             

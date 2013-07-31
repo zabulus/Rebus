@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using NUnit.Framework;
 using Rebus.BusHub.Client;
@@ -41,9 +42,10 @@ namespace Rebus.BusHub.Tests.Jobs
             // this one varies depending on how the tests are run
             //message.FileName.ShouldContain("n/a");
             //message.FileName.ShouldContain("JetBrains.ReSharper.TaskRunner.CLR4.MSIL");
-            message.EntryPointAssemblyVersion.ShouldContain("1.0.0.1");
-            message.ExecutablePath.ShouldContain("Rebus.BusHub.Tests");
-            message.CodebasePath.ShouldContain("Rebus.BusHub.Tests");
+            message.LoadedAssemblies
+                   .ShouldContain(a => a.Version.Contains("1.0.0.1")
+                                       && a.Location.Contains("Rebus.BusHub.Tests")
+                                       && a.Codebase.Contains("Rebus.BusHub.Tests"));
         }
     }
 }
