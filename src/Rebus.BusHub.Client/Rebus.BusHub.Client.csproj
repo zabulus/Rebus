@@ -55,6 +55,7 @@
     <Compile Include="Jobs\NotifyClientIsOnline.cs" />
     <Compile Include="Jobs\SendMessageHandlingStats.cs" />
     <Compile Include="Jobs\SendMessageSendingStats.cs" />
+    <Compile Include="Jobs\Stats\StatsCollectingUnitOfWork.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Jobs\SendHeartbeat.cs" />
   </ItemGroup>

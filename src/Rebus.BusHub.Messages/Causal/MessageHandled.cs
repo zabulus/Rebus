@@ -1,8 +1,11 @@
 ﻿using System;
 
-namespace Rebus.BusHub.Messages
+namespace Rebus.BusHub.Messages.Causal
 {
-    public class UnitOfWorkStats : BusHubMessage
+    /// <summary>
+    /// Raised after the successful handling of a message.
+    /// </summary>
+    public class MessageHandled : BusHubMessage
     {
         public TimeSpan Elapsed { get; set; }
 
@@ -13,12 +16,6 @@ namespace Rebus.BusHub.Messages
 
     public class LogicalMessageStats
     {
-        public LogicalMessageStats(string messageType, TimeSpan elapsed)
-        {
-            MessageType = messageType;
-            Elapsed = elapsed;
-        }
-
         public string MessageType { get; set; }
         public TimeSpan Elapsed { get; set; }
     }

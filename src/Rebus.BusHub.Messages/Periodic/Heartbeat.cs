@@ -1,4 +1,4 @@
-﻿namespace Rebus.BusHub.Messages
+﻿namespace Rebus.BusHub.Messages.Periodic
 {
     public class Heartbeat : BusHubMessage
     {

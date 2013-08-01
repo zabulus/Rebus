@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.BusHub.Client;
 using Rebus.BusHub.Client.Jobs;
 using Rebus.BusHub.Messages;
+using Rebus.BusHub.Messages.Causal;
 using Shouldly;
 using System.Linq;
 using Rhino.Mocks;
@@ -35,9 +36,9 @@ namespace Rebus.BusHub.Tests.Jobs
 
             // assert
             messages.Count.ShouldBe(1);
-            messages.Single().ShouldBeTypeOf<ClientIsOnline>();
+            messages.Single().ShouldBeTypeOf<BusHasBeenStarted>();
             
-            var message = (ClientIsOnline) messages.Single();
+            var message = (BusHasBeenStarted) messages.Single();
 
             // this one varies depending on how the tests are run
             //message.FileName.ShouldContain("n/a");

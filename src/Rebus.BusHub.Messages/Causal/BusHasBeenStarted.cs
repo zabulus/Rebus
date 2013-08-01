@@ -1,23 +1,10 @@
-﻿namespace Rebus.BusHub.Messages
+﻿namespace Rebus.BusHub.Messages.Causal
 {
-    public class ClientIsOnline : BusHubMessage
+    /// <summary>
+    /// Raised when the bus is started. Collects a bunch of information about the current process so that we know what's running.
+    /// </summary>
+    public class BusHasBeenStarted : BusHubMessage
     {
-        public ClientIsOnline(
-            string inputQueueAddress, 
-            string machineName, 
-            string os, 
-            string fileName,
-            string arguments,
-            LoadedAssembly[] loadedAssemblies)
-        {
-            InputQueueAddress = inputQueueAddress;
-            MachineName = machineName;
-            Os = os;
-            FileName = fileName;
-            Arguments = arguments;
-            LoadedAssemblies = loadedAssemblies;
-        }
-
         public string InputQueueAddress { get; set; }
         public string MachineName { get; set; }
         public string Os { get; set; }

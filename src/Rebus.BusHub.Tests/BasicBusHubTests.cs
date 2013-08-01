@@ -5,6 +5,7 @@ using NUnit.Framework;
 using Rebus.BusHub.Client;
 using Rebus.BusHub.Hub;
 using Rebus.BusHub.Messages;
+using Rebus.BusHub.Messages.Periodic;
 using Shouldly;
 using System.Linq;
 

@@ -1,72 +1,35 @@
-﻿using System;
-using System.Collections.Generic;
-using Rebus.Bus;
-using Rebus.BusHub.Messages;
+﻿using Rebus.BusHub.Client.Jobs.Stats;
+using Rebus.BusHub.Messages.Causal;
 
 namespace Rebus.BusHub.Client.Jobs
 {
-    public class SendMessageSendingStats : Job, IUnitOfWorkManager
+    public class SendMessageSendingStats : Job
     {
-        const string StatsKey = "SendMessageSendingStats-uow";
-
         public override void Initialize(IRebusEvents events, IBusHubClient client)
         {
-            events.AddUnitOfWorkManager(this);
             events.MessageSent += OnMessageSent;
-        }
-
-        public IUnitOfWork Create()
-        {
-            var uow = new StatsCollectingUnitOfWork();
-            uow.Committed += () => uow.SentMessages.ForEach(SendMessage);
-            var messageContext = MessageContext.GetCurrent();
-            messageContext.Items[StatsKey] = uow;
-            return uow;
         }
 
         void OnMessageSent(IBus bus, string destination, object message)
         {
-            var busHubMessage = new MessageSent(message.GetType().FullName, destination);
+            var busHubMessage =
+                new MessageSent
+                    {
+                        MessageType = message.GetType().FullName,
+                        Destination = destination,
+                    };
 
+            // if we're not in a message handler, we just send the event right away
             if (!MessageContext.HasCurrent)
             {
                 SendMessage(busHubMessage);
                 return;
             }
 
+            // otherwise, put the sent message info inside the current stats colletor
             var messageContext = MessageContext.GetCurrent();
-            var uow = (StatsCollectingUnitOfWork)messageContext.Items[StatsKey];
-            uow.Add(busHubMessage);
-        }
-
-        class StatsCollectingUnitOfWork : IUnitOfWork
-        {
-            readonly List<MessageSent> sentMessages = new List<MessageSent>();
-
-            public event Action Committed = delegate { };
-
-            public List<MessageSent> SentMessages
-            {
-                get { return sentMessages; }
-            }
-
-            public void Commit()
-            {
-                Committed();
-            }
-
-            public void Abort()
-            {
-            }
-
-            public void Dispose()
-            {
-            }
-
-            public void Add(MessageSent busHubMessage)
-            {
-                sentMessages.Add(busHubMessage);
-            }
+            var uow = (StatsCollectingUnitOfWork)messageContext.Items[StatsCollectingUnitOfWork.Key];
+            uow.MessageWasSent(busHubMessage);
         }
     }
 }

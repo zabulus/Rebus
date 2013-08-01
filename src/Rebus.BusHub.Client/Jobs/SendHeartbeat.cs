@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Timers;
 using Rebus.BusHub.Messages;
+using Rebus.BusHub.Messages.Periodic;
 
 namespace Rebus.BusHub.Client.Jobs
 {

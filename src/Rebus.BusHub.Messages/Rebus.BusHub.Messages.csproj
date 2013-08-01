@@ -40,12 +40,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusHubMessage.cs" />
-    <Compile Include="ClientIsOffline.cs" />
-    <Compile Include="ClientIsOnline.cs" />
-    <Compile Include="Heartbeat.cs" />
-    <Compile Include="MessageSent.cs" />
+    <Compile Include="Causal\BusHasBeenStopped.cs" />
+    <Compile Include="Causal\BusHasBeenStarted.cs" />
+    <Compile Include="Periodic\Heartbeat.cs" />
+    <Compile Include="Causal\MessageSent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UnitOfWorkStats.cs" />
+    <Compile Include="Causal\MessageHandled.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

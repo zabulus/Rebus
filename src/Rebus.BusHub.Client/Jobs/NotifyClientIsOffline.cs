@@ -1,4 +1,5 @@
 ﻿using Rebus.BusHub.Messages;
+using Rebus.BusHub.Messages.Causal;
 
 namespace Rebus.BusHub.Client.Jobs
 {
@@ -8,7 +9,7 @@ namespace Rebus.BusHub.Client.Jobs
         {
             // we could have used events.BusStopped for this, but then we would risk that the client was disposed before us
             // ... therefore:
-            client.BeforeDispose += () => SendMessage(new ClientIsOffline());
+            client.BeforeDispose += () => SendMessage(new BusHasBeenStopped());
         }
     }
 }
