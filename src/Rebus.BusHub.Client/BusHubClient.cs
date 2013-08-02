@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Web;
 using Microsoft.AspNet.SignalR.Client.Hubs;
 using Newtonsoft.Json;
 using Rebus.BusHub.Client.Jobs;
@@ -60,7 +61,25 @@ namespace Rebus.BusHub.Client
         
         public Assembly GetEntryAssembly()
         {
-            return Assembly.GetEntryAssembly();
+            return Assembly.GetEntryAssembly() ?? GetWebEntryAssembly();
+        }
+
+        static Assembly GetWebEntryAssembly()
+        {
+            if (HttpContext.Current == null ||
+                HttpContext.Current.ApplicationInstance == null)
+            {
+                return null;
+            }
+
+            var type = HttpContext.Current.ApplicationInstance.GetType();
+
+            while (type != null && type.Namespace == "ASP")
+            {
+                type = type.BaseType;
+            }
+
+            return type == null ? null : type.Assembly;
         }
 
         public void Initialize(IRebusEvents events)
