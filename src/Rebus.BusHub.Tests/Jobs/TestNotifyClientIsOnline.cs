@@ -31,8 +31,11 @@ namespace Rebus.BusHub.Tests.Jobs
             var busHubClient = Mock<IBusHubClient>();
             var testAssemblyJustForTesting = Assembly.GetExecutingAssembly();
             busHubClient.Stub(c => c.GetEntryAssembly()).Return(testAssemblyJustForTesting);
+            var rebusEvents = Mock<IRebusEvents>();
+            var mockBus = Mock<IBus>();
 
-            instance.Initialize(Mock<IRebusEvents>(), busHubClient);
+            instance.Initialize(rebusEvents, busHubClient);
+            rebusEvents.GetEventRaiser(e => e.BusStarted += delegate{}).Raise(mockBus);
 
             // assert
             messages.Count.ShouldBe(1);
