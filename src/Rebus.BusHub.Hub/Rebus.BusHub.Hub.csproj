@@ -34,6 +34,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="AWSSDK">
+      <HintPath>..\Rebus.Tests\bin\Release\AWSSDK.dll</HintPath>
+    </Reference>
     <Reference Include="log4net">
       <HintPath>..\packages\log4net.2.0.0\lib\net40-full\log4net.dll</HintPath>
     </Reference>
@@ -103,12 +106,14 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BusHubService.cs" />
+    <Compile Include="Handlers\BusTopology.cs" />
     <Compile Include="Handlers\SaveToMongo.cs" />
     <Compile Include="IMessageHandler.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RebusHub.cs" />
     <Compile Include="Startup.cs" />
+    <Compile Include="Views\IBusTopologyView.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config">

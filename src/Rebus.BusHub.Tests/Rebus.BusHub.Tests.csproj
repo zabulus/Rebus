@@ -81,6 +81,8 @@
     <Compile Include="FixtureFor.cs" />
     <Compile Include="Jobs\TestNotifyClientIsOnline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Views\TestBusTopologyView.cs" />
+    <Compile Include="ViewFixture.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="log4net.config">
