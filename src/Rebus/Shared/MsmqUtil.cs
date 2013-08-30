@@ -90,7 +90,14 @@ namespace Rebus.Shared
 
         public static void Delete(string queueName)
         {
+            if (!Exists(queueName)) return;
+
             MessageQueue.Delete(GetPath(queueName));
+        }
+
+        public static bool Exists(string queueName)
+        {
+            return MessageQueue.Exists(GetPath(queueName));
         }
 
         static QueueInfo Parse(string queueName)

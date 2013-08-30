@@ -4,7 +4,6 @@ using Autofac;
 using Rebus.Autofac;
 using Rebus.Configuration;
 using Rebus.Testing;
-using Rhino.Mocks;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 {
