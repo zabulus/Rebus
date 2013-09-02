@@ -168,9 +168,11 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             public IRebusEvents Events { get; private set; }
             public IRebusBatchOperations Batch { get; private set; }
             public IRebusRouting Routing { get; private set; }
+            public IRebusDiagnostics Diagnostics { get; private set; }
 
             class SomeTestRebusEvents : IRebusEvents
             {
+                public event BusStartedEventHandler BusStarted;
                 public event BeforeTransportMessageEventHandler BeforeTransportMessage;
                 public event AfterTransportMessageEventHandler AfterTransportMessage;
                 public event PoisonMessageEventHandler PoisonMessage;

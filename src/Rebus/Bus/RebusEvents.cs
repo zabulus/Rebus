@@ -12,6 +12,8 @@ namespace Rebus.Bus
             MessageMutators = new List<IMutateMessages>();
         }
 
+        public event BusStartedEventHandler BusStarted = delegate { };
+
         public event MessageSentEventHandler MessageSent = delegate { };
 
         public event BeforeMessageEventHandler BeforeMessage = delegate { };
@@ -43,6 +45,11 @@ namespace Rebus.Bus
         internal void RaiseMessageContextEstablished(IBus bus, IMessageContext messageContext)
         {
             MessageContextEstablished(bus, messageContext);
+        }
+
+        internal void RaiseBusStarted(IBus bus)
+        {
+            BusStarted(bus);
         }
 
         internal void RaiseMessageSent(IBus bus, string destination, object message)

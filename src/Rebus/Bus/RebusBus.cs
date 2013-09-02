@@ -43,6 +43,7 @@ namespace Rebus.Bus
         readonly RebusBatchOperations batch;
         readonly DueTimeoutScheduler dueTimeoutScheduler;
         readonly IRebusRouting routing;
+        readonly IRebusDiagnostics diagnostics;
 
         static int rebusIdCounter;
         readonly int rebusId;
@@ -80,6 +81,7 @@ namespace Rebus.Bus
 
             batch = new RebusBatchOperations(determineMessageOwnership, storeSubscriptions, this);
             routing = new RebusRouting(this);
+            diagnostics = new RebusDiagnostics();
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
@@ -239,6 +241,11 @@ namespace Rebus.Bus
         public IRebusRouting Routing
         {
             get { return routing; }
+        }
+
+        public IRebusDiagnostics Diagnostics
+        {
+            get { return diagnostics; }
         }
 
         /// <summary>
@@ -414,6 +421,8 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
 
             SetNumberOfWorkers(numberOfWorkers);
             started = true;
+
+            RaiseBusStarted();
 
             log.Info("Bus started");
         }
@@ -731,6 +740,11 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                     }
                 }
             }
+        }
+
+        void RaiseBusStarted()
+        {
+            events.RaiseBusStarted(this);
         }
 
         void RaiseMessageContextEstablished(IMessageContext messageContext)
