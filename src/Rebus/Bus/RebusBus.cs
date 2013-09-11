@@ -722,6 +722,8 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             {
                 disposable.Dispose();
             }
+
+            events.RaiseBusDisposed(this);
         }
 
         string GetMessageOwnerEndpointFor(Type messageType)

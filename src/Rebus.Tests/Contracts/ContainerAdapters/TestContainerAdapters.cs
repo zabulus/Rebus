@@ -236,8 +236,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             public IRebusBatchOperations Batch { get; private set; }
             public IRebusRouting Routing { get; private set; }
             public IRebusDiagnostics Diagnostics { get; private set; }
-                public event BusStartedEventHandler BusStarted;
-                public event BusDisposedEventHandler BusDisposed;
         }
     }
 }
