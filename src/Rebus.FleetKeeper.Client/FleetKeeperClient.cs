@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json.Linq;
+using Rebus.FleetKeeper.Client.Messages;
 using Rebus.Logging;
 
 namespace Rebus.FleetKeeper.Client
@@ -45,7 +46,6 @@ namespace Rebus.FleetKeeper.Client
                                ? processStartInfo.FileName
                                : currentProcess.ProcessName;
 
-
             //new
             //{
             //    ClientId = clientId, 
@@ -55,7 +55,7 @@ namespace Rebus.FleetKeeper.Client
             //    FileName = fileName
             //}
 
-            hubProxy.Invoke("ReceiveFromBus", "Test");
+            hubProxy.Invoke("ReceiveFromBus", new BusStarted());
         }
 
         public void OnBusDispose(IBus bus)

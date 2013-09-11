@@ -46,10 +46,10 @@ namespace Rebus.FleetKeeper
             return Groups.Add(Context.ConnectionId, "busclients");
         }
 
-        public void ReceiveFromBus(string message)
+        public void ReceiveFromBus(object message)
         {
             dbConnection.Execute("insert into events (Message) values (@Message)", new {Message = message});
-            Clients.Group("webclients").notify(message);
+            Clients.Group("webclients").notify(message.GetType());
         }
 
         public void SendToBus(string message)

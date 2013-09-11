@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Rebus.Configuration;
 using Rebus.Transports.Msmq;
 
@@ -6,50 +7,73 @@ namespace Rebus.FleetKeeper.Client
 {
     public class Program
     {
-        static readonly Random Random = new Random();
+        static readonly Dictionary<string, IBus> busses = new Dictionary<string, IBus>();
 
         static void Main()
         {
+            Console.WriteLine("Rebus FleetKeeper Test Console");
+            WriteHelp();
+
             using (var adapter = new BuiltinContainerAdapter())
             {
-                adapter.Register(typeof(Program));
-
-                Configure.With(adapter)
-                         .Transport(t => t.UseMsmqAndGetInputQueueNameFromAppConfig())
-                         .MessageOwnership(d => d.FromRebusConfigurationSection())
-                         .EnableFleetKeeper("http://localhost:8080")
-                         .CreateBus()
-                         .Start();
+                adapter.Register(typeof (Program));
 
                 var keepRunning = true;
                 do
                 {
-                    Console.WriteLine(@"Press 
-
-    a) to send a message to self
-    b) to send batch messages to self
-    q) to quit
-
-");
-
-                    var key = Console.ReadKey();
-
-                    switch (char.ToLower(key.KeyChar))
+                    var line = Console.ReadLine() ?? "";
+                    var words = line.Split(' ');
+                    if (words[0] == "start" && words[1] == "bus")
                     {
-                        case 'a':
-                            adapter.Bus.Send("hello world!! " + new string('*', Random.Next(10) + 1));
-                            break;
+                        var name = words[2];
 
-                        case 'b':
-                            adapter.Bus.Advanced.Batch.Send(new[] { "hello", "there", "my", "friend" });
-                            break;
+                        var bus = Configure.With(adapter)
+                                 .Transport(t => t.UseMsmq(name + ".test", name + ".test.error"))
+                                 .MessageOwnership(d => d.FromRebusConfigurationSection())
+                                 .EnableFleetKeeper("http://localhost:8080")
+                                 .CreateBus()
+                                 .Start();
 
-                        case 'q':
-                            keepRunning = false;
-                            break;
+                        busses.Add(name, bus);
+                    }
+                    else if (line.StartsWith("stop bus"))
+                    {
+                        var name = words[2];
+
+                        IBus bus;
+                        if (busses.TryGetValue(name, out bus))
+                        {
+                            busses.Remove(name);
+                            bus.Dispose();
+                        }
+                        else
+                        {
+                            Console.WriteLine("No bus named '{0}' was found", name);
+                        }
+                    }
+                    else if (line == "h" || line == "help")
+                    {
+                        WriteHelp();
+                    }
+                    else if (line == "q" || line == "quit")
+                    {
+                        keepRunning = false;
                     }
                 } while (keepRunning);
             }
+        }
+
+        static void WriteHelp()
+        {
+            Console.WriteLine(@"
+Use the following commands to control the process:
+
+    start bus <name>            - starts a bus with queues named {name}.test 
+                                  and {name}.test.error
+    stop bus <name>             - stops the bus with the given name
+    set fleetkeeper url=<url>   - setup the client to use this url for any 
+                                  _new_ bus, defaults to http://localhost:8080
+");
         }
 
         public void Handle(string message)
