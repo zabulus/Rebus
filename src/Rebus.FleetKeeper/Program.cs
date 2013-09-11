@@ -1,8 +1,9 @@
 ﻿using System;
-using System.Threading.Tasks;
+using System.Configuration;
+using System.Data.SQLite;
 using Microsoft.AspNet.SignalR;
-using Microsoft.Owin;
 using Microsoft.Owin.Hosting;
+using Dapper;
 
 namespace Rebus.FleetKeeper
 {
@@ -10,10 +11,10 @@ namespace Rebus.FleetKeeper
     {
         public static int Main()
         {
-            var url = "http://localhost:8080";
+            var url = ConfigurationManager.AppSettings["listenUri"];
             using (WebApp.Start<Startup>(url))
             {
-                Console.WriteLine("FleetKeeper is running on {0}", url);
+                Console.WriteLine("FleetKeeper is listening on {0}", url);
                 while (true)
                 {
                     var name = Console.ReadLine();
@@ -23,17 +24,6 @@ namespace Rebus.FleetKeeper
             }
 
             return 0;
-        }
-    }
-
-    public class LoggerMiddleware : OwinMiddleware
-    {
-        public LoggerMiddleware(OwinMiddleware next) : base(next) {}
-
-        public override Task Invoke(OwinRequest request, OwinResponse response)
-        {
-            Console.WriteLine("Here");
-            return Next.Invoke(request, response);
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using Microsoft.AspNet.SignalR.Client;
-using Rebus.Configuration;
+using Newtonsoft.Json.Linq;
 using Rebus.Logging;
 
 namespace Rebus.FleetKeeper.Client
@@ -9,10 +9,10 @@ namespace Rebus.FleetKeeper.Client
     public class FleetKeeperClient : IDisposable
     {
         static ILog log;
+        readonly Guid clientId;
 
         readonly HubConnection connection;
         readonly IHubProxy hubProxy;
-        readonly Guid clientId;
 
         static FleetKeeperClient()
         {
@@ -27,7 +27,7 @@ namespace Rebus.FleetKeeper.Client
             connection = new HubConnection(uri);
 
             log.Info("Creating hub proxy");
-            hubProxy = connection.CreateHubProxy("RebusHub");
+            hubProxy = connection.CreateHubProxy("FleetKeeperHub");
             //hubProxy.On("MessageToClient", (string str) => ReceiveMessage(Deserialize(str)));
 
             log.Info("Starting connection");
@@ -35,29 +35,32 @@ namespace Rebus.FleetKeeper.Client
             log.Info("Started!");
         }
 
+        public void Dispose() {}
+
         public void OnBusStarted(IBus bus)
         {
             var currentProcess = Process.GetCurrentProcess();
             var processStartInfo = currentProcess.StartInfo;
-            var fileName = !string.IsNullOrWhiteSpace(processStartInfo.FileName) ? processStartInfo.FileName : currentProcess.ProcessName;
+            var fileName = !string.IsNullOrWhiteSpace(processStartInfo.FileName)
+                               ? processStartInfo.FileName
+                               : currentProcess.ProcessName;
 
-            hubProxy.Invoke("Receive", new
-            {
-                ClientId = clientId, 
-                //InputQueueAddress = bus.Advanced.Diagnostics.InputQueueName,
-                Environment.MachineName, 
-                Os = Environment.OSVersion.ToString(), 
-                FileName = fileName
-            });
+
+            //new
+            //{
+            //    ClientId = clientId, 
+            //    //InputQueueAddress = bus.Advanced.Diagnostics.InputQueueName,
+            //    Environment.MachineName,
+            //    Os = Environment.OSVersion.ToString(),
+            //    FileName = fileName
+            //}
+
+            hubProxy.Invoke("ReceiveFromBus", "Test");
         }
 
-        public void OnDispose(IBus bus)
+        public void OnBusDispose(IBus bus)
         {
             Dispose();
-        }
-
-        public void Dispose()
-        {
         }
     }
 }

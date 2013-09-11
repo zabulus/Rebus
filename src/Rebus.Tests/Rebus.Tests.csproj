@@ -183,7 +183,7 @@
     <Compile Include="Contracts\Transports\TestTransactionality.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
-    <Compile Include="FleetKeeper\TestFleetKeeper.cs" />
+    <Compile Include="FleetKeeper\TestFleetKeeperClient.cs" />
     <Compile Include="HttpGateway\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\TestGatewayRequestReply.cs" />
     <Compile Include="HttpGateway\TestInboundService.cs" />
