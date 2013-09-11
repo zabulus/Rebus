@@ -26,14 +26,6 @@ namespace Rebus.FleetKeeper
         }
     }
 
-    public class FleetKeeperHub : Hub
-    {
-        public void AddEndpoint(string name)
-        {
-            Clients.All.addEndpoint(name);
-        }
-    }
-
     public class LoggerMiddleware : OwinMiddleware
     {
         public LoggerMiddleware(OwinMiddleware next) : base(next) {}

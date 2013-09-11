@@ -10,6 +10,11 @@ namespace Rebus
     public delegate void BusStartedEventHandler(IBus bus);
     
     /// <summary>
+    /// Delegate type that can listen to when the bus is disposed.
+    /// </summary>
+    public delegate void BusDisposedEventHandler(IBus bus);
+    
+    /// <summary>
     /// Delegate type that can listen to whenever the bus sends a logical message.
     /// </summary>
     public delegate void MessageSentEventHandler(IBus bus, string destination, object message);
@@ -59,6 +64,11 @@ namespace Rebus
         /// Event that will be raised upon bus startup
         /// </summary>
         event BusStartedEventHandler BusStarted;
+        
+        /// <summary>
+        /// Event that will be raised upon bus startup
+        /// </summary>
+        event BusDisposedEventHandler BusDisposed;
         
         /// <summary>
         /// Event that will be raised immediately after receiving a transport 

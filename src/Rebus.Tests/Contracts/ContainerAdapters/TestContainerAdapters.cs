@@ -173,6 +173,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             class SomeTestRebusEvents : IRebusEvents
             {
                 public event BusStartedEventHandler BusStarted;
+                public event BusDisposedEventHandler BusDisposed;
                 public event BeforeTransportMessageEventHandler BeforeTransportMessage;
                 public event AfterTransportMessageEventHandler AfterTransportMessage;
                 public event PoisonMessageEventHandler PoisonMessage;

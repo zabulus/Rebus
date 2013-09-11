@@ -14,6 +14,8 @@ namespace Rebus.Bus
 
         public event BusStartedEventHandler BusStarted = delegate { };
 
+        public event BusDisposedEventHandler BusDisposed = delegate { };
+
         public event MessageSentEventHandler MessageSent = delegate { };
 
         public event BeforeMessageEventHandler BeforeMessage = delegate { };
@@ -42,14 +44,19 @@ namespace Rebus.Bus
             get { return unitOfWorkManagers; }
         }
 
-        internal void RaiseMessageContextEstablished(IBus bus, IMessageContext messageContext)
-        {
-            MessageContextEstablished(bus, messageContext);
-        }
-
         internal void RaiseBusStarted(IBus bus)
         {
             BusStarted(bus);
+        }
+
+        internal void RaiseBusDisposed(IBus bus)
+        {
+            BusDisposed(bus);
+        }
+
+        internal void RaiseMessageContextEstablished(IBus bus, IMessageContext messageContext)
+        {
+            MessageContextEstablished(bus, messageContext);
         }
 
         internal void RaiseMessageSent(IBus bus, string destination, object message)
