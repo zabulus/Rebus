@@ -4,7 +4,6 @@ using Autofac;
 using Rebus.Autofac;
 using Rebus.Configuration;
 using Rebus.Testing;
-using Rhino.Mocks;
 
 namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
 {
@@ -44,11 +43,13 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
         {
             public TestMessageContext()
             {
+                Headers = new Dictionary<string, object>();
                 Items = new Dictionary<string, object>();
             }
 
             public void Dispose()
             {
+                Disposed();
             }
 
             public string ReturnAddress { get; private set; }
@@ -58,7 +59,7 @@ namespace Rebus.Tests.Contracts.ContainerAdapters.Factories
             {
             }
 
-            public event Action Disposed;
+            public event Action Disposed = delegate { };
             public object CurrentMessage { get; private set; }
             public IDictionary<string, object> Headers { get; private set; }
             public string StackTrace { get; private set; }

@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
 using NUnit.Framework;
 using log4net.Config;
+using System.Linq;
 
 namespace Rebus.Tests.Persistence
 {
@@ -38,8 +40,19 @@ namespace Rebus.Tests.Persistence
         {
         }
 
+        protected void DropTable(string tableName)
+        {
+            if (!GetTableNames()
+                     .Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
+
+            ExecuteCommand("drop table " + tableName);
+        }
+
         protected void DeleteRows(string tableName)
         {
+            if (!GetTableNames()
+                     .Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
+
             ExecuteCommand("delete from " + tableName);
         }
 

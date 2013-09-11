@@ -12,8 +12,26 @@ using Rebus.Shared;
 namespace Rebus.Serialization.Json
 {
     /// <summary>
-    /// Implementation of <see cref="ISerializeMessages"/> that uses Newtonsoft JSON.NET internally to serialize
-    /// transport messages.
+    /// Implementation of <see cref="ISerializeMessages"/> that uses Newtonsoft JSON.NET internally to serialize transport messages.
+    /// The used JSON.NET DLL is merged into Rebus, which allows it to be used by Rebus without bothering people by an extra dependency.
+    /// 
+    /// JSON.NET has the following license:
+    /// ----------------------------------------------------------------------------------------------------------------------------
+    /// Copyright (c) 2007 James Newton-King
+    /// 
+    /// Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation 
+    /// files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, 
+    /// modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software 
+    /// is furnished to do so, subject to the following conditions:
+    /// 
+    /// The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+    /// 
+    /// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    /// OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
+    /// BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF 
+    /// OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+    /// ----------------------------------------------------------------------------------------------------------------------------
+    /// Bam!1 Thanks James :)
     /// </summary>
     public class JsonMessageSerializer : ISerializeMessages
     {
@@ -27,6 +45,8 @@ namespace Rebus.Serialization.Json
         readonly CultureInfo serializationCulture = CultureInfo.InvariantCulture;
         
         readonly NonDefaultSerializationBinder binder;
+        
+        Encoding customEncoding;
 
         /// <summary>
         /// Constructs the serializer
@@ -45,14 +65,15 @@ namespace Rebus.Serialization.Json
             using (new CultureContext(serializationCulture))
             {
                 var messageAsString = JsonConvert.SerializeObject(message.Messages, Formatting.Indented, settings);
+                var encodingToUse = customEncoding ?? DefaultEncoding;
 
                 var headers = message.Headers.Clone();
                 headers[Headers.ContentType] = JsonContentTypeName;
-                headers[Headers.Encoding] = DefaultEncoding.WebName;
+                headers[Headers.Encoding] = encodingToUse.WebName;
 
                 return new TransportMessageToSend
                            {
-                               Body = DefaultEncoding.GetBytes(messageAsString),
+                               Body = encodingToUse.GetBytes(messageAsString),
                                Headers = headers,
                                Label = message.GetLabel(),
                            };
@@ -226,6 +247,16 @@ namespace Rebus.Serialization.Json
         public void AddTypeResolver(Func<TypeDescriptor, Type> resolver)
         {
             binder.Add(resolver);
+        }
+
+        /// <summary>
+        /// Overrides the default UTF-7 encoding and uses the specified encoding instead when serializing. The used encoding
+        /// is put in a header, so you don't necessarily need to specify the same encoding in order to be able to deserialize
+        /// properly.
+        /// </summary>
+        public void SpecifyEncoding(Encoding encoding)
+        {
+            customEncoding = encoding;
         }
     }
 }

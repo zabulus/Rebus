@@ -13,6 +13,7 @@ namespace Rebus.Configuration
     {
         readonly List<EventsConfigurer> eventsConfigurers = new List<EventsConfigurer>();
         readonly List<Action<ConfigurationBackbone>> decorationSteps = new List<Action<ConfigurationBackbone>>();
+        readonly Dictionary<Type, object> registry = new Dictionary<Type, object>();
         readonly IContainerAdapter adapter;
 
         /// <summary>
@@ -30,6 +31,33 @@ namespace Rebus.Configuration
 
             ActivateHandlers = adapter;
             AdditionalBehavior = new ConfigureAdditionalBehavior();
+        }
+
+        /// <summary>
+        /// Attempts to load from the registry the instance stored with the given type key.
+        /// If no instance is found, the given factory method is invoked, whereafter the
+        /// returned object is stored under the key. This mechanism allows different configurers
+        /// to cooperate and possibly configure the same instances, even though an instance might
+        /// be sitting somewhere as a decorator.
+        /// </summary>
+        public TKey LoadFromRegistry<TKey>(Func<TKey> factoryMethod)
+        {
+            if (registry.ContainsKey(typeof (TKey)))
+            {
+                return (TKey) registry[typeof (TKey)];
+            }
+
+            var instance = factoryMethod();
+            registry[typeof (TKey)] = instance;
+            return instance;
+        }
+
+        /// <summary>
+        /// Configures events
+        /// </summary>
+        public void ConfigureEvents(Action<IRebusEvents> configure)
+        {
+            configure(new EventsConfigurer(this));
         }
 
         /// <summary>

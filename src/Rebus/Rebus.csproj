@@ -55,7 +55,6 @@
       <Link>Reflection\Ponder.cs</Link>
     </Compile>
     <Compile Include="Bus\AmbientTransactionContext.cs" />
-    <Compile Include="Bus\BusMode.cs" />
     <Compile Include="Bus\DeferredMessageReDispatcher.cs" />
     <Compile Include="Bus\Dispatcher.cs" />
     <Compile Include="Bus\DueTimeoutScheduler.cs" />
@@ -101,7 +100,8 @@
     <Compile Include="Testing\FakeBus.cs" />
     <Compile Include="Testing\SagaFixture.cs" />
     <Compile Include="TimedExtensions.cs" />
-    <Compile Include="Transports\Encrypted\RijndaelEncryptionConfigurationExtensions.cs" />
+    <Compile Include="Transports\Encrypted\GZipHelper.cs" />
+    <Compile Include="Transports\Encrypted\EncryptionAndCompressionConfigurationExtensions.cs" />
     <Compile Include="Configuration\HelpText.cs" />
     <Compile Include="Configuration\IContainerAdapter.cs" />
     <Compile Include="Configuration\LoggingConfigurer.cs" />
@@ -172,11 +172,12 @@
     <Compile Include="Timeout\Timeout.cs" />
     <Compile Include="TransportMessageToSend.cs" />
     <Compile Include="Serialization\DictionarySerializer.cs" />
-    <Compile Include="Transports\Encrypted\RijndaelEncryptionTransportDecorator.cs" />
+    <Compile Include="Transports\Encrypted\EncryptionAndCompressionTransportDecorator.cs" />
     <Compile Include="Transports\Encrypted\RijndaelHelper.cs" />
     <Compile Include="Transports\Msmq\MsmqConfigurationExtension.cs" />
     <Compile Include="Shared\MsmqUtil.cs" />
     <Compile Include="Transports\OneWayClientGag.cs" />
+    <Compile Include="Transports\Sql\ConnectionHolder.cs" />
     <Compile Include="Transports\Sql\SqlServerMessageQueueConfigurationExtension.cs" />
     <Compile Include="Transports\Sql\SqlServerMessageQueue.cs" />
     <Compile Include="Transports\Sql\SqlServerMessageQueueOptions.cs" />

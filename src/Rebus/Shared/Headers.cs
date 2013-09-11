@@ -81,7 +81,31 @@ namespace Rebus.Shared
 
         /// <summary>
         /// Special header that will flow through message handlers and be automatically transferred to all outgoing messages.
+        /// Will automatically be set to a globally unique ID if it is not present on an outgoing message. Thus it may be
+        /// used to track cause/effect in messaging-based solutions.
         /// </summary>
         public const string CorrelationId = "rebus-correlation-id";
+       
+        /// <summary>
+        /// Special header that will flow though message handlers like <see cref="CorrelationId"/>, provided that it is present.
+        /// If not, nothing happens. Thus it may be used to authenticate messages and establish a user context within message handlers.
+        /// </summary>
+        public const string UserName = "rebus-username";
+
+        /// <summary>
+        /// This header indicates that the body is currently compressed. The type of the compression is specified by the value.
+        /// </summary>
+        public const string Compression = "rebus-compression";
+
+        /// <summary>
+        /// Contains the available compression types.
+        /// </summary>
+        public class CompressionTypes
+        {
+            /// <summary>
+            /// Indicates that the body has been compressed using GZip
+            /// </summary>
+            public const string GZip = "gzip";
+        }
     }
 }

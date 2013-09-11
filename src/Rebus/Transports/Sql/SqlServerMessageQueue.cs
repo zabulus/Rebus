@@ -1,19 +1,39 @@
-﻿using System;
+﻿using System.Data;
+using System;
 using System.Data.SqlClient;
+using System.Globalization;
+using System.Threading;
 using System.Transactions;
 using Rebus.Logging;
 using Rebus.Persistence.SqlServer;
 using System.Linq;
 using Rebus.Serialization;
+using IsolationLevel = System.Data.IsolationLevel;
 
 namespace Rebus.Transports.Sql
 {
     /// <summary>
-    /// http://www.mssqltips.com/sqlservertip/1257/processing-data-queues-in-sql-server-with-readpast-and-updlock/
+    /// SQL Server-based message queue that uses one single table to store all messages. Messages are received in the
+    /// way described here: http://www.mssqltips.com/sqlservertip/1257/processing-data-queues-in-sql-server-with-readpast-and-updlock/
+    /// (which means that the table is queried with a <code>top 1 ... with (updlock, readpast)</code>, allowing for many concurent reads without
+    /// unintentional locking).
+    /// (alternative implementation: http://stackoverflow.com/questions/10820105/t-sql-delete-except-top-1)
     /// </summary>
-    public class SqlServerMessageQueue : IDuplexTransport, IDisposable
+    public class SqlServerMessageQueue : IDuplexTransport
     {
+        /// <summary>
+        /// The default priority that messages will have if the priority has not explicitly been set to something else
+        /// </summary>
+        public const int DefaultMessagePriority = 128;
+
+        /// <summary>
+        /// Special header key that can be used to set the priority of a sent transport message. Please note that the
+        /// priority must be an integer value in the range [0;255] since it is mapped to a tinyint in the database.
+        /// </summary>
+        public const string PriorityHeaderKey = "rebus-sql-message-priority";
+
         const string ConnectionKey = "sql-server-message-queue-current-connection";
+        const int Max = -1;
         static ILog log;
 
         static SqlServerMessageQueue()
@@ -26,14 +46,14 @@ namespace Rebus.Transports.Sql
         readonly string messageTableName;
         readonly string inputQueueName;
 
-        readonly Func<SqlConnection> getConnection;
-        readonly Action<SqlConnection> releaseConnection;
-        readonly Action<SqlConnection> commitAction;
-        readonly Action<SqlConnection> rollbackAction;
+        readonly Func<ConnectionHolder> getConnection;
+        readonly Action<ConnectionHolder> releaseConnection;
+        readonly Action<ConnectionHolder> commitAction;
+        readonly Action<ConnectionHolder> rollbackAction;
 
         /// <summary>
-        /// Constructs the SQL Server-based Rebus transport using the specified <see cref="connectionString"/> to connect to a database,
-        /// storing messages in the table with the specified name, using <see cref="inputQueueName"/> as the logical input queue name
+        /// Constructs the SQL Server-based Rebus transport using the specified <paramref name="connectionString"/> to connect to a database,
+        /// storing messages in the table with the specified name, using <paramref cref="inputQueueName"/> as the logical input queue name
         /// when receiving messages.
         /// </summary>
         public SqlServerMessageQueue(string connectionString, string messageTableName, string inputQueueName)
@@ -46,31 +66,25 @@ namespace Rebus.Transports.Sql
                     {
                         var connection = new SqlConnection(connectionString);
                         connection.Open();
-                        log.Debug("Starting new transaction");
-                        connection.BeginTransaction();
-                        return connection;
+                        var transaction = connection.BeginTransaction(IsolationLevel.ReadCommitted);
+                        return ConnectionHolder.ForTransactionalWork(connection, transaction);
                     }
                 };
-            commitAction = c =>
+            commitAction = h =>
                 {
-                    var t = c.GetTransactionOrNull();
-                    if (t == null) return;
-
-                    log.Debug("Committing!");
-                    t.Commit();
+                    var transaction = h.Transaction;
+                    if (transaction == null) return;
+                    transaction.Commit();
                 };
-            rollbackAction = c =>
+            rollbackAction = h =>
                 {
-                    var t = c.GetTransactionOrNull();
-                    if (t == null) return;
-
-                    log.Debug("Rolling back!");
-                    t.Rollback();
+                    var transaction = h.Transaction;
+                    if (transaction == null) return;
+                    transaction.Rollback();
                 };
-            releaseConnection = c =>
+            releaseConnection = h =>
                 {
-                    log.Debug("Disposing connection");
-                    c.Dispose();
+                    h.Dispose();
                 };
         }
 
@@ -79,7 +93,7 @@ namespace Rebus.Transports.Sql
         /// storing messages in the table with the specified name, using <see cref="inputQueueName"/> as the logical input queue name
         /// when receiving messages.
         /// </summary>
-        public SqlServerMessageQueue(Func<SqlConnection> connectionFactoryMethod, string messageTableName, string inputQueueName)
+        public SqlServerMessageQueue(Func<ConnectionHolder> connectionFactoryMethod, string messageTableName, string inputQueueName)
             : this(messageTableName, inputQueueName)
         {
             getConnection = connectionFactoryMethod;
@@ -96,6 +110,11 @@ namespace Rebus.Transports.Sql
             this.inputQueueName = inputQueueName;
         }
 
+        /// <summary>
+        /// Sends the specified <see cref="TransportMessageToSend"/> to the logical queue specified by <paramref name="destinationQueueName"/>.
+        /// What actually happens, is that a row is inserted into the messages table, setting the 'recipient' column to the specified
+        /// queue.
+        /// </summary>
         public void Send(string destinationQueueName, TransportMessageToSend message, ITransactionContext context)
         {
             var connection = GetConnectionPossiblyFromContext(context);
@@ -104,22 +123,21 @@ namespace Rebus.Transports.Sql
             {
                 using (var command = connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
-
                     command.CommandText = string.Format(@"insert into [{0}] 
-                                                ([id], [headers], [label], [body], [recipient]) 
-                                                values (@id, @headers, @label, @body, @recipient)",
+                                                            ([recipient], [headers], [label], [body], [priority]) 
+                                                            values (@recipient, @headers, @label, @body, @priority)",
                                                         messageTableName);
 
-                    var id = Guid.NewGuid();
+                    var label = message.Label ?? "(no label)";
+                    log.Debug("Sending message with label {0} to {1}", label, destinationQueueName);
 
-                    log.Debug("Sending message with ID {0} to {1}", id, destinationQueueName);
+                    var priority = GetMessagePriority(message);
 
-                    command.Parameters.AddWithValue("id", id);
-                    command.Parameters.AddWithValue("headers", DictionarySerializer.Serialize(message.Headers));
-                    command.Parameters.AddWithValue("label", message.Label ?? id.ToString());
-                    command.Parameters.AddWithValue("body", message.Body);
-                    command.Parameters.AddWithValue("recipient", destinationQueueName);
+                    command.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = destinationQueueName;
+                    command.Parameters.Add("headers", SqlDbType.NVarChar, Max).Value = DictionarySerializer.Serialize(message.Headers);
+                    command.Parameters.Add("label", SqlDbType.NVarChar, Max).Value = label;
+                    command.Parameters.Add("body", SqlDbType.VarBinary, Max).Value = message.Body;
+                    command.Parameters.Add("priority", SqlDbType.TinyInt, 1).Value = priority;
 
                     command.ExecuteNonQuery();
                 }
@@ -138,102 +156,206 @@ namespace Rebus.Transports.Sql
             }
         }
 
-        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
+        static int GetMessagePriority(TransportMessageToSend message)
         {
-            AssertNotInOneWayClientMode();
+            if (!message.Headers.ContainsKey(PriorityHeaderKey))
+                return DefaultMessagePriority;
 
-            var connection = GetConnectionPossiblyFromContext(context);
+            var priorityAsString = message.Headers[PriorityHeaderKey].ToString();
 
             try
             {
-                ReceivedTransportMessage receivedTransportMessage = null;
+                var priority = int.Parse(priorityAsString);
 
-                using (var selectCommand = connection.CreateCommand())
+                if (priority < 0 || priority > 255)
                 {
-                    connection.AssignTransactionIfNecessary(selectCommand);
-
-                    selectCommand.CommandText =
-                        string.Format(
-                            @"select top 1 [id], [headers], [label], [body] from [{0}] with (updlock, readpast) where recipient = @recipient order by [seq] asc",
-                            messageTableName);
-
-                    selectCommand.Parameters.AddWithValue("recipient", inputQueueName);
-
-                    var messageId = Guid.Empty;
-
-                    using (var reader = selectCommand.ExecuteReader())
-                    {
-                        if (reader.Read())
-                        {
-                            messageId = (Guid)reader["id"];
-                            var headers = reader["headers"];
-                            var label = reader["label"];
-                            var body = reader["body"];
-
-                            var headersDictionary = DictionarySerializer.Deserialize((string)headers);
-
-                            receivedTransportMessage =
-                                new ReceivedTransportMessage
-                                    {
-                                        Id = messageId.ToString(),
-                                        Label = (string)label,
-                                        Headers = headersDictionary,
-                                        Body = (byte[])body,
-                                    };
-
-                            log.Debug("Received message with ID {0} from {1}", messageId, inputQueueName);
-                        }
-                    }
-
-                    if (receivedTransportMessage != null)
-                    {
-                        using (var deleteCommand = connection.CreateCommand())
-                        {
-                            connection.AssignTransactionIfNecessary(deleteCommand);
-
-                            deleteCommand.CommandText = string.Format("delete from [{0}] where [id] = @id",
-                                                                      messageTableName);
-                            deleteCommand.Parameters.AddWithValue("id", messageId);
-                            deleteCommand.ExecuteNonQuery();
-                        }
-                    }
+                    throw new ArgumentException(string.Format("Message priority out of range: {0}", priority));
                 }
 
-                if (!context.IsTransactional)
-                {
-                    commitAction(connection);
-                }
-
-                return receivedTransportMessage;
+                return priority;
             }
-            finally
+            catch (Exception exception)
             {
-                if (!context.IsTransactional)
-                {
-                    releaseConnection(connection);
-                }
+                throw new FormatException(
+                    string.Format(
+                        "Could not decode message priority '{0}' - message priority must be an integer value in the [0;255] range",
+                        priorityAsString), exception);
             }
         }
 
-        SqlConnection GetConnectionPossiblyFromContext(ITransactionContext context)
+        /// <summary>
+        /// Receives a message from the logical queue specified as this instance's input queue. What actually
+        /// happens, is that a row is read and locked in the messages table, whereafter it is deleted.
+        /// </summary>
+        public ReceivedTransportMessage ReceiveMessage(ITransactionContext context)
         {
-            if (!context.IsTransactional) return getConnection();
+            try
+            {
+                AssertNotInOneWayClientMode();
 
-            if (context[ConnectionKey] != null) return (SqlConnection)context[ConnectionKey];
+                var connection = GetConnectionPossiblyFromContext(context);
 
-            var sqlConnection = getConnection();
+                try
+                {
+                    ReceivedTransportMessage receivedTransportMessage = null;
 
-            context.DoCommit += () => commitAction(sqlConnection);
-            context.DoRollback += () => rollbackAction(sqlConnection);
-            context.Cleanup += () => releaseConnection(sqlConnection);
+                    using (var selectCommand = connection.Connection.CreateCommand())
+                    {
+                        selectCommand.Transaction = connection.Transaction;
 
-            context[ConnectionKey] = sqlConnection;
+                        //                    selectCommand.CommandText =
+                        //                        string.Format(
+                        //                            @"
+                        //                                ;with msg as (
+                        //	                                select top 1 [seq], [headers], [label], [body]
+                        //		                                from [{0}]
+                        //                                        with (updlock, readpast, rowlock)
+                        //		                                where [recipient] = @recipient
+                        //		                                order by [seq] asc
+                        //	                                )
+                        //                                delete msg
+                        //                                output deleted.seq, deleted.headers, deleted.body, deleted.label
+                        //",
+                        //                            messageTableName);
 
-            return sqlConnection;
+                        selectCommand.CommandText =
+                            string.Format(@"
+                                    select top 1 [seq], [headers], [label], [body], [priority]
+		                                from [{0}]
+                                        with (updlock, readpast, rowlock)
+		                                where [recipient] = @recipient
+		                                order by [priority] asc, [seq] asc
+", messageTableName);
+
+                        //                    selectCommand.CommandText =
+                        //                        string.Format(@"
+                        //delete top(1) from [{0}] 
+                        //output deleted.seq, deleted.headers, deleted.body, deleted.label
+                        //where [seq] = (
+                        //    select min([seq]) from [{0}] with (readpast, holdlock) where recipient = @recipient
+                        //)
+                        //", messageTableName);
+
+                        selectCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200)
+                                     .Value = inputQueueName;
+
+                        var seq = 0L;
+                        var priority = -1;
+
+                        using (var reader = selectCommand.ExecuteReader())
+                        {
+                            if (reader.Read())
+                            {
+                                var headers = reader["headers"];
+                                var label = reader["label"];
+                                var body = reader["body"];
+                                seq = (long) reader["seq"];
+                                priority = (byte) reader["priority"];
+
+                                var headersDictionary = DictionarySerializer.Deserialize((string) headers);
+                                var messageId = seq.ToString(CultureInfo.InvariantCulture);
+
+                                receivedTransportMessage =
+                                    new ReceivedTransportMessage
+                                        {
+                                            Id = messageId,
+                                            Label = (string) label,
+                                            Headers = headersDictionary,
+                                            Body = (byte[]) body,
+                                        };
+
+                                log.Debug("Received message with ID {0} from logical queue {1}.{2}",
+                                          messageId, messageTableName, inputQueueName);
+                            }
+                        }
+
+                        if (receivedTransportMessage != null)
+                        {
+                            using (var deleteCommand = connection.Connection.CreateCommand())
+                            {
+                                deleteCommand.Transaction = connection.Transaction;
+
+                                deleteCommand.CommandText =
+                                    string.Format(
+                                        "delete from [{0}] where [recipient] = @recipient and [priority] = @priority and [seq] = @seq",
+                                        messageTableName);
+
+                                deleteCommand.Parameters.Add("recipient", SqlDbType.NVarChar, 200)
+                                             .Value = inputQueueName;
+                                deleteCommand.Parameters.Add("seq", SqlDbType.BigInt, 8)
+                                             .Value = seq;
+                                deleteCommand.Parameters.Add("priority", SqlDbType.TinyInt, 1)
+                                             .Value = priority;
+
+                                var rowsAffected = deleteCommand.ExecuteNonQuery();
+
+                                if (rowsAffected != 1)
+                                {
+                                    throw new ApplicationException(
+                                        string.Format(
+                                            "Attempted to delete message with recipient = '{0}' and seq = {1}, but {2} rows were affected!",
+                                            inputQueueName, seq, rowsAffected));
+                                }
+                            }
+                        }
+                    }
+
+                    if (!context.IsTransactional)
+                    {
+                        commitAction(connection);
+                    }
+
+                    return receivedTransportMessage;
+                }
+                finally
+                {
+                    if (!context.IsTransactional)
+                    {
+                        releaseConnection(connection);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                // if we end up here, something bas has happened - no need to hurry, so we sleep
+                Thread.Sleep(2000);
+
+                throw new ApplicationException(
+                    string.Format("An error occurred while receiving message from {0}", inputQueueName),
+                    exception);
+            }
         }
 
+        ConnectionHolder GetConnectionPossiblyFromContext(ITransactionContext context)
+        {
+            if (!context.IsTransactional)
+            {
+                return getConnection();
+            }
+
+            if (context[ConnectionKey] != null) return (ConnectionHolder)context[ConnectionKey];
+
+            var connection = getConnection();
+
+            context.DoCommit += () => commitAction(connection);
+            context.DoRollback += () => rollbackAction(connection);
+            context.Cleanup += () => releaseConnection(connection);
+
+            context[ConnectionKey] = connection;
+
+            return connection;
+        }
+
+        /// <summary>
+        /// Gets the name of this receiver's input queue - i.e. this is the queue that this receiver
+        /// will pull messages from.
+        /// </summary>
         public string InputQueue { get { return inputQueueName; } }
 
+        /// <summary>
+        /// Gets the globally accessible adddress of this receiver's input queue - i.e. this would probably
+        /// be the input queue in some form, possible qualified by machine name or something similar.
+        /// </summary>
         public string InputQueueAddress { get { return inputQueueName; } }
 
         /// <summary>
@@ -244,7 +366,7 @@ namespace Rebus.Transports.Sql
             var connection = getConnection();
             try
             {
-                var tableNames = connection.GetTableNames();
+                var tableNames = connection.Connection.GetTableNames();
 
                 if (tableNames.Contains(messageTableName, StringComparer.OrdinalIgnoreCase))
                 {
@@ -256,43 +378,26 @@ namespace Rebus.Transports.Sql
 
                 log.Info("Table '{0}' does not exist - it will be created now", messageTableName);
 
-                using (var command = connection.CreateCommand())
+                using (var command = connection.Connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
+                    command.Transaction = connection.Transaction;
 
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
-	[id] [uniqueidentifier] NOT NULL,
+	[recipient] [nvarchar](200) NOT NULL,
+	[seq] [bigint] IDENTITY(1,1) NOT NULL,
+	[priority] [tinyint] NOT NULL,
 	[label] [nvarchar](max) NOT NULL,
 	[headers] [nvarchar](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
-	[recipient] [nvarchar](200) NOT NULL,
-	[seq] [bigint] IDENTITY(1,1) NOT NULL,
  CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
 (
-	[id] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
+	[recipient] ASC,
+	[priority] ASC,
+	[seq] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = OFF) ON [PRIMARY]
 ) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
 ", messageTableName);
-
-                    command.ExecuteNonQuery();
-                }
-
-                var indexName = string.Format("IX_{0}", messageTableName);
-
-                log.Info("Creating index '{0}' on '{1}'", indexName, messageTableName);
-
-                using (var command = connection.CreateCommand())
-                {
-                    connection.AssignTransactionIfNecessary(command);
-
-                    command.CommandText = string.Format(@"
-CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
-(
-	[recipient] ASC,
-    [seq] ASC
-)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, ONLINE = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-", indexName, messageTableName);
 
                     command.ExecuteNonQuery();
                 }
@@ -304,10 +409,6 @@ CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
                 releaseConnection(connection);
             }
             return this;
-        }
-
-        public void Dispose()
-        {
         }
 
         /// <summary>
@@ -322,14 +423,14 @@ CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
             var connection = getConnection();
             try
             {
-                using (var command = connection.CreateCommand())
+                using (var command = connection.Connection.CreateCommand())
                 {
-                    connection.AssignTransactionIfNecessary(command);
+                    command.Transaction = connection.Transaction;
 
                     command.CommandText = string.Format(@"delete from [{0}] where recipient = @recipient",
                                                         messageTableName);
 
-                    command.Parameters.AddWithValue("recipient", inputQueueName);
+                    command.Parameters.Add("recipient", SqlDbType.NVarChar, 200).Value = inputQueueName;
 
                     command.ExecuteNonQuery();
                 }
@@ -344,6 +445,9 @@ CREATE NONCLUSTERED INDEX [{0}] ON [dbo].[{1}]
             return this;
         }
 
+        /// <summary>
+        /// Creates a <see cref="SqlServerMessageQueue"/> that is capable of sending only.
+        /// </summary>
         public static SqlServerMessageQueue Sender(string connectionString, string messageTableName)
         {
             return new SqlServerMessageQueue(connectionString, messageTableName, null);

@@ -85,3 +85,63 @@
 
 * 1st go at implementing a SQL Server-based transport - can be used if you don't have MSMQ available on your machines
 * Fixed glitch in error handling while doing any kind of send that threw an exception _without including the inner exception_
+
+## 0.35.2
+
+* Better handling of errors (i.e. DON'T IGNORE ERRORS) when MSMQ receive fails
+* Optimization of SQL Server transport
+* Fixed hard-to-find bug in how `SqlServerMessageQueue` would associate commands with the ongoing `SqlTransaction`
+
+## 0.35.3
+
+* Added transport performance showdown
+
+## 0.35.4
+
+* Only one SQL roundtrip to receive a message
+* API to configure whether outgoing RabbitMQ messages should be persistent
+
+## 0.35.5
+
+* Special username header will flow like correlation ID if it is present
+
+## 0.35.6
+
+* Behavior option to allow for impersonating a proper user when the user name header is present on handled messages
+
+## 0.36.0
+
+* Updated Mongo stuff to use 1.8.1 driver and no deprecated APIs
+
+## 0.36.1
+
+* Update Mongo to 1.8.2 because that's the most recent version of the driver... duh!
+
+## 0.37.0
+
+* Added to `SqlServerMessageQueue` the ability to receive messages in prioritized order.
+
+## 0.38.0
+
+* Broke the Log4Net configuration API - sorry! But now it just adds the correlation ID to the thread context by default (i mean, why would you NOT do that?)
+
+## 0.38.1
+
+* Fixed constantly generated warning in timeout manager - thx [hagbarddenstore](https://github.com/hagbarddenstore)
+
+## 0.39.0
+
+* Added ability to compress message bodies as well.
+
+## 0.40.0
+
+* Timeout manager SQL persistence oddity fixed: Explicit bigint PK instead of compound thing that could potentially lead to missed timeouts - thx [krivin](https://github.com/krivin)
+* `IStartableBus` API extended with the ability to specify number of workers - thx [krivin](https://github.com/krivin)
+
+## 0.40.1
+
+* Added ability to use custom encoding with the built-in JSON serializer
+
+## 0.41.0
+
+* Upgraded RabbitMQ client dependency to 3.1

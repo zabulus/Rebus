@@ -10,7 +10,6 @@ using Rebus.Persistence.SqlServer;
 using Rebus.Shared;
 using Rebus.Extensions;
 using Rebus.Timeout;
-using Rebus.Transports;
 
 namespace Rebus.Bus
 {
@@ -49,7 +48,7 @@ namespace Rebus.Bus
         readonly int rebusId;
         readonly string timeoutManagerAddress;
         bool started;
-        BusMode busMode;
+        //BusMode busMode;
 
         /// <summary>
         /// Constructs the bus with the specified ways of achieving its goals.
@@ -119,22 +118,29 @@ namespace Rebus.Bus
                 .Where(r => !ReferenceEquals(null, r));
         }
 
-        /// <summary>
-        /// Starts the bus
-        /// </summary>
-        public IBus Start()
+        private static int GetConfiguredNumberOfWorkers()
         {
             const int defaultNumberOfWorkers = 1;
 
-            var numberOfWorkers = RebusConfigurationSection
+            return RebusConfigurationSection
                 .GetConfigurationValueOrDefault(s => s.Workers, defaultNumberOfWorkers)
                 .GetValueOrDefault(defaultNumberOfWorkers);
-
-            InternalStart(numberOfWorkers);
-
-            return this;
         }
 
+        /// <summary>
+        /// Starts the bus
+        /// </summary>
+        public RebusBus Start()
+        {
+            InternalStart(GetConfiguredNumberOfWorkers());
+            return this;
+        }
+        IBus IStartableBus.Start()
+        {
+            InternalStart(GetConfiguredNumberOfWorkers());
+            return this;
+        }
+ 
         /// <summary>
         /// Starts the <see cref="RebusBus"/> with the specified number of worker threads.
         /// </summary>
@@ -147,6 +153,14 @@ namespace Rebus.Bus
             return this;
         }
 
+        IBus IStartableBus.Start(int numberOfWorkers)
+        {
+            Guard.GreaterThanOrEqual(numberOfWorkers, 0, "numberOfWorkers");
+
+            InternalStart(numberOfWorkers);
+
+            return this;
+        }
 
         /// <summary>
         /// Sends the specified message to the destination as specified by the currently
@@ -170,7 +184,12 @@ namespace Rebus.Bus
         {
             Guard.NotNull(message, "message");
 
-            EnsureBusModeIsNot(BusMode.OneWayClientMode, "You cannot SendLocal when running in one-way client mode, because there's no way for the bus to receive the message you're sending.");
+            if (configureAdditionalBehavior.OneWayClientMode)
+            {
+                throw new InvalidOperationException(
+                    "You cannot SendLocal when running in one-way client mode, because" +
+                    " there's no way for the bus to receive the message you're sending.");
+            }
 
             var destinationEndpoint = receiveMessages.InputQueue;
 
@@ -320,10 +339,15 @@ namespace Rebus.Bus
             Guard.NotNull(message, "message");
             Guard.GreaterThanOrEqual(delay, TimeSpan.FromSeconds(0), "delay");
 
-            if (busMode == BusMode.OneWayClientMode && !HasReturnAddressHeader(message))
+            if (configureAdditionalBehavior.OneWayClientMode && !HasReturnAddressHeader(message))
             {
-                throw new InvalidOperationException("Defer cannot be used when the bus is in OneWayClientMode, since there " +
-                                                    "would be no destination for the TimeoutService to return to.");
+                throw new InvalidOperationException(
+                    string.Format(
+                        "Defer cannot be used when the bus is in OneWayClientMode, since there would be no" +
+                        " destination for the TimeoutService to return to. You CAN defer messages in one-way" +
+                        " mode though, if you explicitly specify a return address on the message with the" +
+                        " {0} header",
+                        Headers.ReturnAddress));
             }
 
             var customData = TimeoutReplyHandler.Serialize(message);
@@ -387,8 +411,12 @@ namespace Rebus.Bus
 
         internal void SendSubscriptionMessage<TMessage>(string destinationQueue, SubscribeAction subscribeAction)
         {
-            EnsureBusModeIsNot(BusMode.OneWayClientMode,
-                               "You cannot Subscribe/Unsubscribe when running in one-way client mode, because there's no way for the bus to receive anything from the publisher.");
+            if (configureAdditionalBehavior.OneWayClientMode)
+            {
+                throw new InvalidOperationException(
+                    "You cannot Subscribe/Unsubscribe when running in one-way client mode, because" +
+                    " there's no way for the bus to receive anything from the publisher.");
+            }
 
             var message = new SubscriptionMessage
                 {
@@ -408,11 +436,10 @@ namespace Rebus.Bus
 Not that it actually matters, I mean we _could_ just ignore subsequent calls to Start() if we wanted to - but if you're calling Start() multiple times it's most likely a sign that something is wrong, i.e. you might be running you app initialization code more than once, etc."));
             }
 
-            if (receiveMessages is OneWayClientGag)
+            if (configureAdditionalBehavior.OneWayClientMode)
             {
                 log.Info("Rebus {0} will be started in one-way client mode", rebusId);
                 numberOfWorkers = 0;
-                busMode = BusMode.OneWayClientMode;
             }
 
             InitializeServicesThatMustBeInitialized();
@@ -478,6 +505,12 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 AttachHeader(messages.First(), Headers.CorrelationId, messageContext.Headers[Headers.CorrelationId].ToString());
             }
 
+            // transfer username to reply if it is present in the current message context
+            if (messageContext.Headers.ContainsKey(Headers.UserName))
+            {
+                AttachHeader(messages.First(), Headers.UserName, messageContext.Headers[Headers.UserName].ToString());
+            }
+
             InternalSend(returnAddress, messages);
         }
 
@@ -511,20 +544,32 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             // if a return address has not been explicitly set, set ourselves as the recipient of replies if we can
             if (!headers.ContainsKey(Headers.ReturnAddress))
             {
-                if (busMode != BusMode.OneWayClientMode)
+                if (!configureAdditionalBehavior.OneWayClientMode)
                 {
                     headers[Headers.ReturnAddress] = receiveMessages.InputQueueAddress;
                 }
             }
 
-            // if we're currently handling a message with a correlation ID, make sure it flows...
-            if (MessageContext.HasCurrent && !headers.ContainsKey(Headers.CorrelationId))
+            if (MessageContext.HasCurrent)
             {
                 var messageContext = MessageContext.GetCurrent();
 
-                if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+                // if we're currently handling a message with a correlation ID, make sure it flows...
+                if (!headers.ContainsKey(Headers.CorrelationId))
                 {
-                    headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
+                    if (messageContext.Headers.ContainsKey(Headers.CorrelationId))
+                    {
+                        headers[Headers.CorrelationId] = messageContext.Headers[Headers.CorrelationId].ToString();
+                    }
+                }
+
+                // if we're currently handling a message with a user name, make sure it flows...
+                if (!headers.ContainsKey(Headers.UserName))
+                {
+                    if (messageContext.Headers.ContainsKey(Headers.UserName))
+                    {
+                        headers[Headers.UserName] = messageContext.Headers[Headers.UserName].ToString();
+                    }
                 }
             }
 
@@ -792,13 +837,6 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             log.Warn("User exception in {0}: {1}", worker.WorkerThreadName, exception);
         }
 
-        void EnsureBusModeIsNot(BusMode busModeToAvoid, string message, params object[] objs)
-        {
-            if (busMode != busModeToAvoid) return;
-
-            throw new InvalidOperationException(string.Format(message, objs));
-        }
-
         internal class HeaderContext
         {
             internal readonly List<Tuple<WeakReference, Dictionary<string, object>>> headers = new List<Tuple<WeakReference, Dictionary<string, object>>>();
@@ -838,5 +876,5 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 cleanupTimer.Dispose();
             }
         }
-    }
+   }
 }

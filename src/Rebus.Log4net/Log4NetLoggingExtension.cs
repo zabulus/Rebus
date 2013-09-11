@@ -10,45 +10,47 @@ namespace Rebus.Log4Net
     public static class Log4NetLoggingExtension
     {
         /// <summary>
-        /// Configures Rebus to use Log4net for all of its internal logging
+        /// Default Log4Net thread context key to use for setting the correlation ID of the message currently being handled.
+        /// </summary>
+        public const string DefaultCorrelationIdPropertyKey = "CorrelationId";
+
+        /// <summary>
+        /// Configures Rebus to use Log4net for all of its internal logging. Will automatically add a 'CorrelationId' variable to the Log4Net
+        /// thread context when handling messages, allowing log output to include that.
         /// </summary>
         public static void Log4Net(this LoggingConfigurer configurer)
         {
             configurer.Use(new Log4NetLoggerFactory());
+
+            SetUpEventHandler(configurer, DefaultCorrelationIdPropertyKey);
         }
 
         /// <summary>
-        /// Installs a hook that automatically transfers the correlation ID of incoming messages to the Log4Net
-        /// <see cref="ThreadContext"/>, allowing it to be included in the logging output. <see cref="propertyKey"/>
-        /// specifies the key under which the correlation ID will be set.
+        /// Configures Rebus to use Log4net for all of its internal logging. Will automatically add a correlation ID variable to the Log4Net
+        /// thread context under the key specified by <paramref name="overriddenCorrelationIdPropertyKey"/> when handling messages, 
+        /// allowing log output to include that.
         /// </summary>
-        public static RebusConfigurer TransferCorrelationIdToLog4NetThreadContext(this RebusConfigurer configurer, string propertyKey)
+        public static void Log4Net(this LoggingConfigurer configurer, string overriddenCorrelationIdPropertyKey)
         {
-            configurer.Events(e => SetLoggerPropertiesWhenAvailable(e, propertyKey));
+            configurer.Use(new Log4NetLoggerFactory());
 
-            return configurer;
+            SetUpEventHandler(configurer, overriddenCorrelationIdPropertyKey);
         }
 
-        /// <summary>
-        /// Installs a hook that automatically transfers the correlation ID of incoming messages to the Log4Net
-        /// <see cref="ThreadContext"/> under the default key 'CorrelationId', allowing it to be included in the logging output.
-        /// </summary>
-        public static RebusConfigurer TransferCorrelationIdToLog4NetThreadContext(this RebusConfigurer configurer)
+        static void SetUpEventHandler(BaseConfigurer configurer, string correlationIdPropertyKey)
         {
-            return TransferCorrelationIdToLog4NetThreadContext(configurer, "CorrelationId");
-        }
-
-        static void SetLoggerPropertiesWhenAvailable(IRebusEvents e, string propertyKey)
-        {
-            e.BeforeTransportMessage +=
-                (bus, message) =>
+            configurer.Backbone.ConfigureEvents(e =>
                 {
-                    var correlationid = message.Headers.ContainsKey(Headers.CorrelationId)
-                                            ? message.Headers[Headers.CorrelationId]
-                                            : null;
+                    e.BeforeTransportMessage +=
+                        (bus, message) =>
+                            {
+                                var correlationid = message.Headers.ContainsKey(Headers.CorrelationId)
+                                                        ? message.Headers[Headers.CorrelationId]
+                                                        : null;
 
-                    ThreadContext.Properties[propertyKey] = correlationid;
-                };
+                                ThreadContext.Properties[correlationIdPropertyKey] = correlationid;
+                            };
+                });
         }
     }
 }
