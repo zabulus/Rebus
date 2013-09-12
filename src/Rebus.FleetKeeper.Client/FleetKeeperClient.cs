@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
 using Microsoft.AspNet.SignalR.Client;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Rebus.FleetKeeper.Client.Messages;
+using Rebus.FleetKeeper.Client.Events;
 using Rebus.Logging;
 
 namespace Rebus.FleetKeeper.Client
@@ -55,12 +56,18 @@ namespace Rebus.FleetKeeper.Client
             //    FileName = fileName
             //}
 
-            hubProxy.Invoke("ReceiveFromBus", new BusStarted());
+            Send(new BusStarted(clientId));
         }
 
         public void OnBusDispose(IBus bus)
         {
             Dispose();
+        }
+
+        void Send(Event @event)
+        {
+            var data = JsonConvert.SerializeObject(@event);
+            hubProxy.Invoke("ReceiveFromBus", data);
         }
     }
 }

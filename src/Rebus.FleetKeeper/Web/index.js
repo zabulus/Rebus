@@ -3,15 +3,8 @@ function IndexController($scope) {
     var hub = $.connection.fleetKeeperHub;
     $scope.endpoints = [];
 
-    hub.client.notify = function (message) {
-        if (message == 'BusStarted') {
-            $scope.endpoints.push({ name: message });
-        }
-        
-        if (message == 'BusStopped') {
-            $scope.endpoints.pop();
-        }
-
+    hub.client.notifyBusStarted = function (message) {
+        $scope.endpoints.push({ name: message });
         $scope.$apply();
     };
     

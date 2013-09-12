@@ -1,13 +1,20 @@
-﻿using System.Data.SQLite;
+﻿using System;
+using System.Collections.Generic;
+using System.Data.SQLite;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNet.SignalR;
+using Newtonsoft.Json.Linq;
+using Rebus.FleetKeeper.Client.Events;
 
 namespace Rebus.FleetKeeper
 {
     public class FleetKeeperHub : Hub
     {
         readonly SQLiteConnection dbConnection;
+        readonly Dictionary<string, Type> handledEvents;
+
         /* On fk web client connect get a snapshot of the current status from persistence
          * 
          * When a fk server get snapshot from all busses that can gve them
@@ -29,11 +36,17 @@ namespace Rebus.FleetKeeper
 
         public FleetKeeperHub()
         {
-            dbConnection = new SQLiteConnection("Data Source=fleetkeeper.db;Version=3;New=False;Compress=True;");
+            dbConnection = new SQLiteConnection("Data Source=fleetkeeper.db;ContractVersion=3;New=False;Compress=True;");
             dbConnection.Execute(@"
                 create table if not exists events (
                 Id integer primary key autoincrement,
                 Message text)");
+
+            handledEvents = new[]
+            {
+                typeof (BusStarted), 
+                typeof (BusStopped)
+            }.ToDictionary(x => x.Name, x => x);
         }
 
         public Task AsWebClient()
@@ -46,10 +59,39 @@ namespace Rebus.FleetKeeper
             return Groups.Add(Context.ConnectionId, "busclients");
         }
 
-        public void ReceiveFromBus(object message)
+        public void ReceiveFromBus(JObject @event)
         {
-            dbConnection.Execute("insert into events (Message) values (@Message)", new {Message = message});
-            Clients.Group("webclients").notify(message.GetType());
+            Persist(@event);
+
+            Type type;
+            var eventname = (string) @event["Name"];
+            if (handledEvents.TryGetValue(eventname, out type))
+            {
+                Apply((dynamic)@event.ToObject(type));
+            }
+        }
+
+        void Persist(JObject @event)
+        {
+            dbConnection.Execute("insert into events (Message) values (@Message)", new {Message = @event.ToString()});
+        }
+
+        void Apply(BusStarted @event)
+        {
+            Clients
+                .Group("webclients")
+                .notifyBusStarted(new
+                {
+                });
+        }
+
+        void Apply(BusStopped @event)
+        {
+            Clients
+                .Group("webclients")
+                .notifyBusStopped(new
+                {
+                });
         }
 
         public void SendToBus(string message)

@@ -139,6 +139,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Rebus.FleetKeeper.Client\Rebus.FleetKeeper.Client.csproj">
+      <Project>{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}</Project>
+      <Name>Rebus.FleetKeeper.Client</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

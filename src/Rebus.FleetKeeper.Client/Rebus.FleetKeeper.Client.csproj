@@ -53,7 +53,8 @@
   <ItemGroup>
     <Compile Include="FleetKeeperClient.cs" />
     <Compile Include="FleetKeeperConfigurationExtensions.cs" />
-    <Compile Include="Messages\BusStarted.cs" />
+    <Compile Include="Events\BusStarted.cs" />
+    <Compile Include="Events\Event.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

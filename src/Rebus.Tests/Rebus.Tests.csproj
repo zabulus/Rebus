@@ -187,6 +187,7 @@
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
     <Compile Include="FleetKeeper\TestFleetKeeperClient.cs" />
+    <Compile Include="FleetKeeper\TestFleetKeeperHub.cs" />
     <Compile Include="HttpGateway\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\TestGatewayRequestReply.cs" />
     <Compile Include="HttpGateway\TestInboundService.cs" />
