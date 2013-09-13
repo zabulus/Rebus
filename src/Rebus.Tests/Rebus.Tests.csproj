@@ -186,8 +186,6 @@
     <Compile Include="Contracts\Transports\TestTransactionality.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
-    <Compile Include="FleetKeeper\TestFleetKeeperClient.cs" />
-    <Compile Include="FleetKeeper\TestFleetKeeperHub.cs" />
     <Compile Include="HttpGateway\Http\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\Http\TestInboundService.cs" />
     <Compile Include="HttpGateway\Http\TestRebusGatewayConfigurationSection.cs" />
@@ -431,6 +429,9 @@
   </ItemGroup>
   <ItemGroup>
     <WCFMetadata Include="Service References\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="FleetKeeper\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" />

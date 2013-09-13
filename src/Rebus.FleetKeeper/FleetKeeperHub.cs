@@ -62,18 +62,27 @@ namespace Rebus.FleetKeeper
         public void ReceiveFromBus(JObject @event)
         {
             Persist(@event);
+            Apply(@event);
+        }
 
+        public void SendToBus(string message)
+        {
+            Clients.All.addEndpoint(message);
+        }
+
+        internal void Persist(JObject @event)
+        {
+            dbConnection.Execute("insert into events (Message) values (@Message)", new {Message = @event.ToString()});
+        }
+
+        internal void Apply(JObject @event)
+        {
             Type type;
-            var eventname = (string) @event["Name"];
+            var eventname = (string)@event["Name"];
             if (handledEvents.TryGetValue(eventname, out type))
             {
                 Apply((dynamic)@event.ToObject(type));
             }
-        }
-
-        void Persist(JObject @event)
-        {
-            dbConnection.Execute("insert into events (Message) values (@Message)", new {Message = @event.ToString()});
         }
 
         void Apply(BusStarted @event)
@@ -92,11 +101,6 @@ namespace Rebus.FleetKeeper
                 .notifyBusStopped(new
                 {
                 });
-        }
-
-        public void SendToBus(string message)
-        {
-            Clients.All.addEndpoint(message);
         }
 
         protected override void Dispose(bool disposing)

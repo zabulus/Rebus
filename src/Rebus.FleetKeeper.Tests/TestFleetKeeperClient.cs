@@ -4,14 +4,14 @@ using Rebus.FleetKeeper.Client;
 
 namespace Rebus.Tests.FleetKeeper
 {
-    public class TestFleetKeeperHub
+    public class TestFleetKeeperClient
     {
         [Test]
         public void Test()
         {
             Configure.With(new BuiltinContainerAdapter())
-                     .Logging(x => { })
-                     .EnableFleetKeeper("http://localhost:8080");
+                .Logging(x => { })
+                .EnableFleetKeeper("http://localhost:8080");
         }
     }
 }

@@ -40,29 +40,31 @@
     </Reference>
     <Reference Include="Microsoft.AspNet.SignalR.Core, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.0.0-beta2\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
+      <HintPath>..\packages\Microsoft.AspNet.SignalR.Core.2.0.0-rc1\lib\net45\Microsoft.AspNet.SignalR.Core.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Owin, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Owin, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.Owin.1.1.0-beta2\lib\net45\Microsoft.Owin.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Owin.2.0.0-rc1\lib\net45\Microsoft.Owin.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Owin.FileSystems">
-      <HintPath>..\packages\Microsoft.Owin.FileSystems.0.24.0-pre-20624-416\lib\net40\Microsoft.Owin.FileSystems.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.Owin.Host.HttpListener, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Owin.FileSystems, Version=0.25.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.Owin.Host.HttpListener.1.1.0-beta2\lib\net45\Microsoft.Owin.Host.HttpListener.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Owin.FileSystems.0.25.0-pre-20912-624-rel\lib\net40\Microsoft.Owin.FileSystems.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Owin.Hosting, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Owin.Host.HttpListener, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.Owin.Hosting.1.1.0-beta2\lib\net40\Microsoft.Owin.Hosting.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Owin.Host.HttpListener.2.0.0-rc1\lib\net45\Microsoft.Owin.Host.HttpListener.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Owin.Security, Version=1.1.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+    <Reference Include="Microsoft.Owin.Hosting, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\packages\Microsoft.Owin.Security.1.1.0-beta2\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+      <HintPath>..\packages\Microsoft.Owin.Hosting.2.0.0-rc1\lib\net45\Microsoft.Owin.Hosting.dll</HintPath>
     </Reference>
-    <Reference Include="Microsoft.Owin.StaticFiles">
-      <HintPath>..\packages\Microsoft.Owin.StaticFiles.0.24.0-pre-20624-416\lib\net40\Microsoft.Owin.StaticFiles.dll</HintPath>
+    <Reference Include="Microsoft.Owin.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Owin.Security.2.0.0-rc1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Owin.StaticFiles, Version=0.25.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Microsoft.Owin.StaticFiles.0.25.0-pre-20912-624-rel\lib\net40\Microsoft.Owin.StaticFiles.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json, Version=4.5.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>

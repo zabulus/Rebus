@@ -8,10 +8,10 @@ namespace Rebus.FleetKeeper
     {
         public LoggerMiddleware(OwinMiddleware next) : base(next) {}
 
-        public override Task Invoke(OwinRequest request, OwinResponse response)
+        public override Task Invoke(IOwinContext context)
         {
-            Console.WriteLine(request.Uri.ToString());
-            return Next.Invoke(request, response);
+            Console.WriteLine(context.Request.Uri.ToString());
+            return Next.Invoke(context);
         }
     }
 }

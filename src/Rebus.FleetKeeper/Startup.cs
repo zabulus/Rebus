@@ -9,8 +9,8 @@ namespace Rebus.FleetKeeper
     {
         public void Configuration(IAppBuilder app)
         {
-            var config = new HubConfiguration {EnableCrossDomain = true};
-            app.MapHubs(config);
+            var config = new HubConfiguration();
+            app.MapSignalR(config);
             
             var exeFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
             var webFolder = Path.Combine(exeFolder, "Web");
