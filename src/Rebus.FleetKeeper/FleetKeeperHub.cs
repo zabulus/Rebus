@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
@@ -12,8 +13,7 @@ namespace Rebus.FleetKeeper
 {
     public class FleetKeeperHub : Hub
     {
-        readonly SQLiteConnection dbConnection;
-        readonly Dictionary<string, Type> handledEvents;
+        readonly IDbConnection dbConnection;
 
         /* On fk web client connect get a snapshot of the current status from persistence
          * 
@@ -34,19 +34,13 @@ namespace Rebus.FleetKeeper
          * 
          */
 
-        public FleetKeeperHub()
+        public FleetKeeperHub(IDbConnection dbConnection)
         {
-            dbConnection = new SQLiteConnection("Data Source=fleetkeeper.db;ContractVersion=3;New=False;Compress=True;");
+            this.dbConnection = dbConnection;
             dbConnection.Execute(@"
-                create table if not exists events (
+                create table if not exists Events (
                 Id integer primary key autoincrement,
-                Message text)");
-
-            handledEvents = new[]
-            {
-                typeof (BusStarted), 
-                typeof (BusStopped)
-            }.ToDictionary(x => x.Name, x => x);
+                Data text)");
         }
 
         public Task AsWebClient()
@@ -72,34 +66,40 @@ namespace Rebus.FleetKeeper
 
         internal void Persist(JObject @event)
         {
-            dbConnection.Execute("insert into events (Message) values (@Message)", new {Message = @event.ToString()});
+            dbConnection.Execute("insert into Events (Data) values (@Data)", new {Data = @event.ToString()});
         }
 
         internal void Apply(JObject @event)
         {
-            Type type;
             var eventname = (string)@event["Name"];
-            if (handledEvents.TryGetValue(eventname, out type))
+            switch (eventname)
             {
-                Apply((dynamic)@event.ToObject(type));
+                case "BusStarted":
+                    ApplyBusStarted(@event);
+                    break;
+                case "BusStopped":
+                    ApplyBusStopped(@event);
+                    break;
             }
         }
 
-        void Apply(BusStarted @event)
+        void ApplyBusStarted(JObject @event)
         {
             Clients
                 .Group("webclients")
                 .notifyBusStarted(new
                 {
+                    SourceBusId = @event["SourceBusId"]
                 });
         }
 
-        void Apply(BusStopped @event)
+        void ApplyBusStopped(JObject @event)
         {
             Clients
                 .Group("webclients")
                 .notifyBusStopped(new
                 {
+
                 });
         }
 

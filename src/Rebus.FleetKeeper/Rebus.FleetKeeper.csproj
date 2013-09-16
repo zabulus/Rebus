@@ -109,6 +109,9 @@
     <Folder Include="Web\js\" />
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Web\app.css">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="Web\favicon.ico">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>

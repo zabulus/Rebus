@@ -30,7 +30,6 @@ namespace Rebus.FleetKeeper.Client
 
             log.Info("Creating hub proxy");
             hubProxy = connection.CreateHubProxy("FleetKeeperHub");
-            //hubProxy.On("MessageToClient", (string str) => ReceiveMessage(Deserialize(str)));
 
             log.Info("Starting connection");
             connection.Start().Wait();
@@ -66,8 +65,7 @@ namespace Rebus.FleetKeeper.Client
 
         void Send(Event @event)
         {
-            var data = JsonConvert.SerializeObject(@event);
-            hubProxy.Invoke("ReceiveFromBus", data);
+            hubProxy.Invoke("ReceiveFromBus", JObject.FromObject(@event));
         }
     }
 }

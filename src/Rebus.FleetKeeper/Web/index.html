@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <title>FleetKeeper</title>
-        <!--<link rel="stylesheet" href="app.css"/>-->
+        <link rel="stylesheet" href="app.css"/>
         <script src="lib/jquery-2.0.3.js"></script>
         <script src="lib/jquery.signalR-2.0.0-beta2.js"></script>
         <script src="lib/angular.min.js"></script>
@@ -16,21 +16,23 @@
             <li><a href="#/routing">Routing</a></li>
             <li><a href="#/about">About</a></li>
         </ul>
+            
+        <div class="endpoints">
+            <div ng-repeat="endpoint in endpoints" class="endpoint">
+                {{endpoint.name}}
+            </div>
+        </div>
 
-        <div>
-            <ul>
-                <li ng-repeat="endpoint in endpoints">
-                    {{endpoint.name}}
-                </li>
-            </ul>
-        </div>    
-
-        <script src="/signalr/hubs"></script>
+        <!--<script src="/signalr/hubs"></script>-->
         <script type="text/javascript">
             $(function() {
-                $.connection.hub.start().done(function() {
-                    $.connection.fleetKeeperHub.server.asWebClient();
-                });
+                var scope = angular.element($('body')).scope();
+                scope.endpoints.push({ name: 'hallihallo' });
+                scope.$apply();
+
+                //$.connection.hub.start().done(function () {
+                //    $.connection.fleetKeeperHub.server.asWebClient();
+                //});
             });
         </script>
     </body>
