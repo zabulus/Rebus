@@ -1,35 +1,13 @@
 ﻿using System;
 using System.Configuration;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.ServiceProcess;
-using Microsoft.AspNet.SignalR;
 using Microsoft.Owin.Hosting;
 
 namespace Rebus.FleetKeeper.Service
 {
     partial class Service : ServiceBase
     {
-        // Declare the SetConsoleCtrlHandler function
-        // as external and receiving a delegate.
-        [DllImport("Kernel32")]
-        public static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
-
-        // A delegate type to be used as the handler routine 
-        // for SetConsoleCtrlHandler.
-        public delegate bool HandlerRoutine(CtrlTypes ctrlType);
-
-        // An enumerated type for the control messages
-        // sent to the handler routine.
-        public enum CtrlTypes
-        {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT,
-            CTRL_CLOSE_EVENT,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT
-        }
-
         public const string FullFleetKeeperServiceName = "Rebus FleetKeeper";
         public const string FleetKeeperServiceName = "FleetKeeper";
 
@@ -84,16 +62,14 @@ namespace Rebus.FleetKeeper.Service
 
             var service = new Service();
 
-            SetConsoleCtrlHandler(type =>
-                {
-                    service.OnStop();
-                    Environment.Exit(0);
-                    return false;
-                }, true);
+            var thing = new Signals();
+            thing.CtrlCPressed += () => ShutDownInteractive(service);
+            thing.CtrlBreakPressed += () => ShutDownInteractive(service);
 
             service.OnStart(args);
 
             Console.CancelKeyPress += delegate { service.OnStop(); };
+            
             while (true)
             {
                 var line = Console.ReadLine();
@@ -102,6 +78,12 @@ namespace Rebus.FleetKeeper.Service
             }
 
             service.OnStop();
+        }
+
+        static void ShutDownInteractive(Service service)
+        {
+            service.OnStop();
+            Environment.Exit(0);
         }
 
         protected override void OnStart(string[] args)
