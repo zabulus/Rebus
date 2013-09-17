@@ -3,27 +3,32 @@ using System.Runtime.InteropServices;
 
 namespace Rebus.FleetKeeper.Service
 {
-    public class Signals
+    /// <summary>
+    /// Static class (that must remain static) that allows for subscribing to process-level events
+    /// (class must remain static for the .NET <see cref="HandlerRoutine"/> to not be collected
+    /// prematurely)
+    /// </summary>
+    public static class Signals
     {
-        public Signals()
+        static Signals()
         {
             SetConsoleCtrlHandler(type =>
                 {
                     switch (type)
                     {
-                        case CtrlTypes.CTRL_C_EVENT:
+                        case CtrlTypes.CtrlCEvent:
                             CtrlCPressed();
                             break;
-                        case CtrlTypes.CTRL_BREAK_EVENT:
+                        case CtrlTypes.CtrlBreakEvent:
                             CtrlBreakPressed();
                             break;
-                        case CtrlTypes.CTRL_CLOSE_EVENT:
+                        case CtrlTypes.CtrlCloseEvent:
                             ApplicationClosed();
                             break;
-                        case CtrlTypes.CTRL_LOGOFF_EVENT:
+                        case CtrlTypes.CtrlLogoffEvent:
                             LoggedOff();
                             break;
-                        case CtrlTypes.CTRL_SHUTDOWN_EVENT:
+                        case CtrlTypes.CtrlShutdownEvent:
                             ShutDown();
                             break;
                         default:
@@ -33,34 +38,28 @@ namespace Rebus.FleetKeeper.Service
                 }, true);
         }
 
-        // Declare the SetConsoleCtrlHandler function
-        // as external and receiving a delegate.
+        public static event Action CtrlCPressed = delegate { };
+
+        public static event Action CtrlBreakPressed = delegate { };
+
+        public static event Action ApplicationClosed = delegate { };
+
+        public static event Action LoggedOff = delegate { };
+
+        public static event Action ShutDown = delegate { };
+
         [DllImport("Kernel32")]
-        public static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
+        static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
 
-        // A delegate type to be used as the handler routine 
-        // for SetConsoleCtrlHandler.
-        public delegate bool HandlerRoutine(CtrlTypes ctrlType);
+        delegate bool HandlerRoutine(CtrlTypes ctrlType);
 
-        // An enumerated type for the control messages
-        // sent to the handler routine.
-        public enum CtrlTypes
+        enum CtrlTypes
         {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT,
-            CTRL_CLOSE_EVENT,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT
+            CtrlCEvent = 0,
+            CtrlBreakEvent = 1,
+            CtrlCloseEvent = 2,
+            CtrlLogoffEvent = 5,
+            CtrlShutdownEvent = 6
         }
-
-        public event Action CtrlCPressed = delegate { };
-
-        public event Action CtrlBreakPressed = delegate { };
-
-        public event Action ApplicationClosed = delegate { };
-
-        public event Action LoggedOff = delegate { };
-
-        public event Action ShutDown = delegate { };
     }
 }

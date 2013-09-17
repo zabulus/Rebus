@@ -1,13 +1,18 @@
 ﻿using System.Data;
+using System.Reflection;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Linq;
+using log4net;
+using System.Linq;
 
 namespace Rebus.FleetKeeper
 {
     public class FleetKeeperHub : Hub
     {
+        static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         readonly IDbConnection dbConnection;
 
         /* On fk web client connect get a snapshot of the current status from persistence
@@ -32,6 +37,9 @@ namespace Rebus.FleetKeeper
         public FleetKeeperHub(IDbConnection dbConnection)
         {
             this.dbConnection = dbConnection;
+            
+            Log.Debug("Ensuring 'Events' table exists");
+
             dbConnection.Execute(@"
                 create table if not exists Events (
                 Id integer primary key autoincrement,
@@ -40,15 +48,25 @@ namespace Rebus.FleetKeeper
 
         public async Task AsWebClient()
         {
+            Log.DebugFormat("New web client: {0}", Context.ConnectionId);
+
             await Groups.Add(Context.ConnectionId, "webclients");
+
+            var events = dbConnection.Query<string>("select Data from Events")
+                                     .ToList();
             
-            var events = dbConnection.Query<string>("select Data from Events");
+            Log.DebugFormat("'Replaying' {0} events to {1}", events.Count, Context.ConnectionId);
+            
             foreach (var @event in events)
+            {
                 Apply(JObject.Parse(@event));
+            }
         }
 
         public Task AsBusClient()
         {
+            Log.DebugFormat("New bus client: {0}", Context.ConnectionId);
+
             return Groups.Add(Context.ConnectionId, "busclients");
         }
 
@@ -65,12 +83,15 @@ namespace Rebus.FleetKeeper
 
         internal void Persist(JObject @event)
         {
+            Log.DebugFormat("Inserting {0}", (string)@event["Name"]);
+
             dbConnection.Execute("insert into Events (Data) values (@Data)", new {Data = @event.ToString()});
         }
 
         internal void Apply(JObject @event)
         {
             var eventname = (string)@event["Name"];
+            
             switch (eventname)
             {
                 case "BusStarted":
@@ -104,7 +125,8 @@ namespace Rebus.FleetKeeper
 
         protected override void Dispose(bool disposing)
         {
-            dbConnection.Dispose();
+          //  Log.Info("Disposing DB connection");
+         //   dbConnection.Dispose();
         }
     }
 }

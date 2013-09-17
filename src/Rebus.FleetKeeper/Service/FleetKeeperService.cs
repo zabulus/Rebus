@@ -1,16 +1,23 @@
 ﻿using System;
 using System.Configuration;
+using System.Reflection;
 using System.ServiceProcess;
 using Microsoft.Owin.Hosting;
+using log4net;
 
 namespace Rebus.FleetKeeper.Service
 {
     partial class FleetKeeperService : ServiceBase
     {
+        static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public const string FullFleetKeeperServiceName = "Rebus FleetKeeper";
         public const string FleetKeeperServiceName = "FleetKeeper";
 
         IDisposable webApp;
+
+        static readonly object ShutDownLock = new object();
+        static volatile bool shuttingDown;
 
         public FleetKeeperService()
         {
@@ -21,16 +28,15 @@ namespace Rebus.FleetKeeper.Service
         {
             Console.WriteLine("Press 'q' or 'ctrl+c' to exit.");
 
-            var service = new FleetKeeperService();
+            var fleetKeeperService = new FleetKeeperService();
 
-            var thing = new Signals();
-            thing.CtrlCPressed += () => ShutDownInteractive(service);
-            thing.CtrlBreakPressed += () => ShutDownInteractive(service);
+            Signals.CtrlCPressed += () => ShutDownInteractive(fleetKeeperService);
+            Signals.CtrlBreakPressed += () => ShutDownInteractive(fleetKeeperService);
 
-            service.OnStart(args);
+            fleetKeeperService.OnStart(args);
 
-            Console.CancelKeyPress += delegate { service.OnStop(); };
-            
+            Console.CancelKeyPress += delegate { fleetKeeperService.OnStop(); };
+
             while (true)
             {
                 var line = Console.ReadLine();
@@ -38,13 +44,22 @@ namespace Rebus.FleetKeeper.Service
                     break;
             }
 
-            service.OnStop();
+            fleetKeeperService.OnStop();
         }
 
         static void ShutDownInteractive(FleetKeeperService fleetKeeperService)
         {
-            fleetKeeperService.OnStop();
-            Environment.Exit(0);
+            if (shuttingDown) return;
+
+            lock (ShutDownLock)
+            {
+                if (shuttingDown) return;
+
+                shuttingDown = true;
+
+                fleetKeeperService.OnStop();
+                Environment.Exit(0);
+            }
         }
 
         protected override void OnStart(string[] args)
@@ -52,7 +67,7 @@ namespace Rebus.FleetKeeper.Service
             var url = ConfigurationManager.AppSettings["listenUri"];
             webApp = WebApp.Start<Startup>(url);
 
-            Console.WriteLine("FleetKeeper is listening on {0}", url);
+            Log.InfoFormat("FleetKeeper is listening on {0}", url);
         }
 
         protected override void OnStop()
@@ -63,7 +78,8 @@ namespace Rebus.FleetKeeper.Service
             {
                 webApp = null;
 
-                Console.WriteLine("Shutting down FleetKeeper");
+                Log.Info("Shutting down FleetKeeper");
+
                 disposable.Dispose();
             }
         }
