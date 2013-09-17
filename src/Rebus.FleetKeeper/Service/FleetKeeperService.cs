@@ -25,21 +25,21 @@ namespace Rebus.FleetKeeper.Service
             switch (args.FirstOrDefault())
             {
                 case "-h":
-                    Console.WriteLine("FleetKeeperService.exe [-i(nstall)|-u(ninstall)|-c(onsole)]");
+                    Console.WriteLine("Rebus.FleetKeeper.exe [-i(nstall)|-u(ninstall)|-c(onsole)]");
                     break;
 
                 case "-i":
-                case "install":
+                case "-install":
                     ServiceInstaller.Install(args);
                     break;
 
                 case "-u":
-                case "uninstall":
+                case "-uninstall":
                     ServiceInstaller.Uninstall(args);
                     break;
 
                 case "-c":
-                case "console":
+                case "-console":
                     RunAsConsole(args);
                     break;
 
