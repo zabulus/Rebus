@@ -1,6 +1,6 @@
 ﻿namespace Rebus.FleetKeeper.Service
 {
-    partial class Service
+    partial class FleetKeeperService
     {
         /// <summary> 
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             components = new System.ComponentModel.Container();
-            this.ServiceName = "Service";
+            this.ServiceName = "FleetKeeperService";
         }
 
         #endregion

@@ -32,7 +32,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup>
-    <StartupObject>Rebus.FleetKeeper.Service.Service</StartupObject>
+    <StartupObject>Rebus.FleetKeeper.Service.FleetKeeperService</StartupObject>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Dapper">
@@ -108,7 +108,7 @@
     <Compile Include="Service\Service.Designer.cs">
       <DependentUpon>Service\Service.cs</DependentUpon>
     </Compile>
-    <Compile Include="Service\Service.cs">
+    <Compile Include="Service\FleetKeeperService.cs">
       <SubType>Component</SubType>
     </Compile>
   </ItemGroup>

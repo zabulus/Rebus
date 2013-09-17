@@ -6,26 +6,26 @@ using Microsoft.Owin.Hosting;
 
 namespace Rebus.FleetKeeper.Service
 {
-    partial class Service : ServiceBase
+    partial class FleetKeeperService : ServiceBase
     {
         public const string FullFleetKeeperServiceName = "Rebus FleetKeeper";
         public const string FleetKeeperServiceName = "FleetKeeper";
 
         IDisposable webApp;
 
-        public Service()
+        public FleetKeeperService()
         {
             InitializeComponent();
         }
 
         static void Main(string[] args)
         {
-            var service = new Service();
+            var service = new FleetKeeperService();
 
             switch (args.FirstOrDefault())
             {
                 case "-h":
-                    Console.WriteLine("Service.exe [-i(nstall)|-u(ninstall)|-c(onsole)]");
+                    Console.WriteLine("FleetKeeperService.exe [-i(nstall)|-u(ninstall)|-c(onsole)]");
                     break;
 
                 case "-i":
@@ -60,7 +60,7 @@ namespace Rebus.FleetKeeper.Service
         {
             Console.WriteLine("Press 'q' or 'ctrl+c' to exit.");
 
-            var service = new Service();
+            var service = new FleetKeeperService();
 
             var thing = new Signals();
             thing.CtrlCPressed += () => ShutDownInteractive(service);
@@ -80,9 +80,9 @@ namespace Rebus.FleetKeeper.Service
             service.OnStop();
         }
 
-        static void ShutDownInteractive(Service service)
+        static void ShutDownInteractive(FleetKeeperService fleetKeeperService)
         {
-            service.OnStop();
+            fleetKeeperService.OnStop();
             Environment.Exit(0);
         }
 

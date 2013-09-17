@@ -11,9 +11,9 @@ namespace Rebus.FleetKeeper.Service
     {
         public ServiceInstaller()
         {
-            Description = Service.FullFleetKeeperServiceName;
-            DisplayName = Service.FullFleetKeeperServiceName;
-            ServiceName = Service.FleetKeeperServiceName;
+            Description = FleetKeeperService.FullFleetKeeperServiceName;
+            DisplayName = FleetKeeperService.FullFleetKeeperServiceName;
+            ServiceName = FleetKeeperService.FleetKeeperServiceName;
             
             StartType = ServiceStartMode.Automatic;
         }
@@ -33,7 +33,7 @@ namespace Rebus.FleetKeeper.Service
             try
             {
                 Console.WriteLine(undo ? "uninstalling" : "installing");
-                using (var inst = new AssemblyInstaller(typeof(Service).Assembly, args))
+                using (var inst = new AssemblyInstaller(typeof(FleetKeeperService).Assembly, args))
                 {
                     IDictionary state = new Hashtable();
                     inst.UseNewContext = true;
