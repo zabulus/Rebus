@@ -63,8 +63,8 @@
     <RemoveDir Directories="$(OutputDirectory)" ContinueOnError="true"/>
     <MakeDir Directories="$(OutputDirectory)"/>
     
-    <!--<MSBuild Projects="@(TimeoutProjects)" Properties="Configuration=Release"/>-->
-    <Exec Command="$(NuGet) pack $(TimeoutProjectDir)\Rebus.Timeout.nuspec -OutputDirectory $(OutputDirectory)"/>
+    <MSBuild Projects="@(TimeoutProjects)" Properties="Configuration=Release"/>
+    <Exec Command="$(NuGet) pack $(TimeoutProjectDir)\Rebus.Timeout.nuspec -OutputDirectory $(OutputDirectory) -NoPackageAnalysis"/>
   </Target>
   
   <Target Name="clean_output_folder">

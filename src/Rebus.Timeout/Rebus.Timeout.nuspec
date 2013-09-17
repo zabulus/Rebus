@@ -2,7 +2,7 @@
 <package>
   <metadata>
     <id>Rebus.Timeout</id>
-    <version>0.0.1</version>
+    <version>1.0.0</version>
     <title>Rebus.Timeout</title>
     <authors>mookid8000</authors>
     <owners>mookid8000</owners>
@@ -15,7 +15,8 @@
     <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
     <dependencies>
       <dependency id="log4net" version="2.0.0" />
-      <dependency id="Topshelf" version="2.3.0.0" />
+      <dependency id="Topshelf" version="3.1.1.0" />
+      <dependency id="Topshelf.Log4Net" version="3.1.1.0" />
     </dependencies>
   </metadata>
   <files>
