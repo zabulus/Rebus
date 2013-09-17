@@ -1,27 +1,49 @@
 ﻿using System;
-using System.Configuration;
-using Microsoft.AspNet.SignalR;
-using Microsoft.Owin.Hosting;
+using System.Linq;
+using System.ServiceProcess;
+using Rebus.FleetKeeper.Service;
+using ServiceInstaller = Rebus.FleetKeeper.Service.ServiceInstaller;
 
 namespace Rebus.FleetKeeper
 {
     public class Program
     {
-        //public static int Main()
-        //{
-        //    var url = ConfigurationManager.AppSettings["listenUri"];
-        //    using (WebApp.Start<Startup>(url))
-        //    {
-        //        Console.WriteLine("FleetKeeper is listening on {0}", url);
-        //        while (true)
-        //        {
-        //            var name = Console.ReadLine();
-        //            var context = GlobalHost.ConnectionManager.GetHubContext<FleetKeeperHub>();
-        //            context.Clients.All.addEndpoint(name);
-        //        }
-        //    }
+        static void Main(string[] args)
+        {
+            var service = new FleetKeeperService();
 
-        //    return 0;
-        //}
+            switch (args.FirstOrDefault())
+            {
+                case "-h":
+                    Console.WriteLine("Rebus.FleetKeeper.exe [-i(nstall)|-u(ninstall)|-c(onsole)]");
+                    break;
+
+                case "-i":
+                case "-install":
+                    ServiceInstaller.Install(args);
+                    break;
+
+                case "-u":
+                case "-uninstall":
+                    ServiceInstaller.Uninstall(args);
+                    break;
+
+                case "-c":
+                case "-console":
+                    FleetKeeperService.RunAsConsole(args);
+                    break;
+
+                default:
+                    if (Environment.UserInteractive)
+                    {
+                        FleetKeeperService.RunAsConsole(args);
+                        return;
+                    }
+                    
+                    ServiceBase.Run(service);
+                    break;
+
+            }
+        }
     }
 }

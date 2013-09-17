@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Configuration;
-using System.Linq;
 using System.ServiceProcess;
 using Microsoft.Owin.Hosting;
 
@@ -18,45 +17,7 @@ namespace Rebus.FleetKeeper.Service
             InitializeComponent();
         }
 
-        static void Main(string[] args)
-        {
-            var service = new FleetKeeperService();
-
-            switch (args.FirstOrDefault())
-            {
-                case "-h":
-                    Console.WriteLine("Rebus.FleetKeeper.exe [-i(nstall)|-u(ninstall)|-c(onsole)]");
-                    break;
-
-                case "-i":
-                case "-install":
-                    ServiceInstaller.Install(args);
-                    break;
-
-                case "-u":
-                case "-uninstall":
-                    ServiceInstaller.Uninstall(args);
-                    break;
-
-                case "-c":
-                case "-console":
-                    RunAsConsole(args);
-                    break;
-
-                default:
-                    if (Environment.UserInteractive)
-                    {
-                        RunAsConsole(args);
-                        return;
-                    }
-                    
-                    Run(service);
-                    break;
-
-            }
-        }
-
-        static void RunAsConsole(string[] args)
+        public static void RunAsConsole(string[] args)
         {
             Console.WriteLine("Press 'q' or 'ctrl+c' to exit.");
 
