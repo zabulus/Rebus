@@ -12,12 +12,9 @@ namespace Rebus.FleetKeeper
         {
             var config = new HubConfiguration();
 
-            config.Resolver.Register(
-                typeof (FleetKeeperHub),
-                () => new FleetKeeperHub(
-                          new SQLiteConnection("Data Source=fleetkeeper.db;Version=3;New=False;Compress=True;"),
-                          new[] { typeof(BusAggregate) }));
-
+            config.Resolver.Register(typeof (FleetKeeperHub), 
+                () => new FleetKeeperHub(new SQLiteConnection("Data Source=fleetkeeper.db;Version=3;New=False;Compress=True;")));
+                          
             app.MapSignalR(config);
 
             var exeFolder = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);

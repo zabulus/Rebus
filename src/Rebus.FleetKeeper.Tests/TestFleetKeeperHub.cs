@@ -22,7 +22,7 @@ namespace Rebus.FleetKeeper.Tests
             dbConnection.Open();
 
             aggregate = new TestAggregate();
-            hub = new FleetKeeperHub(dbConnection, new[] { typeof(TestAggregate) })
+            hub = new FleetKeeperHub(dbConnection)
             {
                 Clients = A.Fake<IHubCallerConnectionContext>()
             };

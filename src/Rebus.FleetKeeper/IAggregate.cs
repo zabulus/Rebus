@@ -6,12 +6,16 @@ namespace Rebus.FleetKeeper
 {
     public abstract class Aggregate
     {
-        public void LoadFromHistory(IEnumerable<JObject> @events)
+        public int LoadFromHistory(IEnumerable<JObject> @events)
         {
+            var count = 0;
             foreach (var @event in events)
             {
                 Apply(@event, false);
+                count++;
             }
+
+            return count;
         }
 
         public void Apply(JObject @event, bool applyToClient)

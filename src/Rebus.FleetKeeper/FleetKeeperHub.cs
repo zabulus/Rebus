@@ -2,40 +2,28 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Linq;
+using log4net;
+using System.Linq;
 
 namespace Rebus.FleetKeeper
 {
     public class FleetKeeperHub : Hub
     {
-        readonly IDbConnection dbConnection;
+        static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        /* On fk web client connect get a snapshot of the current status from persistence
-         * 
-         * When a fk server get snapshot from all busses that can gve them
-         * When a bus is started get snapshot from bus
-         * 
-         * Snapshot: number of messages currently in inputqueue and error queue that are for this bus
-         * 
-         * 
-         * Bus started
-         * Transport message received
-         * Message handled/failed
-         * Message failed
-         * Bus stopped
-         * Log appended
-         *
-         *
-         * 
-         */
+        readonly IDbConnection dbConnection;
 
         public FleetKeeperHub(IDbConnection dbConnection)
         {
             this.dbConnection = dbConnection;
             
+            Log.Debug("Ensuring 'Events' table exists");
+
             dbConnection.Execute(@"
                 create table if not exists Events (
                 Id integer primary key autoincrement,
@@ -44,6 +32,8 @@ namespace Rebus.FleetKeeper
 
         public async Task AsWebClient()
         {
+            Log.DebugFormat("New web client: {0}", Context.ConnectionId);
+
             await Groups.Add(Context.ConnectionId, "webclients");
 
             var aggregate = LoadAggregate();
@@ -52,6 +42,8 @@ namespace Rebus.FleetKeeper
 
         public Task AsBusClient()
         {
+            Log.DebugFormat("New bus client: {0}", Context.ConnectionId);
+
             return Groups.Add(Context.ConnectionId, "busclients");
         }
 
@@ -68,6 +60,8 @@ namespace Rebus.FleetKeeper
 
         internal void Persist(JObject @event)
         {
+            Log.DebugFormat("Inserting {0}", (string)@event["Name"]);
+
             dbConnection.Execute("insert into Events (Data) values (@Data)", new {Data = @event.ToString()});
         }
 
@@ -81,12 +75,16 @@ namespace Rebus.FleetKeeper
         {
             var events = dbConnection.Query<string>("select Data from Events");
             var aggregate = (Aggregate) Activator.CreateInstance(typeof (BusAggregate), this);
-            aggregate.LoadFromHistory(events.Select(JObject.Parse));
+            var numberOfEvents = aggregate.LoadFromHistory(events.Select(JObject.Parse));
+            
+            Log.DebugFormat("'Replaying' {0} events to {1}", numberOfEvents, Context.ConnectionId);
+
             return aggregate;
         }
 
         protected override void Dispose(bool disposing)
         {
+            Log.Info("Disposing DB connection");
             dbConnection.Dispose();
         }
     }
