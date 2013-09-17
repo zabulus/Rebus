@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Data.SQLite;
-using System.Linq;
+﻿using System.Data;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Linq;
-using Rebus.FleetKeeper.Client.Events;
 
 namespace Rebus.FleetKeeper
 {
