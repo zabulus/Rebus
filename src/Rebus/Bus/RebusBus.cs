@@ -16,7 +16,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Implements <see cref="IBus"/> as Rebus would do it.
     /// </summary>
-    public class RebusBus : IStartableBus, IBus, IAdvancedBus
+    public class RebusBus : IStartableBus, IBus, IAdvancedBus, IRebusDiagnostics
     {
         static ILog log;
 
@@ -42,7 +42,6 @@ namespace Rebus.Bus
         readonly RebusBatchOperations batch;
         readonly DueTimeoutScheduler dueTimeoutScheduler;
         readonly IRebusRouting routing;
-        readonly IRebusDiagnostics diagnostics;
 
         static int rebusIdCounter;
         readonly int rebusId;
@@ -80,7 +79,6 @@ namespace Rebus.Bus
 
             batch = new RebusBatchOperations(determineMessageOwnership, storeSubscriptions, this);
             routing = new RebusRouting(this);
-            diagnostics = new RebusDiagnostics();
 
             rebusId = Interlocked.Increment(ref rebusIdCounter);
 
@@ -102,20 +100,22 @@ namespace Rebus.Bus
             }
         }
 
-        IEnumerable<object> InjectedServices()
+        IEnumerable<object> InjectedServices
         {
-            return new object[]
-                       {
-                           activateHandlers,
-                           headerContext, sendMessages, receiveMessages,
-                           storeSubscriptions, storeSagaData,
-                           dueTimeoutScheduler, determineMessageOwnership,
-                           serializeMessages,
-                           inspectHandlerPipeline,
-                           errorTracker,
-                           storeTimeouts
-                       }
-                .Where(r => !ReferenceEquals(null, r));
+            get
+            {
+                return new object[]
+                {
+                    activateHandlers,
+                    headerContext, sendMessages, receiveMessages,
+                    storeSubscriptions, storeSagaData,
+                    dueTimeoutScheduler, determineMessageOwnership,
+                    serializeMessages,
+                    inspectHandlerPipeline,
+                    errorTracker,
+                    storeTimeouts
+                }.Where(r => !ReferenceEquals(null, r));
+            }
         }
 
         private static int GetConfiguredNumberOfWorkers()
@@ -264,7 +264,7 @@ namespace Rebus.Bus
 
         public IRebusDiagnostics Diagnostics
         {
-            get { return diagnostics; }
+            get { return this; }
         }
 
         /// <summary>
@@ -456,7 +456,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
 
         void InitializeServicesThatMustBeInitialized()
         {
-            foreach (var mustBeInitialized in InjectedServices().OfType<INeedInitializationBeforeStart>())
+            foreach (var mustBeInitialized in InjectedServices.OfType<INeedInitializationBeforeStart>())
             {
                 log.Info("Initializing {0}", mustBeInitialized.GetType());
                 mustBeInitialized.Initialize();
@@ -713,7 +713,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
             SetNumberOfWorkers(0);
 
-            var disposables = InjectedServices()
+            var disposables = InjectedServices
                 .Except(new object[] { activateHandlers })
                 .OfType<IDisposable>()
                 .Distinct();
@@ -878,5 +878,13 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 cleanupTimer.Dispose();
             }
         }
-   }
+
+        /// <summary>
+        /// Get all instances of services injected to the bus
+        /// </summary>
+        public IReceiveMessages ReceiveMessagesQueue
+        {
+            get { return receiveMessages; }
+        }
+    }
 }

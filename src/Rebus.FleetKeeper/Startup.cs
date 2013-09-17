@@ -15,7 +15,8 @@ namespace Rebus.FleetKeeper
             config.Resolver.Register(
                 typeof (FleetKeeperHub),
                 () => new FleetKeeperHub(
-                          new SQLiteConnection("Data Source=fleetkeeper.db;Version=3;New=False;Compress=True;")));
+                          new SQLiteConnection("Data Source=fleetkeeper.db;Version=3;New=False;Compress=True;"),
+                          new[] { typeof(BusAggregate) }));
 
             app.MapSignalR(config);
 

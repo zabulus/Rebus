@@ -70,14 +70,14 @@ ul.menu
     height: 30px;    
 }
 
-.endpoints 
+.busses 
 {
     display: table;
     height: 100%;
     border-spacing: 10px 0;
 }
 
-.endpoint 
+.bus 
 {
     display: table-cell;
 
@@ -97,7 +97,7 @@ ul.menu
     box-shadow: #000000 0px 1px 3px;
 }
 
-.endpoint h1 
+.bus h1 
 {
 	font-weight: bold;
     text-transform: uppercase;

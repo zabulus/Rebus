@@ -90,6 +90,7 @@
     <Compile Include="IDuplexTransport.cs" />
     <Compile Include="IMutateMessages.cs" />
     <Compile Include="INeedInitializationBeforeStart.cs" />
+    <Compile Include="IRebusDiagnostics.cs" />
     <Compile Include="ITransactionContext.cs" />
     <Compile Include="Logging\GhettoFileLoggerFactory.cs" />
     <Compile Include="MultipleSagaHandlersException.cs" />

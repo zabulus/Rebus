@@ -1,16 +1,23 @@
-﻿
-function IndexController($scope) {
+﻿function IndexController($scope) {
     var hub = $.connection.fleetKeeperHub;
-    $scope.endpoints = [];
+    $scope.busses = [];
 
-    hub.client.notifyBusStarted = function (message) {
-        $scope.endpoints.push({ name: message });
-        $scope.$apply();
+    hub.client.setBusses = function (busses) {
+        $scope.$apply(function() {
+            $scope.busses = busses;
+        });
+    };
+
+    hub.client.addBus = function (bus) {
+        $scope.$apply(function() {
+            $scope.busses.push(bus);
+        });
     };
     
-    hub.client.notifyBusStopped = function (message) {
-        $scope.endpoints.pop();
-        $scope.$apply();
+    hub.client.removeBus = function (id) {
+        $scope.$apply(function() {
+             $scope.busses.splice(_.findWhere($scope.busses, { id: id }));
+        });
     };
     
     $scope.send = function () {

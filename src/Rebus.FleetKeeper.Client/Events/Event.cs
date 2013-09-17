@@ -4,22 +4,18 @@ namespace Rebus.FleetKeeper.Client.Events
 {
     public abstract class Event
     {
-        protected Event(Guid busId)
+        protected Event()
         {
-            SourceBusId = busId;
-
+            Name = GetType().Name;
             Id = Guid.NewGuid();
             Timestamp = DateTimeOffset.UtcNow;
         }
 
+        public string Name { get; set; }
         public Guid Id { get; set; }
-        public Guid SourceBusId { get; set; }
+        public Guid BusClientId { get; set; }
+        public string Endpoint { get; set; }
         public DateTimeOffset Timestamp { get; set; }
-        public abstract int ContractVersion { get; }
-
-        public string Name
-        {
-            get { return GetType().Name; }
-        }
+        public int SchemaVersion { get; set; }
     }
 }

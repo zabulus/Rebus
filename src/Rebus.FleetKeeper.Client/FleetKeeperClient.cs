@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Linq;
 using Microsoft.AspNet.SignalR.Client;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Rebus.FleetKeeper.Client.Events;
 using Rebus.Logging;
@@ -46,6 +46,7 @@ namespace Rebus.FleetKeeper.Client
                                ? processStartInfo.FileName
                                : currentProcess.ProcessName;
 
+
             //new
             //{
             //    ClientId = clientId, 
@@ -55,11 +56,23 @@ namespace Rebus.FleetKeeper.Client
             //    FileName = fileName
             //}
 
-            Send(new BusStarted(clientId));
+            var receiveMessages = bus.Advanced.Diagnostics.ReceiveMessagesQueue;
+            Send(new BusStarted
+            {
+                BusClientId = clientId,
+                Endpoint = receiveMessages.InputQueueAddress
+            });
         }
 
-        public void OnBusDispose(IBus bus)
+        public void OnBusDisposed(IBus bus)
         {
+            var receiveMessages = bus.Advanced.Diagnostics.ReceiveMessagesQueue;
+            Send(new BusStopped
+            {
+                BusClientId = clientId,
+                Endpoint = receiveMessages.InputQueueAddress
+            });
+
             Dispose();
         }
 

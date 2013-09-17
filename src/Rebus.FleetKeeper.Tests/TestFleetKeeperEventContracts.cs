@@ -21,9 +21,10 @@ namespace Rebus.FleetKeeper.Tests
         public void BusStartedHasContract()
         {
             AssertHasProperty<BusStarted, string>("N" + "ame");
-            AssertHasProperty<BusStarted, int>("C" + "ontractVersion");
+            AssertHasProperty<BusStarted, int>("S" + "chemaVersion");
             AssertHasProperty<BusStarted, Guid>("I" + "d");
-            AssertHasProperty<BusStarted, Guid>("S" + "ourceBusId");
+            AssertHasProperty<BusStarted, Guid>("B" + "usClientId");
+            AssertHasProperty<BusStarted, string>("E" + "ndpoint");
             AssertHasProperty<BusStarted, DateTimeOffset>("T" + "imestamp");
         }
 

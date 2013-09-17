@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Configuration;
-using System.Data.SQLite;
 using Microsoft.AspNet.SignalR;
 using Microsoft.Owin.Hosting;
-using Dapper;
 
 namespace Rebus.FleetKeeper
 {

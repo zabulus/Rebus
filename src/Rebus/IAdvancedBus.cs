@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Rebus
 {
@@ -26,15 +27,5 @@ namespace Rebus
         /// Gives access to Rebus' diagnostics operations and information.
         /// </summary>
         IRebusDiagnostics Diagnostics { get; }
-    }
-
-    public interface IRebusDiagnostics
-    {
-        
-    }
-
-    public class RebusDiagnostics : IRebusDiagnostics
-    {
-        
     }
 }

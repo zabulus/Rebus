@@ -4,21 +4,17 @@ namespace Rebus.FleetKeeper.Client.Events
 {
     public class BusStarted : Event
     {
-        public BusStarted(Guid busId) : base(busId) {}
-
-        public override int ContractVersion
+        public BusStarted()
         {
-            get { return 1; }
+            SchemaVersion = 1;
         }
     }
 
     public class BusStopped : Event
     {
-        public BusStopped(Guid busId) : base(busId) {}
-
-        public override int ContractVersion
+        public BusStopped()
         {
-            get { return 1; }
+            SchemaVersion = 1;
         }
     }
 }

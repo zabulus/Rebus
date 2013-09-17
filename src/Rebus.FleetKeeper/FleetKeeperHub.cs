@@ -1,4 +1,7 @@
-﻿using System.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Microsoft.AspNet.SignalR;
@@ -32,6 +35,7 @@ namespace Rebus.FleetKeeper
         public FleetKeeperHub(IDbConnection dbConnection)
         {
             this.dbConnection = dbConnection;
+            
             dbConnection.Execute(@"
                 create table if not exists Events (
                 Id integer primary key autoincrement,
@@ -41,10 +45,9 @@ namespace Rebus.FleetKeeper
         public async Task AsWebClient()
         {
             await Groups.Add(Context.ConnectionId, "webclients");
-            
-            var events = dbConnection.Query<string>("select Data from Events");
-            foreach (var @event in events)
-                Apply(JObject.Parse(@event));
+
+            var aggregate = LoadAggregate();
+            aggregate.ApplyStateToClient();
         }
 
         public Task AsBusClient()
@@ -68,38 +71,18 @@ namespace Rebus.FleetKeeper
             dbConnection.Execute("insert into Events (Data) values (@Data)", new {Data = @event.ToString()});
         }
 
-        internal void Apply(JObject @event)
+        public void Apply(JObject @event)
         {
-            var eventname = (string)@event["Name"];
-            switch (eventname)
-            {
-                case "BusStarted":
-                    ApplyBusStarted(@event);
-                    break;
-                case "BusStopped":
-                    ApplyBusStopped(@event);
-                    break;
-            }
+            var aggregate = LoadAggregate();
+            aggregate.Apply(@event, applyToClient: true);
         }
 
-        void ApplyBusStarted(JObject @event)
+        Aggregate LoadAggregate()
         {
-            Clients
-                .Group("webclients")
-                .notifyBusStarted(new
-                {
-                    SourceBusId = @event["SourceBusId"]
-                });
-        }
-
-        void ApplyBusStopped(JObject @event)
-        {
-            Clients
-                .Group("webclients")
-                .notifyBusStopped(new
-                {
-
-                });
+            var events = dbConnection.Query<string>("select Data from Events");
+            var aggregate = (Aggregate) Activator.CreateInstance(typeof (BusAggregate), this);
+            aggregate.LoadFromHistory(events.Select(JObject.Parse));
+            return aggregate;
         }
 
         protected override void Dispose(bool disposing)
