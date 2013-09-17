@@ -17,22 +17,20 @@
             <li><a href="#/about">About</a></li>
         </ul>
             
-        <div class="endpoints">
-            <div ng-repeat="endpoint in endpoints" class="endpoint">
-                {{endpoint.name}}
-            </div>
-        </div>
+        <table class="endpoints">
+            <tr>
+                <td ng-repeat="endpoint in endpoints" class="endpoint">
+                    {{endpoint.name}}
+                </td>    
+            </tr>
+        </table>
 
-        <!--<script src="/signalr/hubs"></script>-->
+        <script src="/signalr/hubs"></script>
         <script type="text/javascript">
             $(function() {
-                var scope = angular.element($('body')).scope();
-                scope.endpoints.push({ name: 'hallihallo' });
-                scope.$apply();
-
-                //$.connection.hub.start().done(function () {
-                //    $.connection.fleetKeeperHub.server.asWebClient();
-                //});
+                $.connection.hub.start().done(function() {
+                    $.connection.fleetKeeperHub.server.asWebClient();
+                });
             });
         </script>
     </body>

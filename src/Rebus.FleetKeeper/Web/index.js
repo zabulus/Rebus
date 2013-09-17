@@ -8,6 +8,11 @@ function IndexController($scope) {
         $scope.$apply();
     };
     
+    hub.client.notifyBusStopped = function (message) {
+        $scope.endpoints.pop();
+        $scope.$apply();
+    };
+    
     $scope.send = function () {
         $.connection.myHub.server.send('asger');
     };

@@ -43,9 +43,13 @@ namespace Rebus.FleetKeeper
                 Data text)");
         }
 
-        public Task AsWebClient()
+        public async Task AsWebClient()
         {
-            return Groups.Add(Context.ConnectionId, "webclients");
+            await Groups.Add(Context.ConnectionId, "webclients");
+            
+            var events = dbConnection.Query<string>("select Data from Events");
+            foreach (var @event in events)
+                Apply(JObject.Parse(@event));
         }
 
         public Task AsBusClient()
