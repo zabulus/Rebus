@@ -108,12 +108,10 @@
       <SubType>Component</SubType>
     </Compile>
     <Compile Include="Startup.cs" />
-    <Compile Include="Service\Service.Designer.cs">
-      <DependentUpon>Service\Service.cs</DependentUpon>
+    <Compile Include="Service\FleetKeeperService.Designer.cs">
+      <DependentUpon>FleetKeeperService.cs</DependentUpon>
     </Compile>
-    <Compile Include="Service\FleetKeeperService.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Include="Service\FleetKeeperService.cs"/>
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
