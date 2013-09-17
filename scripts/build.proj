@@ -1,38 +1,11 @@
 ﻿<Project DefaultTargets="build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Microsoft.Build.Tasks.XmlPoke" AssemblyName="Microsoft.Build.Tasks.v4.0, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a"/>
-
-  <ItemGroup>
-    <AllProjects Include="..\src\**\*.csproj" />
-
-    <RebusProjects Include="..\src\Rebus\*.csproj" />
-    <RebusProjects Include="..\src\Rebus.MongoDb\*.csproj" />
-    <RebusProjects Include="..\src\Rebus.Log4Net\*.csproj" />
-    <RebusProjects Include="..\src\Rebus.Castle.Windsor\*.csproj" />
-    <RebusProjects Include="..\src\Rebus.StructureMap\*.csproj" />
-    <RebusProjects Include="..\src\Rebus.RavenDb\*.csproj" />
-    <RebusProjects Include="..\src\Rebus.Autofac\*.csproj"/>
-    <RebusProjects Include="..\src\Rebus.Unity\*.csproj"/>
-    <RebusProjects Include="..\src\Rebus.RabbitMQ\*.csproj"/>
-    <RebusProjects Include="..\src\Rebus.AzureServiceBus\*.csproj"/>
-    <RebusProjects Include="..\src\Rebus.Ninject\*.csproj"/>
-    <RebusProjects Include="..\src\Rebus.NLog\*.csproj"/>
-    <RebusProjects Include="..\src\Rebus.Async\*.csproj"/>
-
-    <Docs Include="..\src\Rebus\bin\Release\Rebus.xml" />
-    <Docs Include="..\src\Rebus.*\bin\Release\Rebus.*.xml" />
-
-    <NuSpecFiles Include="$(ScriptsFolder)\*.nuspec" />
-    <DependantNuSpecFiles Include="$(ScriptsFolder)\*.nuspec" Exclude="$(ScriptsFolder)\Rebus.nuspec" />
-
-    <SnoopProjects Include="..\src\Rebus.Snoop\*.csproj"/>
-    <ReturnToSourceQueueProjects Include="..\src\Rebus.ReturnToSourceQueue.*\*.csproj"/>
-    <TimeoutProjects Include="..\src\Rebus.Timeout\*.csproj"/>
-  </ItemGroup>
-
+  
   <PropertyGroup>
     <ToolsFolder>..\tools</ToolsFolder>
     <ScriptsFolder>..\scripts</ScriptsFolder>
     <BuildOutputFolder>..\deploy\NET40</BuildOutputFolder>
+    <SrcFolder>..\src</SrcFolder>
     
     <!-- Should be provided from command-line / CI environment -->
     <Version></Version>
@@ -42,17 +15,58 @@
     <Zip>$(ToolsFolder)\7zip\7za.exe</Zip>
     
     <SnoopOutputFolder>$(BuildOutputFolder)\Snoop</SnoopOutputFolder>
-    <SnoopProjectOutputFolder>..\src\Rebus.Snoop\bin\Release</SnoopProjectOutputFolder>
+    <SnoopProjectOutputFolder>$(SrcFolder)\Rebus.Snoop\bin\Release</SnoopProjectOutputFolder>
 
     <ReturnToSourceQueueOutputFolder>$(BuildOutputFolder)\ReturnToSourceQueue</ReturnToSourceQueueOutputFolder>
-    <ReturnToSourceQueueMsmqProjectOutputFolder>..\src\Rebus.ReturnToSourceQueue.Msmq\bin\Release</ReturnToSourceQueueMsmqProjectOutputFolder>
+    <ReturnToSourceQueueMsmqProjectOutputFolder>$(SrcFolder)\Rebus.ReturnToSourceQueue.Msmq\bin\Release</ReturnToSourceQueueMsmqProjectOutputFolder>
     
     <TimeoutOutputFolder>$(BuildOutputFolder)\Timeout</TimeoutOutputFolder>
-    <TimeoutProjectOutputFolder>..\src\Rebus.Timeout\bin\Release</TimeoutProjectOutputFolder>
+    <TimeoutProjectDir>$(SrcFolder)\Rebus.Timeout</TimeoutProjectDir>
+    <TimeoutProjectOutputFolder>$(TimeoutProjectDir)\bin\Release</TimeoutProjectOutputFolder>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AllProjects Include="$(SrcFolder)\**\*.csproj" />
+
+    <RebusProjects Include="$(SrcFolder)\Rebus\*.csproj" />
+    <RebusProjects Include="$(SrcFolder)\Rebus.MongoDb\*.csproj" />
+    <RebusProjects Include="$(SrcFolder)\Rebus.Log4Net\*.csproj" />
+    <RebusProjects Include="$(SrcFolder)\Rebus.Castle.Windsor\*.csproj" />
+    <RebusProjects Include="$(SrcFolder)\Rebus.StructureMap\*.csproj" />
+    <RebusProjects Include="$(SrcFolder)\Rebus.RavenDb\*.csproj" />
+    <RebusProjects Include="$(SrcFolder)\Rebus.Autofac\*.csproj"/>
+    <RebusProjects Include="$(SrcFolder)\Rebus.Unity\*.csproj"/>
+    <RebusProjects Include="$(SrcFolder)\Rebus.RabbitMQ\*.csproj"/>
+    <RebusProjects Include="$(SrcFolder)\Rebus.AzureServiceBus\*.csproj"/>
+    <RebusProjects Include="$(SrcFolder)\Rebus.Ninject\*.csproj"/>
+    <RebusProjects Include="$(SrcFolder)\Rebus.NLog\*.csproj"/>
+    <RebusProjects Include="$(SrcFolder)\Rebus.Async\*.csproj"/>
+
+    <Docs Include="$(SrcFolder)\Rebus\bin\Release\Rebus.xml" />
+    <Docs Include="$(SrcFolder)\Rebus.*\bin\Release\Rebus.*.xml" />
+
+    <NuSpecFiles Include="$(ScriptsFolder)\*.nuspec" />
+    <DependantNuSpecFiles Include="$(ScriptsFolder)\*.nuspec" Exclude="$(ScriptsFolder)\Rebus.nuspec" />
+
+    <SnoopProjects Include="$(SrcFolder)\Rebus.Snoop\*.csproj"/>
+    <ReturnToSourceQueueProjects Include="$(SrcFolder)\Rebus.ReturnToSourceQueue.*\*.csproj"/>
+    <TimeoutProjects Include="$(SrcFolder)\Rebus.Timeout\*.csproj"/>
+  </ItemGroup>
 
   <Target Name="build" DependsOnTargets="clean_output_folder;compile_projects;copy_build_output;merge;createNugetPackage" />
 
+  <Target Name="chocoPackTimeoutService">
+    <PropertyGroup>
+      <OutputDirectory>$(BuildOutputFolder)\ChocoTimeout</OutputDirectory>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(OutputDirectory)" ContinueOnError="true"/>
+    <MakeDir Directories="$(OutputDirectory)"/>
+    
+    <!--<MSBuild Projects="@(TimeoutProjects)" Properties="Configuration=Release"/>-->
+    <Exec Command="$(NuGet) pack $(TimeoutProjectDir)\Rebus.Timeout.nuspec -OutputDirectory $(OutputDirectory)"/>
+  </Target>
+  
   <Target Name="clean_output_folder">
     <Message Text="Removing old output folder"/>
     <RemoveDir Directories="$(BuildOutputFolder)" ContinueOnError="true"/>

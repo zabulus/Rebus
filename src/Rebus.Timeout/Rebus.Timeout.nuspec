@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>Rebus.Timeout</id>
+    <version>0.0.1</version>
+    <title>Rebus.Timeout</title>
+    <authors>mookid8000</authors>
+    <owners>mookid8000</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0</licenseUrl>
+    <projectUrl>http://mookid.dk/oncode/rebus</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Rebus Timeout Manager</description>
+    <copyright>Copyright 2013</copyright>
+    <tags>rebus timeouts</tags>
+    <iconUrl>https://github.com/mookid8000/Rebus/raw/master/artwork/logo200x200-transparent.png</iconUrl>
+    <dependencies>
+      <dependency id="log4net" version="2.0.0" />
+      <dependency id="Topshelf" version="2.3.0.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="bin\Release\*.dll" target="lib" />
+    <file src="bin\Release\*.exe" target="lib" />
+    <file src="bin\Release\*.config" target="lib" />
+  </files>
+</package>

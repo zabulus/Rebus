@@ -88,6 +88,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
+    <None Include="Rebus.Timeout.nuspec" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.Log4net\Rebus.Log4Net.csproj">
