@@ -72,16 +72,17 @@ ul.menu
 
 .endpoints 
 {
-    overflow-x: scroll;
-    white-space: nowrap;
+    display: table;
+    height: 100%;
+    border-spacing: 10px 0;
 }
 
 .endpoint 
 {
-    /*float: left;*/
+    display: table-cell;
+
     background-color: #ccddcc;
     width: 200px;
-    margin: 10px 10px 10px 10px;
     padding: 5px 5px 5px 5px;
     height: 100%;
 

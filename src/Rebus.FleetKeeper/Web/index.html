@@ -7,6 +7,8 @@
         <script src="lib/jquery-2.0.3.js"></script>
         <script src="lib/jquery.signalR-2.0.0-beta2.js"></script>
         <script src="lib/angular.min.js"></script>
+        <script src="lib/jquery.mousewheel.js"></script>
+
         <script src="index.js"></script>
     </head>
 
@@ -17,19 +19,22 @@
             <li><a href="#/about">About</a></li>
         </ul>
             
-        <table class="endpoints">
-            <tr>
-                <td ng-repeat="endpoint in endpoints" class="endpoint">
-                    {{endpoint.name}}
-                </td>    
-            </tr>
-        </table>
+        <div class="endpoints">
+            <div ng-repeat="endpoint in endpoints" class="endpoint">
+                {{endpoint.name}}
+            </div>
+        </div>
 
         <script src="/signalr/hubs"></script>
         <script type="text/javascript">
             $(function() {
-                $.connection.hub.start().done(function() {
+                $.connection.hub.start().done(function () {
                     $.connection.fleetKeeperHub.server.asWebClient();
+                });
+                
+                $("body").mousewheel(function (event, delta) {
+                    this.scrollLeft -= (delta * 30);
+                    event.preventDefault();
                 });
             });
         </script>
