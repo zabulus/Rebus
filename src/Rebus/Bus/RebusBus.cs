@@ -340,7 +340,7 @@ namespace Rebus.Bus
             Guard.NotNull(message, "message");
             Guard.GreaterThanOrEqual(delay, TimeSpan.FromSeconds(0), "delay");
 
-            if (configureAdditionalBehavior.OneWayClientMode && !HasReturnAddressHeader(message))
+            if (configureAdditionalBehavior.OneWayClientMode && !HasHeaderFor(message, Headers.ReturnAddress))
             {
                 throw new InvalidOperationException(
                     string.Format(
@@ -370,16 +370,20 @@ namespace Rebus.Bus
                     var sagaContext = ((SagaContext)messageContext.Items[SagaContext.SagaContextItemKey]);
                     timeoutRequest.SagaId = sagaContext.Id;
                 }
+
+                // if we're currently handling a message with a rebus message ID, transfer it to the deferred message
+                if (!HasHeaderFor(message, Headers.MessageId))
+                {
+                    if (messageContext.Headers.ContainsKey(Headers.MessageId))
+                    {
+                        headerContext.AttachHeader(message, Headers.MessageId, messageContext.RebusTransportMessageId);
+                    }
+                }
             }
 
             var messages = new List<object> { timeoutRequest };
 
             InternalSend(timeoutManagerAddress, messages);
-        }
-
-        bool HasReturnAddressHeader(object message)
-        {
-            return headerContext.GetHeadersFor(message).ContainsKey(Headers.ReturnAddress);
         }
 
         /// <summary>
@@ -392,7 +396,36 @@ namespace Rebus.Bus
             Guard.NotNull(message, "message");
             Guard.NotNull(key, "key");
 
+            if (key == Headers.MessageId)
+                throw new ArgumentException("The Rebus transport message ID can not be overwritten.");
+
             headerContext.AttachHeader(message, key, value);
+        }
+
+        /// <summary>
+        /// Retrives the header from the specified message with the given key. If none is found, null is returned.
+        /// </summary>
+        public string GetHeaderFor(object message, string key)
+        {
+            Guard.NotNull(message, "message");
+            Guard.NotNull(key, "key");
+
+            object value;
+            if (!headerContext.GetHeadersFor(message).TryGetValue(key, out value))
+                return null;
+
+            return (string) value;
+        }
+
+        /// <summary>
+        /// Checks if header from the specified message with the given key is attached.
+        /// </summary>
+        public bool HasHeaderFor(object message, string key)
+        {
+            Guard.NotNull(message, "message");
+            Guard.NotNull(key, "key");
+
+            return headerContext.GetHeadersFor(message).ContainsKey(key);
         }
 
         /// <summary>
@@ -488,7 +521,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                                   " reply to someone, you can make the requestor include the {1} header manually," +
                                   " using the address of another service as the value - this way, replies will" +
                                   " be sent to a third party, that can take action.",
-                                  messageContext.TransportMessageId,
+                                  messageContext.RebusTransportMessageId,
                                   Headers.ReturnAddress);
 
                 throw new InvalidOperationException(errorMessage);
@@ -578,6 +611,12 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             if (!headers.ContainsKey(Headers.CorrelationId))
             {
                 headers[Headers.CorrelationId] = Guid.NewGuid().ToString();
+            }
+
+            // if, at this point, there's no rebus message ID in a header, just provide one
+            if (!headers.ContainsKey(Headers.MessageId))
+            {
+                headers[Headers.MessageId] = Guid.NewGuid().ToString();
             }
 
             messageToSend.Headers = headers;
@@ -855,7 +894,6 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             public void AttachHeader(object message, string key, string value)
             {
                 var headerDictionary = headers.GetOrAdd(message, () => new Dictionary<string, object>());
-
                 headerDictionary[key] = value;
             }
 

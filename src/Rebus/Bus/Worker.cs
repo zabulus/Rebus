@@ -7,6 +7,7 @@ using System.Transactions;
 using Rebus.Configuration;
 using Rebus.Logging;
 using System.Linq;
+using Rebus.Shared;
 using Rebus.Timeout;
 
 namespace Rebus.Bus
@@ -277,6 +278,12 @@ namespace Rebus.Bus
             try
             {
                 BeforeTransportMessage(transportMessage);
+
+                // Populate rebus-msg-id, if not set, from transport-level-id
+                if (!transportMessage.Headers.ContainsKey(Headers.MessageId))
+                {
+                    transportMessage.Headers[Headers.MessageId] = transportMessage.Id;
+                }
 
                 using (var scope = BeginTransaction())
                 {
