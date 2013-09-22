@@ -4,28 +4,25 @@ using Newtonsoft.Json.Linq;
 
 namespace Rebus.FleetKeeper.Tests
 {
-    public class TestAggregate : Aggregate
+    public class TestView : ReadModel
     {
-        public TestAggregate()
+        public TestView()
         {
             Calls = new Dictionary<string, JObject>();
         }
 
         public Dictionary<string, JObject> Calls { get; set; }
 
-        public override void ApplyStateToClient()
-        {
-            throw new NotImplementedException();
-        }
-
-        public override void ApplyBusStarted(JObject @event, bool applyToClient)
+        public override JsonAction ApplyBusStarted(JObject @event)
         {
             Calls.Add("BusStarted", @event);
+            return null;
         }
 
-        public override void ApplyBusStopped(JObject @event, bool applyToClient)
+        public override JsonAction ApplyBusStopped(JObject @event)
         {
             throw new NotImplementedException();
+            return null;
         }
     }
 }

@@ -1,15 +1,9 @@
-﻿<!doctype html>
-<html lang="en" ng-app>
+<!doctype html>
+<html lang="en" ng-app="fleetkeeper">
     <head>
         <meta charset="utf-8">
         <title>FleetKeeper</title>
         <link rel="stylesheet" href="app.css"/>
-        <script src="lib/jquery-2.0.3.js"></script>
-        <script src="lib/jquery.signalR-2.0.0-beta2.js"></script>
-        <script src="lib/angular.min.js"></script>
-        <script src="lib/jquery.mousewheel.js"></script>
-
-        <script src="index.js"></script>
     </head>
 
     <body ng-controller="IndexController">
@@ -20,22 +14,24 @@
         </ul>
             
         <div class="busses">
-            <div ng-repeat="bus in busses" class="bus">
-                {{bus.name}}
+            <div ng-repeat="service in services" class="bus">
+                {{service.name}}
             </div>
         </div>
 
+        <script src="libs.js"></script>
+        <script src="app.js"></script>
         <script src="/signalr/hubs"></script>
         <script type="text/javascript">
             $(function() {
                 $.connection.hub.start().done(function () {
-                    $.connection.fleetKeeperHub.server.asWebClient();
+                    $.connection.fleetKeeperHub.server.asWebClient('services');
                 });
-                
-                $("body").mousewheel(function (event, delta) {
-                    this.scrollLeft -= (delta * 30);
-                    event.preventDefault();
-                });
+              
+                // $("body").mousewheel(function (event, delta) {
+                //     this.scrollLeft -= (delta * 30);
+                //     event.preventDefault();
+                // });
             });
         </script>
     </body>

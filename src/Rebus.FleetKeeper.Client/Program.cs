@@ -30,7 +30,7 @@ namespace Rebus.FleetKeeper.Client
                         var bus = Configure.With(adapter)
                                  .Transport(t => t.UseMsmq(name + ".test", name + ".test.error"))
                                  .MessageOwnership(d => d.FromRebusConfigurationSection())
-                                 .EnableFleetKeeper("http://localhost:8080")
+                                 .EnableFleetKeeper("http://localhost:9001")
                                  .CreateBus()
                                  .Start();
 
@@ -72,7 +72,7 @@ Use the following commands to control the process:
                                   and {name}.test.error
     stop bus <name>             - stops the bus with the given name
     set fleetkeeper url=<url>   - setup the client to use this url for any 
-                                  _new_ bus, defaults to http://localhost:8080
+                                  _new_ bus, defaults to http://localhost:9001
 ");
         }
 

@@ -11,7 +11,7 @@ namespace Rebus.FleetKeeper.Tests
 {
     public class TestFleetKeeperHub : IDisposable
     {
-        readonly TestAggregate aggregate;
+        readonly TestView view;
         readonly SQLiteConnection dbConnection;
         readonly CallWhatEverYouWant fakeGroupOfClients;
         readonly FleetKeeperHub hub;
@@ -21,7 +21,7 @@ namespace Rebus.FleetKeeper.Tests
             dbConnection = new SQLiteConnection("Data Source=:memory:;Version=3;New=True;");
             dbConnection.Open();
 
-            aggregate = new TestAggregate();
+            view = new TestView();
             hub = new FleetKeeperHub(dbConnection)
             {
                 Clients = A.Fake<IHubCallerConnectionContext>()
@@ -60,7 +60,7 @@ namespace Rebus.FleetKeeper.Tests
 
             hub.Apply(@event);
 
-            aggregate.Calls.ShouldContainKeyAndValue("BusStarted", @event);
+            view.Calls.ShouldContainKeyAndValue("BusStarted", @event);
         }
 
         [Test]
@@ -74,7 +74,7 @@ namespace Rebus.FleetKeeper.Tests
 
             hub.Apply(@event);
 
-            aggregate.Calls.ShouldContainKeyAndValue("BusStarted", @event);
+            view.Calls.ShouldContainKeyAndValue("BusStarted", @event);
         }
     }
 }

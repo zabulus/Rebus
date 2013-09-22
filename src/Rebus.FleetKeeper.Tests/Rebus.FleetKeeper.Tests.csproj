@@ -78,8 +78,8 @@
   <ItemGroup>
     <Compile Include="CallWhatEverYouWant.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestAggregate.cs" />
-    <Compile Include="TestBusAggregate.cs" />
+    <Compile Include="TestView.cs" />
+    <Compile Include="TestServicesView.cs" />
     <Compile Include="TestEx.cs" />
     <Compile Include="TestFleetKeeperClient.cs" />
     <Compile Include="TestFleetKeeperEventContracts.cs" />

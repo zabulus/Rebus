@@ -6,12 +6,12 @@ using NUnit.Framework;
 
 namespace Rebus.FleetKeeper.Tests
 {
-    public class TestBusAggregate : IDisposable
+    public class TestServicesView : IDisposable
     {
         readonly CallWhatEverYouWant fakeGroupOfClients;
-        readonly BusAggregate aggregate;
+        readonly ServicesView aggregate;
 
-        public TestBusAggregate()
+        public TestServicesView()
         {
             var hub = new FleetKeeperHub(A.Fake<IDbConnection>())
             {
@@ -21,7 +21,7 @@ namespace Rebus.FleetKeeper.Tests
             fakeGroupOfClients = new CallWhatEverYouWant();
             A.CallTo(() => hub.Clients.Group("webclients")).Returns(fakeGroupOfClients);
 
-            aggregate = new BusAggregate(hub);
+            aggregate = new ServicesView();
             fakeGroupOfClients = new CallWhatEverYouWant();
         }
 
@@ -35,9 +35,9 @@ namespace Rebus.FleetKeeper.Tests
                 Name = "BusStarted",
                 BusClientId = id,
                 Endpoint = "EndpointAddress"
-            }.ToJObject(), false);
+            }.ToJObject());
 
-            //aggregate.Busses.ShouldContain();
+            //aggregate.Services.ShouldContain();
         }
 
         [Test]

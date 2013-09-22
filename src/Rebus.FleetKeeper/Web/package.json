@@ -1,0 +1,20 @@
+{
+  "name": "rebus-fleetkeeper",
+  "private": true,
+  "version": "0.0.1",
+  "description": "ERROR: No README.md file found!",
+  "main": "js/index.js",
+  "dependencies": {
+    "buster": "~0.7.6",
+    "json-patch": "~0.4.0"
+  },
+  "devDependencies": {
+    "grunt": "~0.4.1",
+    "grunt-browserify": "~1.2.4",
+    "grunt-contrib-copy": "~0.4.1",
+    "grunt-contrib-clean": "~0.5.0"
+  },
+  "repository": "https://github.com/rebus-org/Rebus",
+  "author": "@mookid8000,@asgerhallas",
+  "license": "Apache"
+}

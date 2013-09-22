@@ -8,13 +8,18 @@ using Dapper;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Linq;
 using log4net;
-using System.Linq;
 
 namespace Rebus.FleetKeeper
 {
     public class FleetKeeperHub : Hub
     {
         static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+        static readonly Dictionary<string, Type> Views =
+            new Dictionary<string, Type>
+            {
+                { "services", typeof(ServicesView) }
+            };
 
         readonly IDbConnection dbConnection;
 
@@ -30,14 +35,23 @@ namespace Rebus.FleetKeeper
                 Data text)");
         }
 
-        public async Task AsWebClient()
+        public async Task AsWebClient(string view)
         {
             Log.DebugFormat("New web client: {0}", Context.ConnectionId);
 
-            await Groups.Add(Context.ConnectionId, "webclients");
+            await Groups.Add(Context.ConnectionId, "webclients/" + view);
 
-            var aggregate = LoadAggregate();
-            aggregate.ApplyStateToClient();
+            var type = Views[view];
+            var aggregate = LoadView(type);
+
+            Log.DebugFormat("Sending state of {0} to {1}", type.Name, Context.ConnectionId);
+
+            Clients.Caller.execute(
+                new Reset
+                {
+                    Path = "",
+                    Data = aggregate
+                });
         }
 
         public Task AsBusClient()
@@ -67,17 +81,38 @@ namespace Rebus.FleetKeeper
 
         public void Apply(JObject @event)
         {
-            var aggregate = LoadAggregate();
-            aggregate.Apply(@event, applyToClient: true);
+            foreach (var key in Views.Keys)
+            {
+                var type = Views["services"];
+                var view = LoadView(type);
+
+                var eventname = (string) @event["Name"];
+
+                Log.DebugFormat("Applying event {0} to {1}", eventname, GetType().Name);
+
+                var action = view.Apply(@event);
+
+                if (action != null)
+                {
+                    Log.DebugFormat("Sending resulting changes of event {0} to {1} to web client.", eventname, type.Name);
+                    Clients.Group("webclients/" + key).execute(action);
+                }
+                else
+                {
+                    Log.DebugFormat("Event {0} resulted in no changes to {1}", eventname, type.Name);
+                }
+
+                // time for snapshot? Maybe. Can we just snapshot to memory?
+            }
         }
 
-        Aggregate LoadAggregate()
+        ReadModel LoadView(Type type)
         {
             var events = dbConnection.Query<string>("select Data from Events");
-            var aggregate = (Aggregate) Activator.CreateInstance(typeof (BusAggregate), this);
+            var aggregate = (ReadModel) Activator.CreateInstance(type);
             var numberOfEvents = aggregate.LoadFromHistory(events.Select(JObject.Parse));
             
-            Log.DebugFormat("'Replaying' {0} events to {1}", numberOfEvents, Context.ConnectionId);
+            Log.DebugFormat("'Replaying' {0} events to {1}", numberOfEvents, type.Name);
 
             return aggregate;
         }
@@ -87,5 +122,25 @@ namespace Rebus.FleetKeeper
             Log.Info("Disposing DB connection");
             dbConnection.Dispose();
         }
+    }
+
+    public class JsonAction
+    {
+        public string Action 
+        {
+            get { return GetType().Name.ToLowerInvariant(); }
+        }
+    }
+
+    public class Reset : JsonAction
+    {
+        public string Path { get; set; }
+        public object Data { get; set; }
+    }
+
+    public class Add : JsonAction
+    {
+        public string Path { get; set; }
+        public object Data { get; set; }
     }
 }
