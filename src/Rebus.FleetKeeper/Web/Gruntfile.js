@@ -1,6 +1,4 @@
 module.exports = function(grunt) {
-
-  // Project configuration.
   grunt.initConfig({
     pkg: grunt.file.readJSON('package.json'),
     clean: {
@@ -14,27 +12,48 @@ module.exports = function(grunt) {
     browserify: {
       libs: {
         options: {
+          debug: false,
           shim: {
+            jquery: {
+              alias: 'jquery',
+              path: './bower_components/jquery/jquery.js',
+              exports: '$'
+            },
+            signalr: {
+              path: './lib/jquery.signalR-2.0.0-beta2.js',
+              exports: 'signalR',
+              depends: {
+                jquery: '$'
+              }
+            },
             angular: {
+              alias: 'angular',
               path: './bower_components/angular/angular.js',
-              exports: 'angular'
+              exports: 'angular',
+              depends: {
+                jquery: '$'
+              }
             }
           }
         },
         src: ['lib/*.js'],
-        dest: '../bin/Debug/Web/libs.js',
+        dest: 'build/libs.js',
       },
       app: {
         options: {
+          debug: true,
           alias: [
-            './bower_components/angular/angular.js:angular'
+            './bower_components/jquery/jquery.js:jquery',
+            './bower_components/angular/angular.js:angular',
           ],
           external: [
+            //'./build/libs.js',
+            './bower_components/jquery/jquery.js',
             './bower_components/angular/angular.js'
           ]
         },
         src: ['js/*.js'],
-        dest: '../bin/Debug/Web/app.js',
+        dest: 'build/app.js',
       }
     },
     copy: {
@@ -42,20 +61,20 @@ module.exports = function(grunt) {
         expand: true,
         flatten: true,
         cwd: '',
-        src: ['index.html', 'favicon.ico', 'css/*.css'],
+        src: ['index.html', 'favicon.ico', 'css/*.css', 'build/*.js'],
         dest: '../bin/Debug/Web',
       }
     },
     watch: {
       libs: {
-        files: ['<%= browserify.libs.src %>'],
+        files: ['lib/*', 'bower_components/**/*', 'Gruntfile.js'],
         tasks: ['all'],
         options: {
           interrupt: true
         }
       },
       app: {
-        files: ['<%= browserify.app.src %>', '<%= copy.app.src %>'],
+        files: ['js/*', './*'],
         tasks: ['default'],
         options: {
           interrupt: true
