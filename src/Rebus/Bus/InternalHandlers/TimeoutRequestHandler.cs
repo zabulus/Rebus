@@ -3,8 +3,11 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Timeout;
 
-namespace Rebus.Bus
+namespace Rebus.Bus.InternalHandlers
 {
+    /// <summary>
+    /// Special request handler that handles timeout requests and stores them to be able to reply some time in the future
+    /// </summary>
     class TimeoutRequestHandler : IHandleMessages<TimeoutRequest>
     {
         static ILog log;

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Ponder;
+using Rebus.Bus.InternalHandlers;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Shared;

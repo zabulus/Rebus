@@ -70,7 +70,7 @@
     <Compile Include="Bus\RebusBatchOperations.cs" />
     <Compile Include="Bus\RebusEvents.cs" />
     <Compile Include="Bus\RebusRouting.cs" />
-    <Compile Include="Bus\TimeoutRequestHandler.cs" />
+    <Compile Include="Bus\InternalHandlers\TimeoutRequestHandler.cs" />
     <Compile Include="Bus\TransactionContext.cs" />
     <Compile Include="Bus\TxBomkarl.cs" />
     <Compile Include="Bus\UnitOfWorkCommitException.cs" />
@@ -120,7 +120,7 @@
     <Compile Include="IRebusRouting.cs" />
     <Compile Include="IAdvancedBus.cs" />
     <Compile Include="Bus\IHandleDeferredMessage.cs" />
-    <Compile Include="Bus\TimeoutReplyHandler.cs" />
+    <Compile Include="Bus\InternalHandlers\TimeoutReplyHandler.cs" />
     <Compile Include="Configuration\DetermineMessageOwnershipFromRebusConfigurationSection.cs" />
     <Compile Include="Configuration\FluentRearrangeHandlersPipelineInspectorBuilder.cs" />
     <Compile Include="Configuration\MappingElement.cs" />
@@ -138,7 +138,7 @@
     <Compile Include="Logging\ConsoleLoggerExtensions.cs" />
     <Compile Include="Logging\ConsoleLoggerFactory.cs" />
     <Compile Include="Logging\ILog.cs" />
-    <Compile Include="Bus\SubscriptionMessageHandler.cs" />
+    <Compile Include="Bus\InternalHandlers\SubscriptionMessageHandler.cs" />
     <Compile Include="Bus\Worker.cs" />
     <Compile Include="Configuration\ConfigurationException.cs" />
     <Compile Include="Configuration\ConfigurationFileFormatException.cs" />

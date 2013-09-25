@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Transactions;
+using Rebus.Bus.InternalHandlers;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Messages;

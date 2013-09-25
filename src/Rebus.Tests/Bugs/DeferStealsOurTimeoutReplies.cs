@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
+using Rebus.Bus.InternalHandlers;
 using Rebus.Messages;
 using Rebus.Persistence.InMemory;
 using Shouldly;
