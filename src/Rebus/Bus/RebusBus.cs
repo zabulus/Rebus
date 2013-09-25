@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Transactions;
 using Rebus.Configuration;
+using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Messages;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace Rebus.Bus
     /// <summary>
     /// Implements <see cref="IBus"/> as Rebus would do it.
     /// </summary>
-    public class RebusBus : IStartableBus, IBus, IAdvancedBus, IRebusDiagnostics
+    public class RebusBus : IStartableBus, IBus, IAdvancedBus
     {
         static ILog log;
 
@@ -141,7 +142,7 @@ namespace Rebus.Bus
             InternalStart(GetConfiguredNumberOfWorkers());
             return this;
         }
- 
+
         /// <summary>
         /// Starts the <see cref="RebusBus"/> with the specified number of worker threads.
         /// </summary>
@@ -175,7 +176,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(destinationEndpoint, new List<object> { message }, SendMethod.Send);
         }
 
         /// <summary>
@@ -196,7 +197,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(destinationEndpoint, new List<object> { message }, SendMethod.Send);
         }
 
         /// <summary>
@@ -212,7 +213,7 @@ namespace Rebus.Bus
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 AttachHeader(message, Headers.Multicast, "");
-                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message });
+                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message }, SendMethod.Publish);
                 return;
             }
 
@@ -220,7 +221,7 @@ namespace Rebus.Bus
 
             foreach (var subscriberInputQueue in subscriberEndpoints)
             {
-                InternalSend(subscriberInputQueue, new List<object> { message });
+                InternalSend(subscriberInputQueue, new List<object> { message }, SendMethod.Publish);
             }
         }
 
@@ -263,9 +264,9 @@ namespace Rebus.Bus
             get { return routing; }
         }
 
-        public IRebusDiagnostics Diagnostics
+        public IInterrogateThisEndpoint Interrogation 
         {
-            get { return this; }
+            get { return new RebusBusInterrogator(this); }
         }
 
         /// <summary>
@@ -287,7 +288,6 @@ namespace Rebus.Bus
         public void Subscribe<TEvent>()
         {
             var multicastTransport = sendMessages as IMulticastTransport;
-
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 multicastTransport.Subscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
@@ -306,7 +306,6 @@ namespace Rebus.Bus
         public void Unsubscribe<TEvent>()
         {
             var multicastTransport = sendMessages as IMulticastTransport;
-
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 multicastTransport.Unsubscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
@@ -383,7 +382,7 @@ namespace Rebus.Bus
 
             var messages = new List<object> { timeoutRequest };
 
-            InternalSend(timeoutManagerAddress, messages);
+            InternalSend(timeoutManagerAddress, messages, SendMethod.Send);
         }
 
         /// <summary>
@@ -414,7 +413,7 @@ namespace Rebus.Bus
             if (!headerContext.GetHeadersFor(message).TryGetValue(key, out value))
                 return null;
 
-            return (string) value;
+            return (string)value;
         }
 
         /// <summary>
@@ -458,7 +457,7 @@ namespace Rebus.Bus
                     Action = subscribeAction,
                 };
 
-            InternalSend(destinationQueue, new List<object> { message });
+            InternalSend(destinationQueue, new List<object> { message }, SendMethod.Send);
         }
 
         internal void InternalStart(int numberOfWorkers)
@@ -545,7 +544,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 AttachHeader(messages.First(), Headers.UserName, messageContext.Headers[Headers.UserName].ToString());
             }
 
-            InternalSend(returnAddress, messages);
+            InternalSend(returnAddress, messages, SendMethod.Reply);
         }
 
         /// <summary>
@@ -554,7 +553,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
         /// messages to the error queue. This method will bundle the specified batch
         /// of messages inside one single transport message, which it will send.
         /// </summary>
-        internal void InternalSend(string destination, List<object> messages)
+        internal void InternalSend(string destination, List<object> messages, SendMethod method)
         {
             if (!started)
             {
@@ -619,9 +618,27 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 headers[Headers.MessageId] = Guid.NewGuid().ToString();
             }
 
+            AddDefaultHeaders(headers, method);
+
             messageToSend.Headers = headers;
 
             InternalSend(destination, messageToSend);
+        }
+
+        internal enum SendMethod
+        {
+            Send, Publish, Reply
+        }
+
+        void AddDefaultHeaders(IDictionary<string, object> headers, SendMethod method)
+        {
+            headers[Headers.SendTime] = RebusTimeMachine.Now();
+            headers[Headers.RebusSendMethod] = method.ToString().ToLowerInvariant();
+
+            if (!configureAdditionalBehavior.OneWayClientMode)
+            {
+                headers[Headers.SenderAddress] = receiveMessages.InputQueueAddress;
+            }
         }
 
         object MutateOutgoing(object msg)
@@ -787,7 +804,9 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                                         new IncomingMessageMutatorPipeline(Events),
                                         storeTimeouts,
                                         events.UnitOfWorkManagers,
-                                        configureAdditionalBehavior);
+                                        configureAdditionalBehavior,
+                                        new ReplyDispatcher(this),
+                                        new RebusBusInterrogator(this));
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
@@ -802,6 +821,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 worker.Start();
             }
         }
+
 
         void RemoveWorker()
         {
@@ -919,12 +939,49 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
             }
         }
 
-        /// <summary>
-        /// Get all instances of services injected to the bus
-        /// </summary>
-        public IReceiveMessages ReceiveMessagesQueue
+        class RebusBusInterrogator : IInterrogateThisEndpoint
         {
-            get { return receiveMessages; }
+            readonly RebusBus rebusBus;
+
+            public RebusBusInterrogator(RebusBus rebusBus)
+            {
+                this.rebusBus = rebusBus;
+            }
+
+            public bool OneWayClientMode
+            {
+                get { return rebusBus.configureAdditionalBehavior.OneWayClientMode; }
+            }
+
+            public string InputQueueAddress
+            {
+                get
+                {
+                    return OneWayClientMode
+                               ? null
+                               : rebusBus.receiveMessages.InputQueueAddress;
+                }
+            }
+
+            public int Workers
+            {
+                get { return rebusBus.workers.Count; }
+            }
+
+            public int AppDomainRebusEndpointId
+            {
+                get { return rebusBus.rebusId; }
+            }
+
+            public bool IsBrokered
+            {
+                get
+                {
+                    return rebusBus.receiveMessages is IMulticastTransport
+                           && ((IMulticastTransport)rebusBus.receiveMessages)
+                                  .ManagesSubscriptions;
+                }
+            }
         }
     }
 }

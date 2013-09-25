@@ -24,5 +24,10 @@ namespace Rebus.FleetKeeper.Tests
             throw new NotImplementedException();
             return null;
         }
+
+        public override JsonAction ApplyHeartbeat(JObject @event)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

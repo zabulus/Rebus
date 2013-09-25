@@ -46,7 +46,7 @@ namespace Rebus.Testing
 
             dispatcher = new Dispatcher(persister,
                                         new SagaFixtureHandlerActivator(sagaInstances), new InMemorySubscriptionStorage(),
-                                        new TrivialPipelineInspector(), null, null);
+                                        new TrivialPipelineInspector(), null, null, null, null);
         }
 
         void RaiseMarkedAsComplete(ISagaData sagaData)

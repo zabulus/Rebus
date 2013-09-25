@@ -25,6 +25,8 @@ namespace Rebus.Tests.Contracts.Serialization
         [TestCase(typeof(TimeoutRequest))]
         [TestCase(typeof(TimeoutReply))]
         [TestCase(typeof(SubscriptionMessage))]
+        [TestCase(typeof(EndpointInterrogationRequest))]
+        [TestCase(typeof(EndpointInterrogationReply))]
         public void CanSerializeRebusControlMessages(Type controlBusMessageType)
         {
             var messageInstance = Activator.CreateInstance(controlBusMessageType);

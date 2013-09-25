@@ -22,7 +22,9 @@ namespace Rebus.Tests.Bugs
                                         new InMemorySubscriptionStorage(),
                                         new RearrangeHandlersPipelineInspector(),
                                         new DeferredMessageHandlerForTesting(),
-                                        null);
+                                        null,
+                                        new ReplyDispatcherForTesting(),
+                                        new EndpointInterrogatorForTesting());
         }
 
         [Test]

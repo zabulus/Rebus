@@ -8,6 +8,8 @@ namespace Rebus.FleetKeeper.Client.Events
         {
             SchemaVersion = 1;
         }
+
+        public string ProcessName { get; set; }
     }
 
     public class BusStopped : Event
@@ -16,5 +18,7 @@ namespace Rebus.FleetKeeper.Client.Events
         {
             SchemaVersion = 1;
         }
+
+        public string ProcessName { get; set; }
     }
 }

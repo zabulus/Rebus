@@ -40,35 +40,33 @@ namespace Rebus.FleetKeeper.Client
         {
             var currentProcess = Process.GetCurrentProcess();
             var processStartInfo = currentProcess.StartInfo;
-            var fileName = !string.IsNullOrWhiteSpace(processStartInfo.FileName)
+            var processName = !string.IsNullOrWhiteSpace(processStartInfo.FileName)
                                ? processStartInfo.FileName
                                : currentProcess.ProcessName;
 
 
             //new
             //{
-            //    ClientId = clientId, 
-            //    //InputQueueAddress = bus.Advanced.Diagnostics.InputQueueName,
             //    Environment.MachineName,
             //    Os = Environment.OSVersion.ToString(),
-            //    FileName = fileName
             //}
 
-            var receiveMessages = bus.Advanced.Diagnostics.ReceiveMessagesQueue;
+            var inputQueueAddress = bus.Advanced.Interrogation.InputQueueAddress;
             Send(new BusStarted
             {
                 BusClientId = clientId,
-                Endpoint = receiveMessages.InputQueueAddress
+                Endpoint = inputQueueAddress,
+                ProcessName = processName
             });
         }
 
         public void OnBusDisposed(IBus bus)
         {
-            var receiveMessages = bus.Advanced.Diagnostics.ReceiveMessagesQueue;
+            var inputQueueAddress = bus.Advanced.Interrogation.InputQueueAddress;
             Send(new BusStopped
             {
                 BusClientId = clientId,
-                Endpoint = receiveMessages.InputQueueAddress
+                Endpoint = inputQueueAddress
             });
 
             Dispose();

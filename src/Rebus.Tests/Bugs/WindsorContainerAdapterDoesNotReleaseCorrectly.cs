@@ -25,7 +25,9 @@ namespace Rebus.Tests.Bugs
                                         new InMemorySubscriptionStorage(),
                                         pipelineInspector,
                                         new DeferredMessageHandlerForTesting(),
-                                        null);
+                                        null,
+                                        new ReplyDispatcherForTesting(),
+                                        new EndpointInterrogatorForTesting());
 
 
             var message = new Message();

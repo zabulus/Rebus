@@ -9,10 +9,10 @@
     <body ng-controller="IndexController">
         <div class="busses">
             <div ng-repeat="service in services.services" class="bus">
-                <h2>{{service.endpoint}}</h2>
+                <h2>{{service.processName}}</h2>
+                <div class="heart blink" title="Seen alive at: {{service.lastLifeSign}}"></div>
                 <h3>Service client id:</h3>{{service.busClientId}}
                 <h3>Endpoint:</h3>{{service.endpoint}}
-                <h3>Seen alive at:</h3>{{service.lastLifeSign}}
             </div>
         </div>
 

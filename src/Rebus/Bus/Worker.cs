@@ -67,7 +67,9 @@ namespace Rebus.Bus
             IMutateIncomingMessages mutateIncomingMessages,
             IStoreTimeouts storeTimeouts,
             IEnumerable<IUnitOfWorkManager> unitOfWorkManagers,
-            ConfigureAdditionalBehavior configureAdditionalBehavior)
+            ConfigureAdditionalBehavior configureAdditionalBehavior,
+            ISendReplies sendReplies,
+            IInterrogateThisEndpoint interrogateThisEndpoint)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
@@ -75,7 +77,7 @@ namespace Rebus.Bus
             this.unitOfWorkManagers = unitOfWorkManagers;
             this.configureAdditionalBehavior = configureAdditionalBehavior;
             this.errorTracker = errorTracker;
-            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
+            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts, sendReplies, interrogateThisEndpoint);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };

@@ -22,7 +22,9 @@ namespace Rebus.Tests.Integration
                                         new InMemorySubscriptionStorage(),
                                         new TrivialPipelineInspector(),
                                         new DeferredMessageHandlerForTesting(),
-                                        null);
+                                        null,
+                                        new ReplyDispatcherForTesting(),
+                                        new EndpointInterrogatorForTesting());
         }
 
         [Test]

@@ -55,7 +55,7 @@ module.exports = function(grunt) {
         expand: true,
         flatten: true,
         cwd: '',
-        src: ['index.html', 'favicon.ico', 'build/*'],
+        src: ['index.html', 'favicon.ico', 'build/*', 'resources/*'],
         dest: '../bin/Debug/Web',
       }
     },

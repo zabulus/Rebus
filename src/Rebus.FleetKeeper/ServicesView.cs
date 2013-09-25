@@ -21,6 +21,7 @@ namespace Rebus.FleetKeeper
                 Id = Guid.NewGuid(),
                 BusClientId = (Guid)@event["BusClientId"], 
                 Endpoint = (string)@event["Endpoint"],
+                ProcessName = (string)@event["ProcessName"],
                 LastLifeSign = (DateTimeOffset) @event["Timestamp"]
             };
 
@@ -60,6 +61,7 @@ namespace Rebus.FleetKeeper
             public Guid Id { get; set; }
             public Guid BusClientId { get; set; }
             public string Endpoint { get; set; }
+            public string ProcessName { get; set; }
             public DateTimeOffset LastLifeSign { get; set; }
         }
     }

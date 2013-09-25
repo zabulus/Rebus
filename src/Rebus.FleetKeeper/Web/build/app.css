@@ -89,7 +89,7 @@ ul.menu
     background-color: rgba(52, 170, 220, 0.6);
     background: linear-gradient(to bottom, rgba(52, 170, 220, 0.6), rgba(0, 122, 255, 0.6));
     width: 320px;
-    padding: 10px 5px 15px 5px;
+    padding: 5px 5px 5px 5px;
     color: #FFF;
     word-break: break-all;
 }
@@ -100,7 +100,8 @@ ul.menu
     font-size: 1.2em;
     font-weight: bold;
     text-transform: uppercase;
-    margin-bottom: 10px;
+    height: 2em;
+    margin: 10px 0px 10px 0px;
 }
 
 .bus h3
@@ -109,6 +110,25 @@ ul.menu
     font-size: 0.8em;
     margin: 10px 0px 3px 0px;
     color: #FCD271;
+}
+
+.bus .heart
+{
+    /* icon from: http://www.designbolts.com */
+    background-image: url(heart-doodle-icon.png);
+    width:24px;
+    height:24px;
+    opacity: 0.6;
+}
+
+.heartbeat
+{
+    transition:opacity 0.5s linear;
+}
+
+.heartbeat-active
+{
+    opacity: 1;
 }
 
 .bus .info

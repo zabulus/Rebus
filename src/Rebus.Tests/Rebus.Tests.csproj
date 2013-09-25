@@ -186,6 +186,7 @@
     <Compile Include="Contracts\Transports\TestTransactionality.cs" />
     <Compile Include="DeferredMessageHandlerForTesting.cs" />
     <Compile Include="DeliverRealisticMessagesToQueue.cs" />
+    <Compile Include="EndpointInterrogatorForTesting.cs" />
     <Compile Include="HttpGateway\Http\TestGatewayIntegration.cs" />
     <Compile Include="HttpGateway\Http\TestInboundService.cs" />
     <Compile Include="HttpGateway\Http\TestRebusGatewayConfigurationSection.cs" />
@@ -194,7 +195,9 @@
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
+    <Compile Include="Integration\TestDefaultHeaders.cs" />
     <Compile Include="Integration\TestEncryptionAndCompression.cs" />
+    <Compile Include="Integration\TestEndpointInterrogation.cs" />
     <Compile Include="Integration\TestUserContext.cs" />
     <Compile Include="Integration\TestUserNameHeader.cs" />
     <Compile Include="Integration\Factories\BusFactoryBase.cs" />
@@ -231,6 +234,7 @@
     <Compile Include="Persistence\SqlServer\TestSqlServerSubscriptionStorage_UserProvidedConnection.cs" />
     <Compile Include="Persistence\SqlServer\TestSqlServerTimeoutStorage.cs" />
     <Compile Include="Persistence\TestHybridSagaPersister.cs" />
+    <Compile Include="ReplyDispatcherForTesting.cs" />
     <Compile Include="TestHelpers.cs" />
     <Compile Include="Testing\TestSagaFixture.cs" />
     <Compile Include="Testing\TestSagaFixtureAndSerializationCornerCases.cs" />
