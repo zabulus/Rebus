@@ -47,10 +47,11 @@ namespace Rebus.FleetKeeper
             Log.DebugFormat("Sending state of {0} to {1}", type.Name, Context.ConnectionId);
 
             Clients.Caller.execute(
-                new Reset
+                view,
+                new Replace
                 {
                     Path = "",
-                    Data = aggregate
+                    Value = aggregate
                 });
         }
 
@@ -83,19 +84,19 @@ namespace Rebus.FleetKeeper
         {
             foreach (var key in Views.Keys)
             {
-                var type = Views["services"];
+                var type = Views[key];
                 var view = LoadView(type);
 
                 var eventname = (string) @event["Name"];
 
                 Log.DebugFormat("Applying event {0} to {1}", eventname, GetType().Name);
 
-                var action = view.Apply(@event);
+                var patch = view.Apply(@event);
 
-                if (action != null)
+                if (patch != null)
                 {
                     Log.DebugFormat("Sending resulting changes of event {0} to {1} to web client.", eventname, type.Name);
-                    Clients.Group("webclients/" + key).execute(action);
+                    Clients.Group("webclients/" + key).execute(key, patch);
                 }
                 else
                 {
@@ -126,21 +127,21 @@ namespace Rebus.FleetKeeper
 
     public class JsonAction
     {
-        public string Action 
+        public string Op 
         {
             get { return GetType().Name.ToLowerInvariant(); }
         }
+
+        public string Path { get; set; }
     }
 
-    public class Reset : JsonAction
+    public class Replace : JsonAction
     {
-        public string Path { get; set; }
-        public object Data { get; set; }
+        public object Value { get; set; }
     }
 
     public class Add : JsonAction
     {
-        public string Path { get; set; }
-        public object Data { get; set; }
+        public object Value { get; set; }
     }
 }

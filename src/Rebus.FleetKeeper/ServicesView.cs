@@ -20,15 +20,16 @@ namespace Rebus.FleetKeeper
             {
                 Id = Guid.NewGuid(),
                 BusClientId = (Guid)@event["BusClientId"], 
-                Endpoint = (string)@event["Endpoint"]
+                Endpoint = (string)@event["Endpoint"],
+                LastLifeSign = (DateTimeOffset) @event["Timestamp"]
             };
 
             Services.Add(bus);
 
             return new Add
             {
-                Path = "Services",
-                Data = bus
+                Path = "/services/-",
+                Value = bus
             };
         }
 
@@ -41,11 +42,25 @@ namespace Rebus.FleetKeeper
             return new JsonAction();
         }
 
+        public override JsonAction ApplyHeartbeat(JObject @event)
+        {
+            var bus = Services.Single(x => x.BusClientId == (Guid)@event["BusClientId"]);
+
+            bus.LastLifeSign = (DateTimeOffset)@event["Timestamp"];
+
+            return new Replace
+            {
+                Path = string.Format("/services/{0}/lastLifeSign", Services.IndexOf(bus)),
+                Value = bus.LastLifeSign
+            };
+        }
+
         public class Bus
         {
             public Guid Id { get; set; }
             public Guid BusClientId { get; set; }
             public string Endpoint { get; set; }
+            public DateTimeOffset LastLifeSign { get; set; }
         }
     }
 

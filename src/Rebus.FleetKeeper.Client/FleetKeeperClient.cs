@@ -14,7 +14,7 @@ namespace Rebus.FleetKeeper.Client
         readonly Guid clientId;
 
         readonly HubConnection connection;
-        readonly IHubProxy hubProxy;
+        readonly IHubProxy hub;
 
         static FleetKeeperClient()
         {
@@ -29,14 +29,12 @@ namespace Rebus.FleetKeeper.Client
             connection = new HubConnection(uri);
 
             log.Info("Creating hub proxy");
-            hubProxy = connection.CreateHubProxy("FleetKeeperHub");
+            hub = connection.CreateHubProxy("FleetKeeperHub");
 
             log.Info("Starting connection");
             connection.Start().Wait();
             log.Info("Started!");
         }
-
-        public void Dispose() {}
 
         public void OnBusStarted(IBus bus)
         {
@@ -78,7 +76,9 @@ namespace Rebus.FleetKeeper.Client
 
         void Send(Event @event)
         {
-            hubProxy.Invoke("ReceiveFromBus", JObject.FromObject(@event));
+            hub.Invoke("ReceiveFromBus", JObject.FromObject(@event));
         }
+
+        public void Dispose() { }
     }
 }

@@ -8,7 +8,7 @@ namespace Rebus.FleetKeeper.Client.Events
         {
             Name = GetType().Name;
             Id = Guid.NewGuid();
-            Timestamp = DateTimeOffset.UtcNow;
+            Timestamp = DateTimeOffset.Now;
         }
 
         public string Name { get; set; }

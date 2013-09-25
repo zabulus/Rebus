@@ -12,7 +12,8 @@
     "grunt": "~0.4.1",
     "grunt-browserify": "~1.2.4",
     "grunt-contrib-copy": "~0.4.1",
-    "grunt-contrib-clean": "~0.5.0"
+    "grunt-contrib-clean": "~0.5.0",
+    "grunt-contrib-concat": "~0.3.0"
   },
   "repository": "https://github.com/rebus-org/Rebus",
   "author": "@mookid8000,@asgerhallas",

@@ -33,5 +33,6 @@ namespace Rebus.FleetKeeper
 
         public abstract JsonAction ApplyBusStarted(JObject @event);
         public abstract JsonAction ApplyBusStopped(JObject @event);
+        public abstract JsonAction ApplyHeartbeat(JObject @event);
     }
 }

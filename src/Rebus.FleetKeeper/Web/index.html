@@ -7,15 +7,12 @@
     </head>
 
     <body ng-controller="IndexController">
-        <ul class="menu">
-            <li><a href="#/endpoints">Endpoints</a></li>
-            <li><a href="#/routing">Routing</a></li>
-            <li><a href="#/about">About</a></li>
-        </ul>
-            
         <div class="busses">
-            <div ng-repeat="service in services" class="bus">
-                {{service.name}}
+            <div ng-repeat="service in services.services" class="bus">
+                <h2>{{service.endpoint}}</h2>
+                <h3>Service client id:</h3>{{service.busClientId}}
+                <h3>Endpoint:</h3>{{service.endpoint}}
+                <h3>Seen alive at:</h3>{{service.lastLifeSign}}
             </div>
         </div>
 
@@ -26,11 +23,6 @@
             $(function() {
                 $.connection.hub.start().done(function () {
                     $.connection.fleetKeeperHub.server.asWebClient('services');
-                });
-              
-                $("body").mousewheel(function (event, delta) {
-                    this.scrollLeft -= (delta * 30);
-                    event.preventDefault();
                 });
             });
         </script>
