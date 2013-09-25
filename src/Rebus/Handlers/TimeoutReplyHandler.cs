@@ -1,8 +1,9 @@
 ﻿using Newtonsoft.Json;
+using Rebus.Bus;
 using Rebus.Logging;
 using Rebus.Messages;
 
-namespace Rebus.Bus.InternalHandlers
+namespace Rebus.Handlers
 {
     /// <summary>
     /// Special internal message handler that handles timeout replies from the timeout manager

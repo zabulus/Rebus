@@ -26,7 +26,9 @@ namespace Rebus.Tests.Unit
                               new IncomingMessageMutatorPipelineForTesting(),
                               null,
                               unitOfWorkManagers ?? new IUnitOfWorkManager[0],
-                              new ConfigureAdditionalBehavior());
+                              new ConfigureAdditionalBehavior(),
+                              null,
+                              null);
         }
     }
 }

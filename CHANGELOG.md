@@ -163,4 +163,4 @@
 
 ## vNext
 
-* 
+* Added interrogation feature by which you can send an `EndpointInterrogationRequest` to an endpoint which will yield an `EndpointInterrogationReply` containing interesting information.

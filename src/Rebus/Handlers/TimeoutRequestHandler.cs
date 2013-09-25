@@ -3,7 +3,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Timeout;
 
-namespace Rebus.Bus.InternalHandlers
+namespace Rebus.Handlers
 {
     /// <summary>
     /// Special request handler that handles timeout requests and stores them to be able to reply some time in the future

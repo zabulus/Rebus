@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Ponder;
-using Rebus.Bus.InternalHandlers;
+using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Shared;
@@ -31,6 +31,8 @@ namespace Rebus.Bus
         readonly IInspectHandlerPipeline inspectHandlerPipeline;
         readonly IHandleDeferredMessage handleDeferredMessage;
         readonly IStoreTimeouts storeTimeouts;
+        readonly ISendReplies sendReplies;
+        readonly IInterrogateThisEndpoint interrogateThisEndpoint;
         readonly IStoreSagaData storeSagaData;
         readonly IStoreSubscriptions storeSubscriptions;
         readonly string sagaDataIdPropertyName;
@@ -46,7 +48,9 @@ namespace Rebus.Bus
                           IStoreSubscriptions storeSubscriptions,
                           IInspectHandlerPipeline inspectHandlerPipeline,
                           IHandleDeferredMessage handleDeferredMessage,
-                          IStoreTimeouts storeTimeouts)
+                          IStoreTimeouts storeTimeouts,
+                          ISendReplies sendReplies,
+                          IInterrogateThisEndpoint interrogateThisEndpoint)
         {
             this.storeSagaData = storeSagaData;
             this.activateHandlers = activateHandlers;
@@ -54,6 +58,8 @@ namespace Rebus.Bus
             this.inspectHandlerPipeline = inspectHandlerPipeline;
             this.handleDeferredMessage = handleDeferredMessage;
             this.storeTimeouts = storeTimeouts;
+            this.sendReplies = sendReplies;
+            this.interrogateThisEndpoint = interrogateThisEndpoint;
             sagaDataIdPropertyName = Reflect.Path<ISagaData>(s => s.Id);
             sagaDataPropertyName = Reflect.Path<Saga<ISagaData>>(s => s.Data);
         }
@@ -191,9 +197,14 @@ namespace Rebus.Bus
 
         IEnumerable<IHandleMessages<T>> OwnHandlersFor<T>()
         {
+            if (typeof(T) == typeof(EndpointInterrogationRequest))
+            {
+                yield return (IHandleMessages<T>)new EndpointInterrogationRequestHandler(sendReplies, interrogateThisEndpoint);
+            }
+
             if (typeof(T) == typeof(SubscriptionMessage))
             {
-                return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
+                yield return (IHandleMessages<T>)new SubscriptionMessageHandler(storeSubscriptions);
             }
 
             if (typeof(T) == typeof(TimeoutRequest))
@@ -204,15 +215,14 @@ namespace Rebus.Bus
 
 This most likely indicates that you have configured this Rebus service to use an external timeout manager, but accidentally configured the timeout manager endpoint address to be the same as this endpoint's input queue."));
                 }
-                return new[] {(IHandleMessages<T>) new TimeoutRequestHandler(storeTimeouts)};
+
+                yield return (IHandleMessages<T>)new TimeoutRequestHandler(storeTimeouts);
             }
 
             if (typeof(T) == typeof(TimeoutReply))
             {
-                return new[] {(IHandleMessages<T>) new TimeoutReplyHandler(handleDeferredMessage)};
+                yield return (IHandleMessages<T>)new TimeoutReplyHandler(handleDeferredMessage);
             }
-
-            return new IHandleMessages<T>[0];
         }
 
         void AddTypesFrom(Type messageType, HashSet<Type> typeSet)

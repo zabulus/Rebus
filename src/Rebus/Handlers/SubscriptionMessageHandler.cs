@@ -3,7 +3,7 @@ using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Shared;
 
-namespace Rebus.Bus.InternalHandlers
+namespace Rebus.Handlers
 {
     /// <summary>
     /// Internal message handler that handles subscription messages.

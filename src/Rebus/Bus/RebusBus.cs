@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Transactions;
-using Rebus.Bus.InternalHandlers;
 using Rebus.Configuration;
+using Rebus.Handlers;
 using Rebus.Logging;
 using Rebus.Messages;
 using System.Linq;
@@ -140,7 +140,7 @@ namespace Rebus.Bus
             InternalStart(GetConfiguredNumberOfWorkers());
             return this;
         }
- 
+
         /// <summary>
         /// Starts the <see cref="RebusBus"/> with the specified number of worker threads.
         /// </summary>
@@ -281,7 +281,6 @@ namespace Rebus.Bus
         public void Subscribe<TEvent>()
         {
             var multicastTransport = sendMessages as IMulticastTransport;
-
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 multicastTransport.Subscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
@@ -300,7 +299,6 @@ namespace Rebus.Bus
         public void Unsubscribe<TEvent>()
         {
             var multicastTransport = sendMessages as IMulticastTransport;
-
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 multicastTransport.Unsubscribe(typeof(TEvent), receiveMessages.InputQueueAddress);
@@ -408,7 +406,7 @@ namespace Rebus.Bus
             if (!headerContext.GetHeadersFor(message).TryGetValue(key, out value))
                 return null;
 
-            return (string) value;
+            return (string)value;
         }
 
         /// <summary>
@@ -777,7 +775,9 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                                         new IncomingMessageMutatorPipeline(Events),
                                         storeTimeouts,
                                         events.UnitOfWorkManagers,
-                                        configureAdditionalBehavior);
+                                        configureAdditionalBehavior,
+                                        new ReplyDispatcher(this),
+                                        new PrivateRebusBusInterrogator(this));
                 workers.Add(worker);
                 worker.MessageFailedMaxNumberOfTimes += HandleMessageFailedMaxNumberOfTimes;
                 worker.UserException += LogUserException;
@@ -790,6 +790,51 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 worker.UncorrelatedMessage += RaiseUncorrelatedMessage;
                 worker.MessageContextEstablished += RaiseMessageContextEstablished;
                 worker.Start();
+            }
+        }
+
+        class PrivateRebusBusInterrogator : IInterrogateThisEndpoint
+        {
+            readonly RebusBus rebusBus;
+
+            public PrivateRebusBusInterrogator(RebusBus rebusBus)
+            {
+                this.rebusBus = rebusBus;
+            }
+
+            public bool OneWayClientMode
+            {
+                get { return rebusBus.configureAdditionalBehavior.OneWayClientMode; }
+            }
+         
+            public string InputQueueAddress
+            {
+                get
+                {
+                    return OneWayClientMode
+                               ? null
+                               : rebusBus.receiveMessages.InputQueueAddress;
+                }
+            }
+            
+            public int Workers
+            {
+                get { return rebusBus.workers.Count; }
+            }
+
+            public int AppDomainRebusEndpointId
+            {
+                get { return rebusBus.rebusId; }
+            }
+
+            public bool IsBrokered
+            {
+                get
+                {
+                    return rebusBus.receiveMessages is IMulticastTransport
+                           && ((IMulticastTransport) rebusBus.receiveMessages)
+                                  .ManagesSubscriptions;
+                }
             }
         }
 
@@ -903,5 +948,5 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 cleanupTimer.Dispose();
             }
         }
-   }
+    }
 }
