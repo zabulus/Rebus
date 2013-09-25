@@ -174,7 +174,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(destinationEndpoint, new List<object> { message }, SendMethod.Send);
         }
 
         /// <summary>
@@ -195,7 +195,7 @@ namespace Rebus.Bus
 
             PossiblyAttachSagaIdToRequest(message);
 
-            InternalSend(destinationEndpoint, new List<object> { message });
+            InternalSend(destinationEndpoint, new List<object> { message }, SendMethod.Send);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace Rebus.Bus
             if (multicastTransport != null && multicastTransport.ManagesSubscriptions)
             {
                 AttachHeader(message, Headers.Multicast, "");
-                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message });
+                InternalSend(multicastTransport.GetEventName(message.GetType()), new List<object> { message }, SendMethod.Publish);
                 return;
             }
 
@@ -219,7 +219,7 @@ namespace Rebus.Bus
 
             foreach (var subscriberInputQueue in subscriberEndpoints)
             {
-                InternalSend(subscriberInputQueue, new List<object> { message });
+                InternalSend(subscriberInputQueue, new List<object> { message }, SendMethod.Publish);
             }
         }
 
@@ -375,7 +375,7 @@ namespace Rebus.Bus
 
             var messages = new List<object> { timeoutRequest };
 
-            InternalSend(timeoutManagerAddress, messages);
+            InternalSend(timeoutManagerAddress, messages, SendMethod.Send);
         }
 
         /// <summary>
@@ -450,7 +450,7 @@ namespace Rebus.Bus
                     Action = subscribeAction,
                 };
 
-            InternalSend(destinationQueue, new List<object> { message });
+            InternalSend(destinationQueue, new List<object> { message }, SendMethod.Send);
         }
 
         internal void InternalStart(int numberOfWorkers)
@@ -535,7 +535,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
                 AttachHeader(messages.First(), Headers.UserName, messageContext.Headers[Headers.UserName].ToString());
             }
 
-            InternalSend(returnAddress, messages);
+            InternalSend(returnAddress, messages, SendMethod.Reply);
         }
 
         /// <summary>
@@ -544,7 +544,7 @@ Not that it actually matters, I mean we _could_ just ignore subsequent calls to 
         /// messages to the error queue. This method will bundle the specified batch
         /// of messages inside one single transport message, which it will send.
         /// </summary>
-        internal void InternalSend(string destination, List<object> messages)
+        internal void InternalSend(string destination, List<object> messages, SendMethod method)
         {
             if (!started)
             {
@@ -609,16 +609,27 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 headers[Headers.MessageId] = Guid.NewGuid().ToString();
             }
 
-            AddDefaultHeaders(headers);
+            AddDefaultHeaders(headers, method);
 
             messageToSend.Headers = headers;
 
             InternalSend(destination, messageToSend);
         }
 
-        void AddDefaultHeaders(IDictionary<string, object> headers)
+        internal enum SendMethod
+        {
+            Send, Publish, Reply
+        }
+
+        void AddDefaultHeaders(IDictionary<string, object> headers, SendMethod method)
         {
             headers[Headers.SendTime] = RebusTimeMachine.Now();
+            headers[Headers.RebusSendMethod] = method.ToString().ToLowerInvariant();
+
+            if (!configureAdditionalBehavior.OneWayClientMode)
+            {
+                headers[Headers.SenderAddress] = receiveMessages.InputQueueAddress;
+            }
         }
 
         object MutateOutgoing(object msg)

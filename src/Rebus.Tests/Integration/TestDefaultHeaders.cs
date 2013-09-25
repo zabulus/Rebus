@@ -39,28 +39,50 @@ namespace Rebus.Tests.Integration
         [Test]
         public void AddsDefaultHeadersToLocallySentMessage()
         {
-            RunTest(() => adapter.Bus.SendLocal("hey!"));
+            RunTest(() => adapter.Bus.SendLocal("hey!"), "send");
         }
 
         [Test]
         public void AddsDefaultHeadersToSentMessage()
         {
-            RunTest(() => adapter.Bus.Send("hey!"));
+            RunTest(() => adapter.Bus.Send("hey!"), "send");
+        }
+
+        [Test]
+        public void AddsDefaultHeadersToBatchSentMessage()
+        {
+            RunTest(() => adapter.Bus.Advanced.Batch.Send("hey!"), "send");
+        }
+
+        [Test]
+        public void AddsDefaultHeadersToBatchPublishedMessage()
+        {
+            RunTest(() => adapter.Bus.Advanced.Batch.Publish("hey!"), "publish");
         }
 
         [Test]
         public void AddsDefaultHeadersToPublishedMessage()
         {
-            RunTest(() => adapter.Bus.Publish("hey!"));
+            RunTest(() => adapter.Bus.Publish("hey!"), "publish");
         }
 
         [Test]
         public void AddsDefaultHeadersToRoutedSentMessage()
         {
-            RunTest(() => adapter.Bus.Advanced.Routing.Send(InputQueueName, "hey!"));
+            RunTest(() => adapter.Bus.Advanced.Routing.Send(InputQueueName, "hey!"), "send");
         }
 
-        void RunTest(Action sendAction)
+        [Test]
+        public void AddsDefaultHeadersToReply()
+        {
+            // handle DateTime by replying with a string
+            adapter.Handle<DateTime>(d => adapter.Bus.Reply("hey!"));
+            
+            // trigger reply by sending a DateTime
+            RunTest(() => adapter.Bus.SendLocal(DateTime.Today), "reply");
+        }
+
+        void RunTest(Action sendAction, string expectedMethod)
         {
             var my34thBirthday = new DateTime(2013, 03, 19, 0, 0, 0, DateTimeKind.Utc);
             TimeMachine.FixTo(my34thBirthday);
@@ -70,8 +92,7 @@ namespace Rebus.Tests.Integration
             IDictionary<string, object> headers = null;
             adapter.Handle<string>(str =>
                 {
-                    headers = MessageContext.GetCurrent()
-                                            .Headers;
+                    headers = MessageContext.GetCurrent().Headers;
                     resetEvent.Set();
                 });
 
@@ -81,6 +102,8 @@ namespace Rebus.Tests.Integration
             headers.ShouldNotBe(null);
 
             headers.ShouldContainKeyAndValue(Headers.SendTime, my34thBirthday);
+            headers.ShouldContainKeyAndValue(Headers.SenderAddress, InputQueueName + "@" + Environment.MachineName);
+            headers.ShouldContainKeyAndValue(Headers.RebusSendMethod, expectedMethod);
         }
 
         public string GetEndpointFor(Type messageType)

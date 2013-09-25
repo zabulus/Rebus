@@ -26,7 +26,7 @@ namespace Rebus.Bus
         {
             rebusBus.PossiblyAttachSagaIdToRequest(message);
 
-            rebusBus.InternalSend(destinationEndpoint, new List<object> { message });
+            rebusBus.InternalSend(destinationEndpoint, new List<object> { message }, RebusBus.SendMethod.Send);
         }
 
         /// <summary>
