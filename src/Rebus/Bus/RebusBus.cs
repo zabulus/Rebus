@@ -609,9 +609,16 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
                 headers[Headers.MessageId] = Guid.NewGuid().ToString();
             }
 
+            AddDefaultHeaders(headers);
+
             messageToSend.Headers = headers;
 
             InternalSend(destination, messageToSend);
+        }
+
+        void AddDefaultHeaders(IDictionary<string, object> headers)
+        {
+            headers[Headers.SendTime] = RebusTimeMachine.Now();
         }
 
         object MutateOutgoing(object msg)

@@ -195,6 +195,7 @@
     <Compile Include="HttpGateway\TestInboundService.cs" />
     <Compile Include="HttpGateway\TestRebusGatewayConfigurationSection.cs" />
     <Compile Include="IncomingMessageMutatorPipelineForTesting.cs" />
+    <Compile Include="Integration\TestDefaultHeaders.cs" />
     <Compile Include="Integration\TestEncryptionAndCompression.cs" />
     <Compile Include="Integration\TestEndpointInterrogation.cs" />
     <Compile Include="Integration\TestUserContext.cs" />

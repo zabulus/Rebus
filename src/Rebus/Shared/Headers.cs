@@ -107,5 +107,10 @@ namespace Rebus.Shared
             /// </summary>
             public const string GZip = "gzip";
         }
+
+        /// <summary>
+        /// UTC time of when the message was sent
+        /// </summary>
+        public const string SendTime = "rebus-sendtime";
     }
 }
