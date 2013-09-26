@@ -101,7 +101,7 @@ namespace Rebus.Tests.Integration
 
             headers.ShouldNotBe(null);
 
-            headers.ShouldContainKeyAndValue(Headers.SendTime, my34thBirthday);
+            headers.ShouldContainKeyAndValue(Headers.SendTime, my34thBirthday.ToString());
             headers.ShouldContainKeyAndValue(Headers.SenderAddress, InputQueueName + "@" + Environment.MachineName);
             headers.ShouldContainKeyAndValue(Headers.RebusSendMethod, expectedMethod);
         }
