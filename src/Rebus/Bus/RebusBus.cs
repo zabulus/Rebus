@@ -623,7 +623,7 @@ element and use e.g. .Transport(t => t.UseMsmqInOneWayClientMode())"));
 
         void AddDefaultHeaders(IDictionary<string, object> headers, SendMethod method)
         {
-            headers[Headers.SendTime] = RebusTimeMachine.Now();
+            headers[Headers.SendTime] = RebusTimeMachine.Now().ToString();
             headers[Headers.RebusSendMethod] = method.ToString().ToLowerInvariant();
 
             if (!configureAdditionalBehavior.OneWayClientMode)
