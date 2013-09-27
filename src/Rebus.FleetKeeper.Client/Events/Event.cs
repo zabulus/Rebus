@@ -15,6 +15,7 @@ namespace Rebus.FleetKeeper.Client.Events
         public Guid Id { get; set; }
         public Guid BusClientId { get; set; }
         public string Endpoint { get; set; }
+        public string ProcessName { get; set; }
         public DateTimeOffset Timestamp { get; set; }
         public int SchemaVersion { get; set; }
     }

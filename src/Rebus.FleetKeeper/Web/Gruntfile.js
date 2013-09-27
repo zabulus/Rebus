@@ -26,6 +26,14 @@ module.exports = function(grunt) {
               depends: {
                 jquery: '$'
               }
+            },
+            'angular_animate': {
+              alias: 'angular-animate',
+              path: './bower_components/angular-animate/angular-animate.js',
+              exports: 'angular_animate',
+              depends: {
+                angular: 'angular'
+              }
             }
           },
         },
@@ -37,7 +45,8 @@ module.exports = function(grunt) {
           debug: true,
           external: [
             'jquery',
-            'angular'
+            'angular',
+            'angular_animate'
           ]
         },
         src: ['app.js'],
@@ -78,7 +87,7 @@ module.exports = function(grunt) {
   });
 
   grunt.loadNpmTasks('grunt-browserify');
-  grunt.loadNpmTasks('grunt-contrib-clean');  
+  grunt.loadNpmTasks('grunt-contrib-clean');
   grunt.loadNpmTasks('grunt-contrib-copy');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');

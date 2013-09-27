@@ -8,17 +8,5 @@ namespace Rebus.FleetKeeper.Client.Events
         {
             SchemaVersion = 1;
         }
-
-        public string ProcessName { get; set; }
-    }
-
-    public class BusStopped : Event
-    {
-        public BusStopped()
-        {
-            SchemaVersion = 1;
-        }
-
-        public string ProcessName { get; set; }
     }
 }

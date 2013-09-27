@@ -24,6 +24,8 @@ namespace Rebus.FleetKeeper
             {
                 case "BusStarted":
                     return ApplyBusStarted(@event);
+                case "HeartBeat":
+                    return ApplyHeartbeat(@event);
                 case "BusStopped":
                     return ApplyBusStopped(@event);
             }

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Linq;
+using System.Threading;
 using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json.Linq;
 using Rebus.FleetKeeper.Client.Events;
@@ -11,10 +11,11 @@ namespace Rebus.FleetKeeper.Client
     public class FleetKeeperClient : IDisposable
     {
         static ILog log;
-        readonly Guid clientId;
 
         readonly HubConnection connection;
         readonly IHubProxy hub;
+        Timer timer;
+        BusIdentification identification;
 
         static FleetKeeperClient()
         {
@@ -23,8 +24,6 @@ namespace Rebus.FleetKeeper.Client
 
         public FleetKeeperClient(string uri)
         {
-            clientId = Guid.NewGuid();
-
             log.Info("Establishing hub connection to {0}", uri);
             connection = new HubConnection(uri);
 
@@ -38,45 +37,66 @@ namespace Rebus.FleetKeeper.Client
 
         public void OnBusStarted(IBus bus)
         {
-            var currentProcess = Process.GetCurrentProcess();
-            var processStartInfo = currentProcess.StartInfo;
-            var processName = !string.IsNullOrWhiteSpace(processStartInfo.FileName)
-                               ? processStartInfo.FileName
-                               : currentProcess.ProcessName;
+            if (identification != null)
+                throw new InvalidOperationException("Same bus instance seems to have been started twice. FleetKeeper was not ready for that.");
 
+            identification = new BusIdentification(bus);
+            Send(new BusStarted());
+            timer = new Timer(OnHeartBeat, bus, 3000, 3000);
+        }
 
-            //new
-            //{
-            //    Environment.MachineName,
-            //    Os = Environment.OSVersion.ToString(),
-            //}
-
-            var inputQueueAddress = bus.Advanced.Interrogation.InputQueueAddress;
-            Send(new BusStarted
-            {
-                BusClientId = clientId,
-                Endpoint = inputQueueAddress,
-                ProcessName = processName
-            });
+        void OnHeartBeat(object state)
+        {
+            // TODO: There's a little concurrency issue here, I think.
+            // Connection might have been disposed, if bus was stopped
+            // at the time of a heartbeat
+            Send(new HeartBeat());
         }
 
         public void OnBusDisposed(IBus bus)
         {
-            var inputQueueAddress = bus.Advanced.Interrogation.InputQueueAddress;
-            Send(new BusStopped
-            {
-                BusClientId = clientId,
-                Endpoint = inputQueueAddress
-            });
-
+            Send(new BusStopped());
             Dispose();
         }
 
         void Send(Event @event)
         {
+            if (identification != null)
+            {
+                @event.BusClientId = identification.BusClientId;
+                @event.Endpoint = identification.Endpoint;
+                @event.ProcessName = identification.ProcessName;
+            }
+
             hub.Invoke("ReceiveFromBus", JObject.FromObject(@event));
         }
 
-        public void Dispose() { }
+        public void Dispose()
+        {
+            timer.Dispose();
+            connection.Dispose();
+        }
+
+        public class BusIdentification
+        {
+            public BusIdentification(IBus bus)
+            {
+                var currentProcess = Process.GetCurrentProcess();
+                var processStartInfo = currentProcess.StartInfo;
+                var processName = !string.IsNullOrWhiteSpace(processStartInfo.FileName)
+                                   ? processStartInfo.FileName
+                                   : currentProcess.ProcessName;
+
+                var inputQueueAddress = bus.Advanced.Interrogation.InputQueueAddress;
+
+                BusClientId = Guid.NewGuid();
+                Endpoint = inputQueueAddress;
+                ProcessName = processName;
+            }
+
+            public Guid BusClientId { get; set; }
+            public string Endpoint { get; set; }
+            public string ProcessName { get; set; }
+        }
     }
 }
