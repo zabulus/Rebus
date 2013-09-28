@@ -31,27 +31,30 @@ namespace Rebus.FleetKeeper
 
             dbConnection.Execute(@"
                 create table if not exists Events (
-                Id integer primary key autoincrement,
+                Sequence integer primary key autoincrement,
+                AggregateId text,
+                Version integer,
                 Data text)");
         }
 
-        public async Task AsWebClient(string view)
+        public async Task AsWebClient(string viewname)
         {
             Log.DebugFormat("New web client: {0}", Context.ConnectionId);
 
-            await Groups.Add(Context.ConnectionId, "webclients/" + view);
+            await Groups.Add(Context.ConnectionId, "webclients/" + viewname);
 
-            var type = Views[view];
-            var aggregate = LoadView(type);
+            var type = Views[viewname];
+            var view = LoadView(type);
 
             Log.DebugFormat("Sending state of {0} to {1}", type.Name, Context.ConnectionId);
 
             Clients.Caller.execute(
-                view,
+                viewname,
                 new Replace
                 {
                     Path = "",
-                    Value = aggregate
+                    Value = view,
+                    Version = view.Version
                 });
         }
 
@@ -64,8 +67,8 @@ namespace Rebus.FleetKeeper
 
         public void ReceiveFromBus(JObject @event)
         {
-            Persist(@event);
-            Apply(@event);
+            var sequence = Persist(@event);
+            Apply(sequence, @event);
         }
 
         public void SendToBus(string message)
@@ -73,14 +76,33 @@ namespace Rebus.FleetKeeper
             Clients.All.addEndpoint(message);
         }
 
-        internal void Persist(JObject @event)
-        {
-            Log.DebugFormat("Inserting {0}", (string)@event["Name"]);
+        List<JObject> pendingEvents = new List<JObject>(); 
 
-            dbConnection.Execute("insert into Events (Data) values (@Data)", new {Data = @event.ToString()});
+        internal long Persist(JObject @event)
+        {
+            Log.DebugFormat("Inserting {0} ({1})", (string)@event["Name"], (Guid)@event["Id"]);
+
+            var sequence = dbConnection.Query<long>(
+                "insert into Events (AggregateId, Version, Data) values (@AggregateId, @Version, @Data);" +
+                "select last_insert_rowid();", 
+                new
+                {
+                    AggregateId = (Guid)@event["BusClientId"],
+                    Version = (long)@event["Version"],
+                    Data = @event.ToString()
+                }).Single();
+
+            if (sequence == 0) // or last sequence
+            {
+                pendingEvents.Add(@event);
+            }
+
+            Log.DebugFormat("Inserted {0} ({1}) and got sequence number {2}", (string)@event["Name"], (Guid)@event["Id"], sequence);
+
+            return sequence;
         }
 
-        public void Apply(JObject @event)
+        public void Apply(long sequence, JObject @event)
         {
             foreach (var key in Views.Keys)
             {
@@ -89,14 +111,15 @@ namespace Rebus.FleetKeeper
 
                 var eventname = (string) @event["Name"];
 
-                Log.DebugFormat("Applying event {0} to {1}", eventname, GetType().Name);
+                //var patch = view.Apply(sequence, @event);
 
-                var patch = view.Apply(@event);
-
-                if (patch != null)
+                if (view.Changes.Any())
                 {
                     Log.DebugFormat("Sending resulting changes of event {0} to {1} to web client.", eventname, type.Name);
-                    Clients.Group("webclients/" + key).execute(key, patch);
+                    foreach (var patch in view.Changes)
+                    {
+                        Clients.Group("webclients/" + key).execute(key, patch);
+                    }
                 }
                 else
                 {
@@ -109,13 +132,16 @@ namespace Rebus.FleetKeeper
 
         ReadModel LoadView(Type type)
         {
-            var events = dbConnection.Query<string>("select Data from Events");
-            var aggregate = (ReadModel) Activator.CreateInstance(type);
-            var numberOfEvents = aggregate.LoadFromHistory(events.Select(JObject.Parse));
-            
-            Log.DebugFormat("'Replaying' {0} events to {1}", numberOfEvents, type.Name);
+            Log.DebugFormat("Loading view {0}", type.Name);
 
-            return aggregate;
+            // Split this into snapshot load and replay
+            var events = dbConnection.Query<dynamic>("select Sequence, Data from Events");
+            var view = (ReadModel) Activator.CreateInstance(type);
+            view.LoadFromHistory(events.Select(@event => Tuple.Create((long)@event.Sequence, JObject.Parse((string)@event.Data))));
+            
+            Log.DebugFormat("'Replaying' {0} events to {1}", view.Changes.Count, type.Name);
+
+            return view;
         }
 
         protected override void Dispose(bool disposing)
@@ -125,7 +151,7 @@ namespace Rebus.FleetKeeper
         }
     }
 
-    public class JsonAction
+    public class JsonPatch
     {
         public string Op 
         {
@@ -133,15 +159,20 @@ namespace Rebus.FleetKeeper
         }
 
         public string Path { get; set; }
+        public long Version { get; set; }
     }
 
-    public class Replace : JsonAction
+    public class Replace : JsonPatch
     {
         public object Value { get; set; }
     }
 
-    public class Add : JsonAction
+    public class Add : JsonPatch
     {
         public object Value { get; set; }
+    }
+
+    public class Remove : JsonPatch
+    {
     }
 }

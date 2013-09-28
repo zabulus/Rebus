@@ -14,6 +14,8 @@ namespace Rebus.FleetKeeper.Client
             configurer.Events(events =>
             {
                 events.BusStarted += client.OnBusStarted;
+                events.BeforeTransportMessage += client.OnBeforeTransportMessage;
+                events.AfterTransportMessage += client.OnAfterTransportMessage;
                 events.BusDisposed += client.OnBusDisposed;
             });
             

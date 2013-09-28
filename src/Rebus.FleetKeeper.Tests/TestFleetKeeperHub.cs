@@ -58,7 +58,7 @@ namespace Rebus.FleetKeeper.Tests
                 SomeProperty = "SomeValue"
             }.ToJObject();
 
-            hub.Apply(@event);
+            //hub.Apply(TODO, @event);
 
             view.Calls.ShouldContainKeyAndValue("BusStarted", @event);
         }
@@ -72,7 +72,7 @@ namespace Rebus.FleetKeeper.Tests
                 SomeProperty = "SomeValue"
             }.ToJObject();
 
-            hub.Apply(@event);
+            //hub.Apply(TODO, @event);
 
             view.Calls.ShouldContainKeyAndValue("BusStarted", @event);
         }

@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Rebus.Configuration;
 using Rebus.Transports.Msmq;
 
 namespace Rebus.FleetKeeper.Client
 {
-    public class Program
+    public class Program : IHandleMessages<string>
     {
         static readonly Dictionary<string, IBus> busses = new Dictionary<string, IBus>();
 
@@ -35,6 +36,13 @@ namespace Rebus.FleetKeeper.Client
                                  .Start();
 
                         busses.Add(name, bus);
+                    }
+                    else if (line.StartsWith("send"))
+                    {
+                        var to = words[1];
+                        var msg = words[2];
+
+                        busses[to].SendLocal(msg);
                     }
                     else if (line.StartsWith("stop bus"))
                     {

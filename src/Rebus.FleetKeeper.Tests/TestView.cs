@@ -13,19 +13,29 @@ namespace Rebus.FleetKeeper.Tests
 
         public Dictionary<string, JObject> Calls { get; set; }
 
-        public override JsonAction ApplyBusStarted(JObject @event)
+        public override JsonPatch ApplyBusStarted(JObject @event)
         {
             Calls.Add("BusStarted", @event);
             return null;
         }
 
-        public override JsonAction ApplyBusStopped(JObject @event)
+        public override JsonPatch ApplyMessageReceived(JObject @event)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override JsonPatch ApplyMessageHandled(JObject @event)
+        {
+            throw new NotImplementedException();
+        }
+
+        public override JsonPatch ApplyBusStopped(JObject @event)
         {
             throw new NotImplementedException();
             return null;
         }
 
-        public override JsonAction ApplyHeartbeat(JObject @event)
+        public override JsonPatch ApplyHeartbeat(JObject @event)
         {
             throw new NotImplementedException();
         }

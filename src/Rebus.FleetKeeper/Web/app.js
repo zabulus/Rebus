@@ -17,28 +17,32 @@ var patcher = require("json-patch");
 
 var app = angular.module('fleetkeeper', ['ngAnimate']);
 
-app.directive('highlightOnChange', ['$animate',
-  function($animate) {
-    return {
-      link: function($scope, element, attrs) {
-        attrs.$observe('highlightOnChange', function(val) {
-          var el = $(element);
-          el.removeClass('heartbeat');
-          _.defer(function() {
-            el.addClass('heartbeat')
-          });
+app.directive('highlightOnChange', function($animate) {
+  return {
+    link: function($scope, element, attrs) {
+      attrs.$observe('highlightOnChange', function(val) {
+        var el = $(element);
+        el.removeClass('heartbeat');
+        _.defer(function() {
+          el.addClass('heartbeat')
         });
-      }
-    };
-  }
-]);
+      });
+    }
+  };
+});
 
 app.controller('IndexController', function($scope) {
   var hub = $.connection.fleetKeeperHub;
-  $scope.services = [];
+  $scope.version = -1;
+  $scope.services = {};
 
   hub.client.execute = function(view, patch) {
     $scope.$apply(function() {
+      if (patch.version != $scope.version+1 && $scope.version != -1)
+        return;
+
+      $scope.version = patch.version;
+
       patcher.apply($scope, [{
         op: patch.op,
         path: '/' + view + patch.path,

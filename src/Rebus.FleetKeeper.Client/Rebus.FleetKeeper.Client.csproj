@@ -53,6 +53,8 @@
   <ItemGroup>
     <Compile Include="Events\BusStopped.cs" />
     <Compile Include="Events\HeartBeat.cs" />
+    <Compile Include="Events\MessageHandled.cs" />
+    <Compile Include="Events\MessageReceived.cs" />
     <Compile Include="FleetKeeperClient.cs" />
     <Compile Include="FleetKeeperConfigurationExtensions.cs" />
     <Compile Include="Events\BusStarted.cs" />

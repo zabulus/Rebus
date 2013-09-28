@@ -79,6 +79,18 @@ ul.menu
     -webkit-animation: pulsate 2s ease-out;
 }
 
+.message.ng-leave
+{
+    -webkit-transition: 10s linear all; /* Chrome */
+    transition: 10s linear all;
+    opacity: 1;
+}
+
+.message.ng-leave.ng-leave-active
+{
+    opacity: 0;
+}
+
 .bus .info
 {
 }

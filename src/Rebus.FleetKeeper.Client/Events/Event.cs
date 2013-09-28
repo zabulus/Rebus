@@ -18,5 +18,6 @@ namespace Rebus.FleetKeeper.Client.Events
         public string ProcessName { get; set; }
         public DateTimeOffset Timestamp { get; set; }
         public int SchemaVersion { get; set; }
+        public long Version { get; set; }
     }
 }

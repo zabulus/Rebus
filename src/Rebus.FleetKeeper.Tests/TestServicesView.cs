@@ -30,12 +30,12 @@ namespace Rebus.FleetKeeper.Tests
         {
             var id = Guid.NewGuid();
 
-            aggregate.Apply(new
-            {
-                Name = "BusStarted",
-                BusClientId = id,
-                Endpoint = "EndpointAddress"
-            }.ToJObject());
+            //aggregate.Apply(TODO, new
+            //{
+            //    Name = "BusStarted",
+            //    BusClientId = id,
+            //    Endpoint = "EndpointAddress"
+            //}.ToJObject());
 
             //aggregate.Services.ShouldContain();
         }

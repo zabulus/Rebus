@@ -13,6 +13,10 @@
                 <div class="heart" highlight-on-change="{{service.lastLifeSign}}" title="Seen alive at: {{service.lastLifeSign}}"></div>
                 <h3>Service client id:</h3>{{service.busClientId}}
                 <h3>Endpoint:</h3>{{service.endpoint}}
+                <h3>Messages:</h3>
+                <div ng-repeat="message in service.currentMessages" class="message">
+                    {{message.type}}
+                </div>
             </div>
         </div>
 
