@@ -59,6 +59,22 @@ namespace Rebus.FleetKeeper.Tests
         }
 
         [Test]
+        public void FailsOnDuplicateEvents()
+        {
+            var busClientId = Guid.NewGuid();
+            var @event = new
+            {
+                Id = Guid.NewGuid(), 
+                BusClientId = busClientId, 
+                Version = 1, 
+                Name = "SomeEvent",
+            };
+
+            hub.Persist(@event.ToJObject());
+            Should.Throw<Exception>(() => hub.Persist(@event.ToJObject()));
+        }
+
+        [Test]
         public void RetainsOutOfOrderMessages()
         {
             var busClientId = Guid.NewGuid();
