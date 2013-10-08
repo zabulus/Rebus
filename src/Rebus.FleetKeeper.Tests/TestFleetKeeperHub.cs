@@ -39,42 +39,77 @@ namespace Rebus.FleetKeeper.Tests
         [Test]
         public void CanPersistEvent()
         {
-            hub.Persist(new
+            var busClientId = Guid.NewGuid();
+            var @event = new
             {
-                Name = "SomeEvent"
-            }.ToJObject());
+                Id = Guid.NewGuid(), 
+                BusClientId = busClientId, 
+                Version = 1, 
+                Name = "SomeEvent",
+            };
 
-            var result = dbConnection.Query<string>("select Data from Events").ToList();
+            hub.Persist(@event.ToJObject());
+
+            var result = dbConnection.Query<dynamic>("select AggregateId, Version, Data from Events").ToList();
             result.Count.ShouldBe(1);
-            result[0].ShouldBe(new {Name = "SomeEvent"}.ToJson());
+            
+            ((string)result[0].AggregateId).ShouldBe(busClientId.ToString());
+            ((long)result[0].Version).ShouldBe(1);
+            ((string)result[0].Data).ShouldBe(@event.ToJson());
         }
 
         [Test]
-        public void AppliesBusStartedEvent()
+        public void RetainsOutOfOrderMessages()
         {
-            var @event = new
+            var busClientId = Guid.NewGuid();
+
+            var @event2 = new
             {
-                Name = "BusStarted",
-                SomeProperty = "SomeValue"
-            }.ToJObject();
+                Id = Guid.NewGuid(),
+                BusClientId = busClientId,
+                Version = 2,
+                Name = "SomeEvent",
+            };
 
-            //hub.Apply(TODO, @event);
+            hub.Persist(@event2.ToJObject());
 
-            view.Calls.ShouldContainKeyAndValue("BusStarted", @event);
+            var result = dbConnection.Query<dynamic>("select AggregateId, Version, Data from Events").ToList();
+            result.Count.ShouldBe(0);
         }
 
         [Test]
-        public void AppliesBusStoppedEvent()
+        public void RetainsOutOfOrderMessages2()
         {
-            var @event = new
+            var busClientId = Guid.NewGuid();
+            var @event1 = new
             {
-                Name = "BusStopped",
-                SomeProperty = "SomeValue"
-            }.ToJObject();
+                Id = Guid.NewGuid(),
+                BusClientId = busClientId,
+                Version = 1,
+                Name = "SomeEvent",
+            };
 
-            //hub.Apply(TODO, @event);
+            var @event2 = new
+            {
+                Id = Guid.NewGuid(),
+                BusClientId = busClientId,
+                Version = 2,
+                Name = "SomeEvent",
+            };
 
-            view.Calls.ShouldContainKeyAndValue("BusStarted", @event);
+            hub.Persist(@event2.ToJObject());
+
+            
+
+            hub.Persist(@event1.ToJObject());
+
+            var result = dbConnection.Query<dynamic>("select AggregateId, Version, Data from Events").ToList();
+            result.Count.ShouldBe(1);
+
+            ((string)result[0].AggregateId).ShouldBe(busClientId.ToString());
+            ((long)result[0].Version).ShouldBe(1);
+            ((string)result[0].Data).ShouldBe(@event1.ToJson());
         }
+    
     }
 }
