@@ -239,28 +239,35 @@ namespace Rebus.RabbitMQ
             }
         }
 
-        public void Subscribe(Type messageType, string inputQueueAddress)
+        public void Subscribe(Type eventType, string inputQueueAddress)
         {
             if (SenderOnly)
             {
                 throw new InvalidOperationException(
                     string.Format(
                         "Attempted to subscribe to {0}, but the transport is configured to work in one-way client mode which implies that messages can only be sent/published and not received",
-                        messageType));
+                        eventType));
             }
 
             EnsureInputQueueInitialized(inputQueueAddress);
 
             if (autoDeleteInputQueue)
             {
-                subscriptions.TryAdd(messageType, "");
-
+                subscriptions.TryAdd(eventType, "");
+                EstablishSubscriptions(threadBoundModel);
+                
+                // if we have the connection now, make sure the subscription is established on that
                 var model = threadBoundModel;
                 if (model != null)
                 {
-                    var topic = GetEventName(messageType);
-                    log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
-                    model.QueueBind(InputQueueAddress, ExchangeName, topic);
+                    EstablishSubscription(model, eventType);
+                }
+                else
+                {
+                    // in case we have already established a connection on another thread, we must ensure the binding happens
+                    // - if the connection has not been established, this will end up as a temporarily visible queue with
+                    // one binding, which disappears immediately
+                    WithConnection(m => EstablishSubscription(m, eventType));
                 }
                 return;
             }
@@ -269,9 +276,7 @@ namespace Rebus.RabbitMQ
             {
                 using (var model = GetConnection().CreateModel())
                 {
-                    var topic = GetEventName(messageType);
-                    log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
-                    model.QueueBind(InputQueueAddress, ExchangeName, topic);
+                    EstablishSubscription(model, eventType);
                 }
             }
             catch (Exception e)
@@ -283,7 +288,7 @@ namespace Rebus.RabbitMQ
 
         void EnsureInputQueueInitialized(string inputQueueNameToInitialize)
         {
-            if (threadBoundModel != null)
+            if (CanUseThreadBoundModel)
             {
                 InitializeLogicalQueue(inputQueueNameToInitialize, threadBoundModel, autoDeleteInputQueue);
             }
@@ -291,6 +296,11 @@ namespace Rebus.RabbitMQ
             {
                 WithConnection(model => InitializeLogicalQueue(inputQueueNameToInitialize, model, autoDeleteInputQueue));
             }
+        }
+
+        static bool CanUseThreadBoundModel
+        {
+            get { return threadBoundModel != null && threadBoundModel.IsOpen; }
         }
 
         public void Unsubscribe(Type messageType, string inputQueueAddress)
@@ -412,10 +422,15 @@ namespace Rebus.RabbitMQ
 
             foreach (var subscription in subscriptions.Keys)
             {
-                var topic = GetEventName(subscription);
-                log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
-                model.QueueBind(InputQueueAddress, ExchangeName, topic);
+                EstablishSubscription(model, subscription);
             }
+        }
+
+        void EstablishSubscription(IModel model, Type subscription)
+        {
+            var topic = GetEventName(subscription);
+            log.Info("Subscribing {0} to {1}", InputQueueAddress, topic);
+            model.QueueBind(InputQueueAddress, ExchangeName, topic);
         }
 
         static string GetPrettyTypeName(Type messageType)
@@ -469,9 +484,9 @@ namespace Rebus.RabbitMQ
             }
         }
 
-        internal void CreateQueue(string errorQueueName)
+        internal void CreateQueue(string queueName)
         {
-            WithConnection(model => InitializeLogicalQueue(errorQueueName, model));
+            WithConnection(model => InitializeLogicalQueue(queueName, model));
         }
 
         public void Initialize()
@@ -486,7 +501,7 @@ namespace Rebus.RabbitMQ
 
         void EnsureThreadBoundModelIsInitialized(ITransactionContext context)
         {
-            if (threadBoundModel != null && threadBoundModel.IsOpen)
+            if (CanUseThreadBoundModel)
             {
                 if (context[CurrentModelKey] == null)
                 {

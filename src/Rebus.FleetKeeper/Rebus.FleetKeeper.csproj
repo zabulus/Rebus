@@ -145,7 +145,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <PropertyGroup>
-    <PostBuildEvent>cd $(ProjectDir)\Web
+    <PostBuildEvent>cd "$(ProjectDir)Web"
 grunt
 </PostBuildEvent>
   </PropertyGroup>

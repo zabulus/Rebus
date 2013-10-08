@@ -6,7 +6,9 @@
   "main": "js/index.js",
   "dependencies": {
     "buster": "~0.7.6",
-    "json-patch": "~0.4.0"
+    "json-patch": "~0.4.0",
+    "underscore": "~1.5.2",
+    "grunt-contrib-watch": "~0.5.3"
   },
   "devDependencies": {
     "grunt": "~0.4.1",

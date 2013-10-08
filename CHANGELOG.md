@@ -161,6 +161,24 @@
 * RabbitMQ transport uses the Rebus Transport ID as it's message ID, if it is not set otherwise
 * RabbitMQ transport now initializes the input queue when subscribing - relevant if subscribe is called before receive
 
-## vNext
+## 0.44.0
 
 * Added interrogation feature by which you can send an `EndpointInterrogationRequest` to an endpoint which will yield an `EndpointInterrogationReply` containing interesting information.
+* Updated Log4Net dependency to 2.0.1 (BEWARE: It appears that the Log4Net public key has changed since previous version!!)
+* Azure transport can now be configured in one-way client mode
+
+## 0.44.1
+
+* Avoid warning when disposing one-way Azure transport
+
+## 0.44.2
+
+* Added ability for RabbitMQ transport to NOT create the error queue. This way, the Rebus errorQueue setting just becomes the topic under which failed messages will be published.
+
+## 0.44.3
+
+* Fixed race condition bug when using RabbitMQ auto-delete input queue and subscribing on another thread after having started the bus
+
+## 0.44.4
+
+* Added ability for Azure Service Bus transport to actually use MSMQ when connection string is `UseDevelopmentStorage=true`
