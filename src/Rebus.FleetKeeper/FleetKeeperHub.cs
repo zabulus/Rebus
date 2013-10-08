@@ -30,11 +30,15 @@ namespace Rebus.FleetKeeper
             Log.Debug("Ensuring 'Events' table exists");
 
             dbConnection.Execute(@"
+                begin;   
                 create table if not exists Events (
                 Sequence integer primary key autoincrement,
                 AggregateId text,
                 Version integer,
-                Data text)");
+                Data text);
+                
+                create unique index aggregateid_version on Events (AggregateId, Version);
+                commit;");
         }
 
         public async Task AsWebClient(string viewname)
@@ -83,11 +87,12 @@ namespace Rebus.FleetKeeper
             Log.DebugFormat("Inserting {0} ({1})", (string)@event["Name"], (Guid)@event["Id"]);
 
             var sequence = dbConnection.Query<long>(
-                "insert into Events (AggregateId, Version, Data) values (@AggregateId, @Version, @Data);" +
-                "select last_insert_rowid();", 
+                "insert into Events (AggregateId, Version, Data) " +
+                "select @AggregateId as AggregateId, @Version as Version, @Data, Version as OldVersion from Events where Version = OldVersion+1;" +
+                "select last_insert_rowid()", 
                 new
                 {
-                    AggregateId = (Guid)@event["BusClientId"],
+                    AggregateId = (string)@event["BusClientId"],
                     Version = (long)@event["Version"],
                     Data = @event.ToString()
                 }).Single();
@@ -147,6 +152,8 @@ namespace Rebus.FleetKeeper
         protected override void Dispose(bool disposing)
         {
             Log.Info("Disposing DB connection");
+            
+            //TODO: We should not dispose a connection, we do not own
             dbConnection.Dispose();
         }
     }
