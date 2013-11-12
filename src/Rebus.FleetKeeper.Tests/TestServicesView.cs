@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Data;
+using System.Reactive.Subjects;
 using FakeItEasy;
 using Microsoft.AspNet.SignalR.Hubs;
 using NUnit.Framework;
+using Newtonsoft.Json.Linq;
 
 namespace Rebus.FleetKeeper.Tests
 {
@@ -13,7 +15,7 @@ namespace Rebus.FleetKeeper.Tests
 
         public TestServicesView()
         {
-            var hub = new FleetKeeperHub(A.Fake<IDbConnection>())
+            var hub = new FleetKeeperHub(A.Fake<IDbConnection>(), new Subject<JObject>())
             {
                 Clients = A.Fake<IHubCallerConnectionContext>()
             };

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reactive.Subjects;
 using System.Reflection;
 using System.Threading.Tasks;
 using Dapper;
@@ -22,11 +23,13 @@ namespace Rebus.FleetKeeper
             };
 
         readonly IDbConnection dbConnection;
+        readonly Subject<JObject> subject;
 
-        public FleetKeeperHub(IDbConnection dbConnection)
+        public FleetKeeperHub(IDbConnection dbConnection, Subject<JObject> subject)
         {
             this.dbConnection = dbConnection;
-            
+            this.subject = subject;
+
             Log.Debug("Ensuring 'Events' table exists");
 
             dbConnection.Execute(@"
@@ -71,6 +74,7 @@ namespace Rebus.FleetKeeper
 
         public void ReceiveFromBus(JObject @event)
         {
+            subject.OnNext(@event);
             var sequence = Persist(@event);
             Apply(sequence, @event);
         }
@@ -88,7 +92,7 @@ namespace Rebus.FleetKeeper
 
             var sequence = dbConnection.Query<long>(
                 "insert into Events (AggregateId, Version, Data) " +
-                "select @AggregateId as AggregateId, @Version as Version, @Data, Version as OldVersion from Events where Version = OldVersion+1;" +
+                "select @AggregateId as AggregateId, @Version as Version, @Data from Events where Version = OldVersion+1;" +
                 "select last_insert_rowid()", 
                 new
                 {

@@ -1,8 +1,10 @@
 ﻿using System.Data.SQLite;
 using System.IO;
+using System.Reactive.Subjects;
 using System.Reflection;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Owin;
 
 namespace Rebus.FleetKeeper
@@ -21,7 +23,9 @@ namespace Rebus.FleetKeeper
             config.Resolver.Register(typeof(JsonSerializer), () => serializer);
             
             config.Resolver.Register(typeof(FleetKeeperHub), 
-                () => new FleetKeeperHub(new SQLiteConnection("Data Source=fleetkeeper.db;Version=3;New=False;Compress=True;")));
+                () => new FleetKeeperHub(
+                    new SQLiteConnection("Data Source=fleetkeeper.db;Version=3;New=False;Compress=True;"), 
+                    new Subject<JObject>()));
                           
             app.MapSignalR(config);
 
