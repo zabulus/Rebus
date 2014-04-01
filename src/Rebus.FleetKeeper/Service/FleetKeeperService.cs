@@ -4,6 +4,7 @@ using System.Reflection;
 using System.ServiceProcess;
 using Microsoft.Owin.Hosting;
 using log4net;
+using Rebus.FleetKeeper.Http;
 
 namespace Rebus.FleetKeeper.Service
 {

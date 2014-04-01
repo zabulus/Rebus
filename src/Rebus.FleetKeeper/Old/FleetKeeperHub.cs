@@ -6,11 +6,11 @@ using System.Reactive.Subjects;
 using System.Reflection;
 using System.Threading.Tasks;
 using Dapper;
+using log4net;
 using Microsoft.AspNet.SignalR;
 using Newtonsoft.Json.Linq;
-using log4net;
 
-namespace Rebus.FleetKeeper
+namespace Rebus.FleetKeeper.Old
 {
     public class FleetKeeperHub : Hub
     {
@@ -55,14 +55,14 @@ namespace Rebus.FleetKeeper
 
             Log.DebugFormat("Sending state of {0} to {1}", type.Name, Context.ConnectionId);
 
-            Clients.Caller.execute(
-                viewname,
-                new Replace
-                {
-                    Path = "",
-                    Value = view,
-                    Version = view.Version
-                });
+            //Clients.Caller.execute(
+            //    viewname,
+            //    new Replace
+            //    {
+            //        Path = "",
+            //        Value = view,
+            //        Version = view.Version
+            //    });
         }
 
         public Task AsBusClient()
@@ -139,14 +139,14 @@ namespace Rebus.FleetKeeper
             }
         }
 
-        ReadModel LoadView(Type type)
+        ReadModel2 LoadView(Type type)
         {
             Log.DebugFormat("Loading view {0}", type.Name);
 
             // Split this into snapshot load and replay
             var events = dbConnection.Query<dynamic>("select Sequence, Data from Events");
-            var view = (ReadModel) Activator.CreateInstance(type);
-            view.LoadFromHistory(events.Select(@event => Tuple.Create((long)@event.Sequence, JObject.Parse((string)@event.Data))));
+            var view = (ReadModel2) Activator.CreateInstance(type);
+            //view.LoadFromHistory(events.Select(@event => Tuple.Create((long)@event.Sequence, JObject.Parse((string)@event.Data))));
             
             Log.DebugFormat("'Replaying' {0} events to {1}", view.Changes.Count, type.Name);
 
@@ -160,30 +160,5 @@ namespace Rebus.FleetKeeper
             //TODO: We should not dispose a connection, we do not own
             dbConnection.Dispose();
         }
-    }
-
-    public class JsonPatch
-    {
-        public string Op 
-        {
-            get { return GetType().Name.ToLowerInvariant(); }
-        }
-
-        public string Path { get; set; }
-        public long Version { get; set; }
-    }
-
-    public class Replace : JsonPatch
-    {
-        public object Value { get; set; }
-    }
-
-    public class Add : JsonPatch
-    {
-        public object Value { get; set; }
-    }
-
-    public class Remove : JsonPatch
-    {
     }
 }

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Threading;
 using Microsoft.AspNet.SignalR.Client;
 using Newtonsoft.Json.Linq;
-using Rebus.FleetKeeper.Client.Events;
+using Rebus.FleetKeeper.Messages;
 using Rebus.Logging;
 using Rebus.Shared;
 
@@ -32,7 +32,7 @@ namespace Rebus.FleetKeeper.Client
             connection = new HubConnection(uri);
 
             log.Info("Creating hub proxy");
-            hub = connection.CreateHubProxy("FleetKeeperHub");
+            hub = connection.CreateHubProxy("RxHub");
 
             log.Info("Starting connection");
             connection.Start().Wait();
@@ -99,7 +99,7 @@ namespace Rebus.FleetKeeper.Client
 
             log.Debug("Sending event {0} ({1}) to FleetKeeper", @event.Name, @event.Id);
 
-            hub.Invoke("ReceiveFromBus", JObject.FromObject(@event));
+            hub.Invoke("Receive", JObject.FromObject(@event));
         }
 
         public void Dispose()

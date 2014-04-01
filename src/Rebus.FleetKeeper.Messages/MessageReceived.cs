@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Rebus.FleetKeeper.Client.Events
+﻿namespace Rebus.FleetKeeper.Messages
 {
     public class MessageReceived : Event
     {

@@ -1,22 +1,22 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using Newtonsoft.Json.Linq;
 using log4net;
+using Newtonsoft.Json.Linq;
 
-namespace Rebus.FleetKeeper
+namespace Rebus.FleetKeeper.Old
 {
-    public abstract class ReadModel
+    public abstract class ReadModel2
     {
         static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        protected ReadModel()
+        protected ReadModel2()
         {
-            Changes = new List<JsonPatch>();
+            Changes = new List<Change>();
         }
 
         public long Version { get; private set; }
-        public List<JsonPatch> Changes { get; private set; }
+        public List<Change> Changes { get; private set; }
 
         public void LoadFromHistory(IEnumerable<Tuple<long, JObject>> @events)
         {
@@ -26,7 +26,7 @@ namespace Rebus.FleetKeeper
             }
         }
 
-        public JsonPatch Apply(long sequence, JObject @event)
+        public Change Apply(long sequence, JObject @event)
         {
             if (sequence != Version + 1)
             {
@@ -59,10 +59,10 @@ namespace Rebus.FleetKeeper
             return null;
         }
 
-        public abstract JsonPatch ApplyBusStarted(JObject @event);
-        public abstract JsonPatch ApplyMessageReceived(JObject @event);
-        public abstract JsonPatch ApplyMessageHandled(JObject @event);
-        public abstract JsonPatch ApplyHeartbeat(JObject @event);
-        public abstract JsonPatch ApplyBusStopped(JObject @event);
+        public abstract Change ApplyBusStarted(JObject @event);
+        public abstract Change ApplyMessageReceived(JObject @event);
+        public abstract Change ApplyMessageHandled(JObject @event);
+        public abstract Change ApplyHeartbeat(JObject @event);
+        public abstract Change ApplyBusStopped(JObject @event);
     }
 }

@@ -2,13 +2,13 @@
 using System.Data.SQLite;
 using System.Linq;
 using System.Reactive.Subjects;
-using System.Threading;
 using System.Threading.Tasks;
 using Dapper;
 using FakeItEasy;
 using Microsoft.AspNet.SignalR.Hubs;
 using NUnit.Framework;
 using Newtonsoft.Json.Linq;
+using Rebus.FleetKeeper.Old;
 using Shouldly;
 
 namespace Rebus.FleetKeeper.Tests

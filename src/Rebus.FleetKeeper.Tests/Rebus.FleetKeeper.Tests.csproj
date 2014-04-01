@@ -51,6 +51,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\Microsoft.Owin.Security.2.0.0-rc1\lib\net45\Microsoft.Owin.Security.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.Reactive.Testing">
+      <HintPath>..\packages\Rx-Testing.2.2.2\lib\net45\Microsoft.Reactive.Testing.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json">
       <HintPath>..\packages\Newtonsoft.Json.5.0.6\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -69,11 +72,21 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\Rebus.FleetKeeper\bin\Debug\System.Data.SQLite.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Interfaces">
-      <HintPath>..\packages\Rx-Interfaces.2.1.30214.0\lib\Net45\System.Reactive.Interfaces.dll</HintPath>
+    <Reference Include="System.Reactive.Core, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Core.2.2.2\lib\net45\System.Reactive.Core.dll</HintPath>
     </Reference>
-    <Reference Include="System.Reactive.Linq">
-      <HintPath>..\packages\Rx-Linq.2.1.30214.0\lib\Net45\System.Reactive.Linq.dll</HintPath>
+    <Reference Include="System.Reactive.Interfaces, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Interfaces.2.2.2\lib\net45\System.Reactive.Interfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Linq, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-Linq.2.2.2\lib\net45\System.Reactive.Linq.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.PlatformServices, Version=2.2.0.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\packages\Rx-PlatformServices.2.2.3\lib\net45\System.Reactive.PlatformServices.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
@@ -82,14 +95,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CallWhatEverYouWant.cs" />
+    <Compile Include="Old\TestHub.cs">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="TestView.cs" />
-    <Compile Include="TestServicesView.cs" />
+    <Compile Include="ReadModelTestBase.cs" />
+    <Compile Include="TestSequencerHub.cs" />
+    <Compile Include="TestServicesReadModel.cs" />
     <Compile Include="TestEx.cs" />
-    <Compile Include="TestFleetKeeperClient.cs" />
-    <Compile Include="TestFleetKeeperEventContracts.cs" />
-    <Compile Include="TestFleetKeeperHub.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -98,6 +111,10 @@
     <ProjectReference Include="..\Rebus.FleetKeeper.Client\Rebus.FleetKeeper.Client.csproj">
       <Project>{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}</Project>
       <Name>Rebus.FleetKeeper.Client</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Rebus.FleetKeeper.Messages\Rebus.FleetKeeper.Messages.csproj">
+      <Project>{F2938E8A-4082-4E4D-86A3-32C004DD3172}</Project>
+      <Name>Rebus.FleetKeeper.Messages</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus.FleetKeeper\Rebus.FleetKeeper.csproj">
       <Project>{297AC9D8-D05C-43B4-9F76-214BE8683D93}</Project>

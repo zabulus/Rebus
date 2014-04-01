@@ -108,6 +108,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "fleetkeeper", "fleetkeeper"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.FleetKeeper.Tests", "Rebus.FleetKeeper.Tests\Rebus.FleetKeeper.Tests.csproj", "{FC224548-F42D-49B3-B4BB-169E3B0452AA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.FleetKeeper.Messages", "Rebus.FleetKeeper.Messages\Rebus.FleetKeeper.Messages.csproj", "{F2938E8A-4082-4E4D-86A3-32C004DD3172}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -344,6 +346,16 @@ Global
 		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Release|x86.ActiveCfg = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -377,6 +389,7 @@ Global
 		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7} = {B9D0DDA8-72D8-4D5A-A98D-83F585BD9010}
 		{297AC9D8-D05C-43B4-9F76-214BE8683D93} = {B9D0DDA8-72D8-4D5A-A98D-83F585BD9010}
 		{FC224548-F42D-49B3-B4BB-169E3B0452AA} = {B9D0DDA8-72D8-4D5A-A98D-83F585BD9010}
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172} = {B9D0DDA8-72D8-4D5A-A98D-83F585BD9010}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		EnterpriseLibraryConfigurationToolBinariesPath = packages\Unity.2.1.505.0\lib\NET35;packages\Unity.2.1.505.2\lib\NET35

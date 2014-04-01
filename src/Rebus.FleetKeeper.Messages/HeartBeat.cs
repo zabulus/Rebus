@@ -1,4 +1,4 @@
-﻿namespace Rebus.FleetKeeper.Client.Events
+﻿namespace Rebus.FleetKeeper.Messages
 {
     public class HeartBeat : Event
     {

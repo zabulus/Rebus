@@ -1,9 +1,9 @@
 ﻿using System.Reflection;
 using System.Threading.Tasks;
-using Microsoft.Owin;
 using log4net;
+using Microsoft.Owin;
 
-namespace Rebus.FleetKeeper
+namespace Rebus.FleetKeeper.Http
 {
     public class LoggerMiddleware : OwinMiddleware
     {

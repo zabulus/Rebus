@@ -2,7 +2,7 @@
 using Rebus.Configuration;
 using Rebus.FleetKeeper.Client;
 
-namespace Rebus.Tests.FleetKeeper
+namespace Rebus.FleetKeeper.Tests
 {
     public class TestFleetKeeperClient
     {

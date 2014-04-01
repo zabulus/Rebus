@@ -51,18 +51,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Events\BusStopped.cs" />
-    <Compile Include="Events\HeartBeat.cs" />
-    <Compile Include="Events\MessageHandled.cs" />
-    <Compile Include="Events\MessageReceived.cs" />
     <Compile Include="FleetKeeperClient.cs" />
     <Compile Include="FleetKeeperConfigurationExtensions.cs" />
-    <Compile Include="Events\BusStarted.cs" />
-    <Compile Include="Events\Event.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rebus.FleetKeeper.Messages\Rebus.FleetKeeper.Messages.csproj">
+      <Project>{f2938e8a-4082-4e4d-86a3-32c004dd3172}</Project>
+      <Name>Rebus.FleetKeeper.Messages</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{f57a06fa-f471-49c8-a92d-85d5a27055c4}</Project>
       <Name>Rebus</Name>

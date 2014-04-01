@@ -5,10 +5,10 @@ using System.Reactive.Concurrency;
 using System.Reactive.Linq;
 using System.Reflection;
 using Dapper;
-using Newtonsoft.Json.Linq;
 using log4net;
+using Newtonsoft.Json.Linq;
 
-namespace Rebus.FleetKeeper
+namespace Rebus.FleetKeeper.Old
 {
     public class Writer
     {
@@ -36,7 +36,7 @@ namespace Rebus.FleetKeeper
             var writerThread = new EventLoopScheduler();
 
             events.ObserveOn(writerThread)
-                  .OrderBy(x => (long) x["Version"])
+                  .Sort(x => (int) x["Version"], 1, x => x+1)
                   .Subscribe(Persist);
         }
 

@@ -3,7 +3,7 @@ using System.Reflection;
 using Microsoft.AspNet.SignalR.Infrastructure;
 using Newtonsoft.Json.Serialization;
 
-namespace Rebus.FleetKeeper
+namespace Rebus.FleetKeeper.Http
 {
     public class SignalRContractResolver : IContractResolver
     {

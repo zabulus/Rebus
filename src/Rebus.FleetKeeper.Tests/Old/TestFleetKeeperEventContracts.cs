@@ -1,6 +1,6 @@
 ﻿using System;
 using NUnit.Framework;
-using Rebus.FleetKeeper.Client.Events;
+using Rebus.FleetKeeper.Messages;
 using Shouldly;
 
 namespace Rebus.FleetKeeper.Tests
