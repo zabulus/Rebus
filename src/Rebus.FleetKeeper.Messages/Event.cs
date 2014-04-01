@@ -18,6 +18,6 @@ namespace Rebus.FleetKeeper.Messages
         public Guid BusClientId { get; set; }
         public string Endpoint { get; set; }
         public string ProcessName { get; set; }
-        public long Version { get; set; }
+        public int Version { get; set; }
     }
 }

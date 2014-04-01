@@ -15,7 +15,7 @@ namespace Rebus.FleetKeeper.Client
 
         readonly HubConnection connection;
         readonly IHubProxy hub;
-        long version;
+        int version;
         Timer timer;
         BusIdentification identification;
 
