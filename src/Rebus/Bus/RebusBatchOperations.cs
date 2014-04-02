@@ -26,7 +26,7 @@ namespace Rebus.Bus
 
             foreach (var batch in groupedByEndpoints)
             {
-                bus.InternalSend(batch.Key, batch.Value, RebusBus.SendMethod.Send);
+                bus.InternalSend(batch.Key, batch.Value);
             }
         }
 
@@ -38,7 +38,7 @@ namespace Rebus.Bus
 
             foreach (var batch in groupedByEndpoints)
             {
-                bus.InternalSend(batch.Key, batch.Value, RebusBus.SendMethod.Publish);
+                bus.InternalSend(batch.Key, batch.Value);
             }
         }
 

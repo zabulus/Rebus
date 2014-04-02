@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using Rebus.Bus;
 
 namespace Rebus
 {
@@ -23,10 +21,5 @@ namespace Rebus
         /// Gives access to Rebus' routing operations.
         /// </summary>
         IRebusRouting Routing { get; }
-
-        /// <summary>
-        /// Gives access to information about this endpoint configuration and health.
-        /// </summary>
-        IInterrogateThisEndpoint Interrogation { get; }
     }
 }

@@ -107,21 +107,5 @@ namespace Rebus.Shared
             /// </summary>
             public const string GZip = "gzip";
         }
-
-        /// <summary>
-        /// UTC time of when the message was sent
-        /// </summary>
-        public const string SendTime = "rebus-sendtime";
-
-        /// <summary>
-        /// Input queue address of the sender (if available) - may not always be the same as
-        /// <see cref="ReturnAddress"/> since this one cannot be set manually
-        /// </summary>
-        public const string SenderAddress = "rebus-sender-address";
-        
-        /// <summary>
-        /// Indicates how this message was sent
-        /// </summary>
-        public const string RebusSendMethod = "rebus-send-method";
     }
 }

@@ -25,6 +25,31 @@ namespace Rebus.Bus
         }
 
         /// <summary>
+        /// Helps with waiting an appropriate amount of time when no message is received
+        /// </summary>
+        readonly BackoffHelper nullMessageReceivedBackoffHelper;
+
+        /// <summary>
+        /// Helps with waiting an appropriate amount of time when something is wrong that makes us unable to do
+        /// useful work
+        /// </summary>
+        readonly BackoffHelper errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper =
+            new BackoffHelper(new[]
+                              {
+                                  TimeSpan.FromSeconds(1),
+                                  TimeSpan.FromSeconds(2),
+                                  TimeSpan.FromSeconds(3),
+                                  TimeSpan.FromSeconds(5),
+                                  TimeSpan.FromSeconds(8),
+                                  TimeSpan.FromSeconds(13),
+                                  TimeSpan.FromSeconds(21),
+                                  TimeSpan.FromSeconds(30),
+                              })
+            {
+                LoggingDisabled = true
+            };
+
+        /// <summary>
         /// Caching of dispatcher methods
         /// </summary>
         readonly ConcurrentDictionary<Type, MethodInfo> dispatchMethodCache = new ConcurrentDictionary<Type, MethodInfo>();
@@ -37,6 +62,7 @@ namespace Rebus.Bus
         readonly IMutateIncomingMessages mutateIncomingMessages;
         readonly IEnumerable<IUnitOfWorkManager> unitOfWorkManagers;
         readonly ConfigureAdditionalBehavior configureAdditionalBehavior;
+        readonly MessageLogger messageLogger;
 
         internal event Action<ReceivedTransportMessage> BeforeTransportMessage = delegate { };
 
@@ -68,17 +94,18 @@ namespace Rebus.Bus
             IStoreTimeouts storeTimeouts,
             IEnumerable<IUnitOfWorkManager> unitOfWorkManagers,
             ConfigureAdditionalBehavior configureAdditionalBehavior,
-            ISendReplies sendReplies,
-            IInterrogateThisEndpoint interrogateThisEndpoint)
+            MessageLogger messageLogger)
         {
             this.receiveMessages = receiveMessages;
             this.serializeMessages = serializeMessages;
             this.mutateIncomingMessages = mutateIncomingMessages;
             this.unitOfWorkManagers = unitOfWorkManagers;
             this.configureAdditionalBehavior = configureAdditionalBehavior;
+            this.messageLogger = messageLogger;
             this.errorTracker = errorTracker;
-            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts, sendReplies, interrogateThisEndpoint);
+            dispatcher = new Dispatcher(storeSagaData, activateHandlers, storeSubscriptions, inspectHandlerPipeline, handleDeferredMessage, storeTimeouts);
             dispatcher.UncorrelatedMessage += RaiseUncorrelatedMessage;
+            nullMessageReceivedBackoffHelper = CreateBackoffHelper(configureAdditionalBehavior.BackoffBehavior);
 
             workerThread = new Thread(MainLoop) { Name = workerThreadName };
             workerThread.Start();
@@ -162,38 +189,45 @@ namespace Rebus.Bus
 
                 try
                 {
-                    TryProcessIncomingMessage();
-                }
-                catch (Exception e)
-                {
                     try
                     {
-                        // if there's two levels of TargetInvocationExceptions, it's user code that threw...
-                        if (e is TargetInvocationException && e.InnerException is TargetInvocationException)
-                        {
-                            UserException(this, e.InnerException.InnerException);
-                        }
-                        else if (e is TargetInvocationException)
-                        {
-                            UserException(this, e.InnerException);
-                        }
-                        else if (e is UnitOfWorkCommitException)
-                        {
-                            UserException(this, e);
-                        }
-                        else
-                        {
-                            SystemException(this, e);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        log.Error(ex, "An exception occurred while raising an error event! There's nothing we can do about" +
-                                     " it at this point, except kick back and wait for a while, because we probably don't" +
-                                     " want to spam the logs - so we'll sleep for a second before carrying on...");
+                        TryProcessIncomingMessage();
 
-                        Thread.Sleep(TimeSpan.FromSeconds(1));
+                        errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper.Reset();
                     }
+                    catch (MessageHandleException exception)
+                    {
+                        UserException(this, exception);
+                    }
+                    catch (UnitOfWorkCommitException exception)
+                    {
+                        UserException(this, exception);
+                    }
+                    catch (QueueCommitException exception)
+                    {
+                        UserException(this, exception);
+
+                        // when the queue cannot commit, we can't get the message into the error queue either - basically,
+                        // there's no way we can do useful work if we end up in here, so we just procrastinate for a while
+                        errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper
+                            .Wait(waitTime => log.Warn(
+                                "Caught an exception when interacting with the queue system - there's basically no meaningful" +
+                                " work we can do as long as we can't successfully commit a queue transaction, so instead we" +
+                                " wait and hope that the situation gets better... current wait time is {0}",
+                                waitTime));
+                    }
+                    catch (Exception e)
+                    {
+                        SystemException(this, e);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errorThatBlocksOurAbilityToDoUsefulWorkBackoffHelper
+                        .Wait(waitTime => log.Error(ex,
+                            "An unhandled exception occurred while iterating the main worker loop - this is a critical error," +
+                            " and there's a probability that we cannot do any useful work, which is why we'll wait for" +
+                            " {0} and hope that the error goes away", waitTime));
                 }
             }
         }
@@ -214,7 +248,15 @@ namespace Rebus.Bus
                 try
                 {
                     DoTry();
-                    context.RaiseDoCommit();
+
+                    try
+                    {
+                        context.RaiseDoCommit();
+                    }
+                    catch (Exception commitException)
+                    {
+                        throw new QueueCommitException(commitException);
+                    }
                 }
                 catch
                 {
@@ -232,31 +274,18 @@ namespace Rebus.Bus
             }
         }
 
-        int successiveNullMessagesReceived = 0;
-
-        readonly TimeSpan[] nullMessageSleepTimes =
-            Enumerable.Empty<TimeSpan>()
-                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(20), 10)) // first 200 ms
-                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(50), 10)) // next 500 ms
-                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(200), 10)) // next 2 s
-                      .Concat(Enumerable.Repeat(TimeSpan.FromMilliseconds(1000), 1)) // the rest of the time
-                      .ToArray();
-
         void DoTry()
         {
             var transportMessage = receiveMessages.ReceiveMessage(TransactionContext.Current);
 
             if (transportMessage == null)
             {
-                // to back off and relax then there's no messages to process, we do this
-                successiveNullMessagesReceived++;
-                var sleepTimeIndex = Math.Min(nullMessageSleepTimes.Length - 1, successiveNullMessagesReceived);
-                var timeToSleep = nullMessageSleepTimes[sleepTimeIndex];
-                Thread.Sleep(timeToSleep);
+                // to back off and relax when there's no messages to process, we do this
+                nullMessageReceivedBackoffHelper.Wait();
                 return;
             }
 
-            successiveNullMessagesReceived = 0;
+            nullMessageReceivedBackoffHelper.Reset();
 
             var id = transportMessage.Id;
             var label = transportMessage.Label;
@@ -311,10 +340,20 @@ namespace Rebus.Bus
 
                                 var typeToDispatch = logicalMessage.GetType();
 
-                                log.Debug("Dispatching message {0}: {1}", id, typeToDispatch);
+                                messageLogger.LogReceive(id, logicalMessage);
 
-                                GetDispatchMethod(typeToDispatch)
-                                    .Invoke(this, new[] { logicalMessage });
+                                try
+                                {
+                                    var dispatchMethod = GetDispatchMethod(typeToDispatch);
+                                    var parameters = new[] { logicalMessage };
+                                    dispatchMethod.Invoke(this, parameters);
+                                }
+                                catch (TargetInvocationException tie)
+                                {
+                                    var exception = tie.InnerException;
+                                    exception.PreserveStackTrace();
+                                    throw exception;
+                                }
                             }
                             catch (Exception exception)
                             {
@@ -393,9 +432,9 @@ namespace Rebus.Bus
             catch (Exception exception)
             {
                 transportMessageExceptionOrNull = exception;
-                log.Debug("Handling message {0} ({1}) has failed", label, id);
+                log.Debug("Handling message {0} with ID {1} has failed", label, id);
                 errorTracker.TrackDeliveryFail(id, exception);
-                throw;
+                throw new MessageHandleException(id, exception);
             }
             finally
             {
@@ -489,6 +528,14 @@ namespace Rebus.Bus
         internal void DispatchGeneric<T>(T message)
         {
             dispatcher.Dispatch(message);
+        }
+
+        /// <summary>
+        /// Create a backoff helper that matches the given behavior.
+        /// </summary>
+        static BackoffHelper CreateBackoffHelper(IEnumerable<TimeSpan> backoffTimes)
+        {
+            return new BackoffHelper(backoffTimes) { LoggingDisabled = true };
         }
     }
 }

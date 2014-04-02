@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Ponder;
-using Rebus.Handlers;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Shared;
@@ -31,8 +31,6 @@ namespace Rebus.Bus
         readonly IInspectHandlerPipeline inspectHandlerPipeline;
         readonly IHandleDeferredMessage handleDeferredMessage;
         readonly IStoreTimeouts storeTimeouts;
-        readonly ISendReplies sendReplies;
-        readonly IInterrogateThisEndpoint interrogateThisEndpoint;
         readonly IStoreSagaData storeSagaData;
         readonly IStoreSubscriptions storeSubscriptions;
         readonly string sagaDataIdPropertyName;
@@ -48,9 +46,7 @@ namespace Rebus.Bus
                           IStoreSubscriptions storeSubscriptions,
                           IInspectHandlerPipeline inspectHandlerPipeline,
                           IHandleDeferredMessage handleDeferredMessage,
-                          IStoreTimeouts storeTimeouts,
-                          ISendReplies sendReplies,
-                          IInterrogateThisEndpoint interrogateThisEndpoint)
+                          IStoreTimeouts storeTimeouts)
         {
             this.storeSagaData = storeSagaData;
             this.activateHandlers = activateHandlers;
@@ -58,8 +54,6 @@ namespace Rebus.Bus
             this.inspectHandlerPipeline = inspectHandlerPipeline;
             this.handleDeferredMessage = handleDeferredMessage;
             this.storeTimeouts = storeTimeouts;
-            this.sendReplies = sendReplies;
-            this.interrogateThisEndpoint = interrogateThisEndpoint;
             sagaDataIdPropertyName = Reflect.Path<ISagaData>(s => s.Id);
             sagaDataPropertyName = Reflect.Path<Saga<ISagaData>>(s => s.Data);
         }
@@ -112,7 +106,17 @@ namespace Rebus.Bus
 
                     foreach (var typeToDispatch in GetTypesToDispatchToThisHandler(typesToDispatch, handlerType))
                     {
-                        GetDispatcherMethod(typeToDispatch).Invoke(this, new object[] { message, handler });
+                        try
+                        {
+                            GetDispatcherMethod(typeToDispatch)
+                                .Invoke(this, new object[] {message, handler});
+                        }
+                        catch (TargetInvocationException tie)
+                        {
+                            var exception = tie.InnerException;
+                            exception.PreserveStackTrace();
+                            throw exception;
+                        }
 
                         if (MessageContext.MessageDispatchAborted) break;
                     }
@@ -197,14 +201,9 @@ namespace Rebus.Bus
 
         IEnumerable<IHandleMessages<T>> OwnHandlersFor<T>()
         {
-            if (typeof(T) == typeof(EndpointInterrogationRequest))
-            {
-                yield return (IHandleMessages<T>)new EndpointInterrogationRequestHandler(sendReplies, interrogateThisEndpoint);
-            }
-
             if (typeof(T) == typeof(SubscriptionMessage))
             {
-                yield return (IHandleMessages<T>)new SubscriptionMessageHandler(storeSubscriptions);
+                return new[] {(IHandleMessages<T>) new SubscriptionMessageHandler(storeSubscriptions)};
             }
 
             if (typeof(T) == typeof(TimeoutRequest))
@@ -215,14 +214,15 @@ namespace Rebus.Bus
 
 This most likely indicates that you have configured this Rebus service to use an external timeout manager, but accidentally configured the timeout manager endpoint address to be the same as this endpoint's input queue."));
                 }
-
-                yield return (IHandleMessages<T>)new TimeoutRequestHandler(storeTimeouts);
+                return new[] {(IHandleMessages<T>) new TimeoutRequestHandler(storeTimeouts)};
             }
 
             if (typeof(T) == typeof(TimeoutReply))
             {
-                yield return (IHandleMessages<T>)new TimeoutReplyHandler(handleDeferredMessage);
+                return new[] {(IHandleMessages<T>) new TimeoutReplyHandler(handleDeferredMessage)};
             }
+
+            return new IHandleMessages<T>[0];
         }
 
         void AddTypesFrom(Type messageType, HashSet<Type> typeSet)
@@ -260,7 +260,7 @@ This most likely indicates that you have configured this Rebus service to use an
                     }
                     else
                     {
-                        log.Warn("No saga data was found for {0}", handler);
+                        log.Warn("No saga data was found for {0}/{1}", message, handler);
                         UncorrelatedMessage(message, saga);
                         return;
                     }

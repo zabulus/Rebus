@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Rebus.Bus;
 using Rebus.Configuration;
+using Rebus.Logging;
 using Rebus.Persistence.InMemory;
 using Rebus.Serialization.Json;
 using Rebus.Tests.Integration;
@@ -27,8 +28,7 @@ namespace Rebus.Tests.Unit
                               null,
                               unitOfWorkManagers ?? new IUnitOfWorkManager[0],
                               new ConfigureAdditionalBehavior(),
-                              null,
-                              null);
+                              new MessageLogger());
         }
     }
 }

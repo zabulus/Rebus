@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Bus;
-using Rebus.Handlers;
 using Rebus.Messages;
 using Rebus.Persistence.InMemory;
 using Shouldly;
@@ -17,15 +16,12 @@ namespace Rebus.Tests.Bugs
             var handlerActivator = new HandlerActivatorForTesting();
             var pipelineInspector = new TrivialPipelineInspector();
             var handleDeferredMessage = new MockDeferredMessageHandler();
-            var sendReplies = new ReplyDispatcherForTesting();
             var dispatcher = new Dispatcher(new InMemorySagaPersister(),
                                         handlerActivator,
                                         new InMemorySubscriptionStorage(),
                                         pipelineInspector,
                                         handleDeferredMessage,
-                                        null,
-                                        sendReplies,
-                                        new EndpointInterrogatorForTesting());
+                                        null);
 
             dispatcher.Dispatch(new TimeoutReply
             {
@@ -56,7 +52,7 @@ namespace Rebus.Tests.Bugs
                 get { return dispatchedMessages; }
             }
 
-            public void DispatchLocal(object deferredMessage, Guid sagaId)
+            public void DispatchLocal(object deferredMessage, Guid sagaId, IDictionary<string, object> headers)
             {
                 dispatchedMessages.Add(deferredMessage);
             }

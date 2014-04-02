@@ -91,7 +91,6 @@ namespace Rebus.Tests.Configuration
             var configurer = Configure.With(adapter)
                 .Events(e =>
                     {
-                        e.BusStarted += delegate { raisedEvents.Add("bus started"); };
                         e.BeforeTransportMessage += delegate { raisedEvents.Add("before transport message"); };
                         e.BeforeMessage += delegate { raisedEvents.Add("before message"); };
                         e.AfterMessage += delegate { raisedEvents.Add("after message"); };
@@ -110,7 +109,6 @@ namespace Rebus.Tests.Configuration
             var bus = (IBus)configurer.CreateBus();
             var events = (RebusEvents) bus.Advanced.Events;
             
-            events.RaiseBusStarted(null);
             events.RaiseBeforeTransportMessage(null, null);
             events.RaiseBeforeMessage(null, null);
             events.RaiseAfterMessage(null, null, null);
@@ -120,7 +118,6 @@ namespace Rebus.Tests.Configuration
             events.RaiseUncorrelatedMessage(null, null, null);
             events.RaiseMessageContextEstablished(null, null);
 
-            raisedEvents.ShouldContain("bus started");
             raisedEvents.ShouldContain("before transport message");
             raisedEvents.ShouldContain("before message");
             raisedEvents.ShouldContain("after message");

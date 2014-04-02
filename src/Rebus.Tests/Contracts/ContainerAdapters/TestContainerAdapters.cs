@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Threading;
 using NUnit.Framework;
-using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Logging;
 using Rebus.Shared;
@@ -236,7 +235,6 @@ namespace Rebus.Tests.Contracts.ContainerAdapters
             public IRebusEvents Events { get; private set; }
             public IRebusBatchOperations Batch { get; private set; }
             public IRebusRouting Routing { get; private set; }
-            public IInterrogateThisEndpoint Interrogation { get; private set; }
         }
     }
 }

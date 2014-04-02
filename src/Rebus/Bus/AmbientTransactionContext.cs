@@ -21,9 +21,13 @@ namespace Rebus.Bus
                 throw new InvalidOperationException("There's currently no ambient transaction associated with this thread." +
                                                     " You can only instantiate this class within a TransactionScope.");
             }
+
             Transaction.Current.EnlistVolatile(this, EnlistmentOptions.None);
+            Transaction.Current.TransactionCompleted += OnTransactionCompleted;
+
             TransactionContext.Set(this);
         }
+
 
         /// <summary>
         /// Will be raised when it is time to commit the transaction. The transport should do its final
@@ -78,10 +82,16 @@ namespace Rebus.Bus
         /// </summary>
         public void Commit(Enlistment enlistment)
         {
-            BeforeCommit();
-            DoCommit();
-            TransactionContext.Clear();
-            enlistment.Done();
+            try
+            {
+                BeforeCommit();
+                DoCommit();
+                enlistment.Done();
+            }
+            finally
+            {
+                TransactionContext.Clear();
+            }
         }
 
         /// <summary>
@@ -89,10 +99,16 @@ namespace Rebus.Bus
         /// </summary>
         public void Rollback(Enlistment enlistment)
         {
-            DoRollback();
-            enlistment.Done();
-            TransactionContext.Clear();
-            AfterRollback();
+            try
+            {
+                DoRollback();
+                AfterRollback();
+                enlistment.Done();
+            }
+            finally
+            {
+                TransactionContext.Clear();
+            }
         }
 
         /// <summary>
@@ -100,7 +116,31 @@ namespace Rebus.Bus
         /// </summary>
         public void InDoubt(Enlistment enlistment)
         {
-            enlistment.Done();
+            try
+            {
+                enlistment.Done();
+            }
+            finally
+            {
+                TransactionContext.Clear();
+            }
+        }
+
+
+        /// <summary>
+        /// Performs necessary cleanup actions, clearing the current <see cref="TransactionContext"/>
+        /// </summary>
+        void OnTransactionCompleted(object sender, TransactionEventArgs transactionEventArgs)
+        {
+            try
+            {
+                Cleanup();
+            }
+
+            finally
+            {
+                TransactionContext.Clear();
+            }
         }
     }
 }

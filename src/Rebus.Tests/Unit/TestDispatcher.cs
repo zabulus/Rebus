@@ -24,9 +24,7 @@ namespace Rebus.Tests.Unit
                                         new InMemorySubscriptionStorage(),
                                         pipelineInspector,
                                         new DeferredMessageHandlerForTesting(),
-                                        null,
-                                        new ReplyDispatcherForTesting(),
-                                        new EndpointInterrogatorForTesting());
+                                        null);
         }
 
         [Test]

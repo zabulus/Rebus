@@ -30,10 +30,9 @@ namespace Rebus.Transports.Msmq
         readonly string machineAddress;
 
         static readonly MessageQueueErrorCode[] AcceptedErrorCodes =
-            new[]
-                {
-                    MessageQueueErrorCode.IOTimeout,
-                };
+        {
+            MessageQueueErrorCode.IOTimeout,
+        };
 
         /// <summary>
         /// Constructs a special send-only instance of <see cref="MsmqMessageQueue"/>. This instance is
@@ -120,30 +119,36 @@ because there would be remote calls involved when you wanted to receive a messag
             {
                 if (!context.IsTransactional)
                 {
-                    var transaction = new MessageQueueTransaction();
-                    transaction.Begin();
-                    var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction);
-                    if (message == null)
+                    using (var transaction = new MessageQueueTransaction())
                     {
-                        log.Warn("Received NULL message - how weird is that?");
-                        transaction.Commit();
-                        return null;
+                        transaction.Begin();
+
+                        using (var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction))
+                        {
+                            if (message == null)
+                            {
+                                log.Warn("Received NULL message - how weird is that?");
+                                transaction.Commit();
+                                return null;
+                            }
+                            var body = message.Body;
+                            if (body == null)
+                            {
+                                log.Warn("Received message with NULL body - how weird is that?");
+                                transaction.Commit();
+                                return null;
+                            }
+                            var transportMessage = (ReceivedTransportMessage) body;
+                        
+                            transaction.Commit();
+                            
+                            return transportMessage;
+                        }
                     }
-                    var body = message.Body;
-                    if (body == null)
-                    {
-                        log.Warn("Received message with NULL body - how weird is that?");
-                        transaction.Commit();
-                        return null;
-                    }
-                    var transportMessage = (ReceivedTransportMessage)body;
-                    transaction.Commit();
-                    return transportMessage;
                 }
-                else
+                
+                using (var message = inputQueue.Receive(TimeSpan.FromSeconds(1), GetTransaction(context)))
                 {
-                    var transaction = GetTransaction(context);
-                    var message = inputQueue.Receive(TimeSpan.FromSeconds(1), transaction);
                     if (message == null)
                     {
                         log.Warn("Received NULL message - how weird is that?");
@@ -155,7 +160,8 @@ because there would be remote calls involved when you wanted to receive a messag
                         log.Warn("Received message with NULL body - how weird is that?");
                         return null;
                     }
-                    var transportMessage = (ReceivedTransportMessage)body;
+                    var transportMessage = (ReceivedTransportMessage) body;
+                    
                     return transportMessage;
                 }
             }
@@ -230,16 +236,23 @@ because there would be remote calls involved when you wanted to receive a messag
         static MessageQueueTransaction GetTransaction(ITransactionContext context)
         {
             var transaction = context[CurrentTransactionKey] as MessageQueueTransaction;
-            if (transaction != null) return transaction;
+            if (transaction == null)
+            {
 
-            transaction = new MessageQueueTransaction();
-            context[CurrentTransactionKey] = transaction;
+                transaction = new MessageQueueTransaction();
 
-            context.DoCommit += transaction.Commit;
-            context.DoRollback += transaction.Abort;
-            context.Cleanup += transaction.Dispose;
+                context.DoCommit += transaction.Commit;
+                context.DoRollback += transaction.Abort;
+                context.Cleanup += transaction.Dispose;
 
-            transaction.Begin();
+                transaction.Begin();
+
+                context[CurrentTransactionKey] = transaction;
+            }
+
+            if (transaction.Status != MessageQueueTransactionStatus.Pending)
+                throw new InvalidOperationException(
+                    "MSMQ transaction has not been started. MSQM will throw messages into the deadletter queue if this transaction is used to send without any warning or exception!");
 
             return transaction;
         }
