@@ -1,0 +1,96 @@
+html, body
+{
+    height: 100%
+}
+
+body 
+{
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
+	font-size: 0.83em;
+	line-height: 14px;
+	letter-spacing: 2px;
+    background-color: #222;
+}
+
+ul.menu 
+{
+    display: static;
+    visibility: hidden;
+    height: 30px;
+}
+
+.busses 
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: table;
+    height: 100%;
+    border-spacing: 10px 10px;
+}
+
+.bus 
+{
+    display: table-cell;
+    background-color: rgba(52, 170, 220, 0.6);
+    background: linear-gradient(to bottom, rgba(52, 170, 220, 0.6), rgba(0, 122, 255, 0.6));
+    width: 320px;
+    padding: 5px 5px 5px 5px;
+    color: #FFF;
+    word-break: break-all;
+}
+
+.bus h2
+{
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-transform: uppercase;
+    height: 2em;
+    margin: 10px 0px 10px 0px;
+}
+
+.bus h3
+{
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;
+    font-size: 0.8em;
+    margin: 10px 0px 3px 0px;
+    color: #FCD271;
+}
+
+
+.heart
+{
+    /* free icons from http://handdrawing.olawolska.com/ */
+    background-image: url(red-heart.png);
+    width:32px;
+    height:28px;
+    opacity: 0.6;
+}
+
+@-webkit-keyframes pulsate {
+    0% {-webkit-transform: opacity: 0.6;}
+    20% {opacity: 1.0;}
+    100% {-webkit-transform: opacity: 0.6;}
+}
+
+.heartbeat
+{
+    -webkit-animation: pulsate 2s ease-out;
+}
+
+.message.ng-leave
+{
+    -webkit-transition: 10s linear all; /* Chrome */
+    transition: 10s linear all;
+    opacity: 1;
+}
+
+.message.ng-leave.ng-leave-active
+{
+    opacity: 0;
+}
+
+.bus .info
+{
+}

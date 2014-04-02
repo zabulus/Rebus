@@ -1,8 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
-MinimumVisualStudioVersion = 10.0.40219.1
+# Visual Studio 2012
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "build", "build", "{37452F2B-E43B-4A39-9956-E3FB17DA2042}"
 	ProjectSection(SolutionItems) = preProject
 		..\scripts\build.proj = ..\scripts\build.proj
@@ -106,6 +104,14 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.MsmqLoadBalancer", "Rebus.MsmqLoadBalancer\Rebus.MsmqLoadBalancer.csproj", "{C2359E91-35C1-4D48-B089-97EF739A08F5}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.ReturnToSourceQueue.RabbitMQ", "Rebus.ReturnToSourceQueue.RabbitMQ\Rebus.ReturnToSourceQueue.RabbitMQ.csproj", "{77AB0C4F-C839-4BD1-BB49-19357A42A82B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.FleetKeeper", "Rebus.FleetKeeper\Rebus.FleetKeeper.csproj", "{297AC9D8-D05C-43B4-9F76-214BE8683D93}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.FleetKeeper.Client", "Rebus.FleetKeeper.Client\Rebus.FleetKeeper.Client.csproj", "{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.FleetKeeper.Messages", "Rebus.FleetKeeper.Messages\Rebus.FleetKeeper.Messages.csproj", "{F2938E8A-4082-4E4D-86A3-32C004DD3172}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rebus.FleetKeeper.Tests", "Rebus.FleetKeeper.Tests\Rebus.FleetKeeper.Tests.csproj", "{FC224548-F42D-49B3-B4BB-169E3B0452AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -333,6 +339,46 @@ Global
 		{77AB0C4F-C839-4BD1-BB49-19357A42A82B}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
 		{77AB0C4F-C839-4BD1-BB49-19357A42A82B}.Release|Mixed Platforms.Build.0 = Release|Any CPU
 		{77AB0C4F-C839-4BD1-BB49-19357A42A82B}.Release|x86.ActiveCfg = Release|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Release|Any CPU.Build.0 = Release|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93}.Release|x86.ActiveCfg = Release|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7}.Release|x86.ActiveCfg = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172}.Release|x86.ActiveCfg = Release|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA}.Release|x86.ActiveCfg = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -355,6 +401,10 @@ Global
 		{3A6809FD-C23D-4B29-AC96-930E289B17F8} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{C2359E91-35C1-4D48-B089-97EF739A08F5} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{77AB0C4F-C839-4BD1-BB49-19357A42A82B} = {35C585ED-8CB0-48D1-83FC-375548298233}
+		{297AC9D8-D05C-43B4-9F76-214BE8683D93} = {35C585ED-8CB0-48D1-83FC-375548298233}
+		{2B0C1CE2-BB38-42D5-AD83-08FB83F6EED7} = {35C585ED-8CB0-48D1-83FC-375548298233}
+		{F2938E8A-4082-4E4D-86A3-32C004DD3172} = {35C585ED-8CB0-48D1-83FC-375548298233}
+		{FC224548-F42D-49B3-B4BB-169E3B0452AA} = {35C585ED-8CB0-48D1-83FC-375548298233}
 		{D5263804-AD2A-40E3-B656-5132255883A8} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{539812E2-0F65-49ED-8F26-1736CF6CBFDA} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
 		{93AEA3E2-F995-427A-BAF4-F2EBD271E818} = {68CCD78A-BFCE-4071-BE9B-C375180375BA}
