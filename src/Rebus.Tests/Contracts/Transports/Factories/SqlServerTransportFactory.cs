@@ -4,14 +4,9 @@ using Rebus.Transports.Sql;
 
 namespace Rebus.Tests.Contracts.Transports.Factories
 {
-    public class SqlServerTransportFactory : ITransportFactory
+    public class SqlServerTransportFactory : SqlServerFixtureBase, ITransportFactory
     {
-        const string MessageTableName = "messages2";
-
-        public SqlServerTransportFactory()
-        {
-            DropMessageTableIfItExists();
-        }
+        const string MessageTableName = "#messages2";
 
         public Tuple<ISendMessages, IReceiveMessages> Create()
         {
@@ -21,28 +16,14 @@ namespace Rebus.Tests.Contracts.Transports.Factories
             return Tuple.Create<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 
-        public void CleanUp()
-        {
-            DropMessageTableIfItExists();
-        }
-
         public IReceiveMessages CreateReceiver(string queueName)
         {
-            var receiver = GetQueue(queueName);
-
-            return receiver;
-        }
-
-        static void DropMessageTableIfItExists()
-        {
-            if (!SqlServerFixtureBase.GetTableNames().Contains(MessageTableName)) return;
-
-            SqlServerFixtureBase.ExecuteCommand(string.Format("drop table [{0}]", MessageTableName));
+            return GetQueue(queueName);
         }
 
         IDuplexTransport GetQueue(string inputQueueName)
         {
-            var queue = new SqlServerMessageQueue(SqlServerFixtureBase.ConnectionString, MessageTableName, inputQueueName)
+            var queue = new SqlServerMessageQueue(GetOrCreateConnection, MessageTableName, inputQueueName)
                 .EnsureTableIsCreated()
                 .PurgeInputQueue();
 

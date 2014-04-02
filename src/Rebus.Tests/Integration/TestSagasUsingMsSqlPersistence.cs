@@ -3,7 +3,9 @@ using System.Data.SqlClient;
 using System.Threading;
 using NUnit.Framework;
 using Rebus.Configuration;
+using Rebus.Persistence.SqlServer;
 using Rebus.Tests.Persistence;
+using Rebus.Transports.Msmq;
 
 namespace Rebus.Tests.Integration
 {
@@ -12,21 +14,27 @@ namespace Rebus.Tests.Integration
     {
         const string InputQueueName = "test.saga.input";
 
-        protected override void DoSetUp()
-        {
-            base.DoSetUp();
-            DropSagaTables();
-        }
-
         [Test]
         public void CanHandleSagaMessageWithinTransactionScope()
         {
             using (var adapter = new BuiltinContainerAdapter())
             {
                 //Arrange
-                adapter.Register(typeof(TestSaga));
+                adapter.Register(typeof (TestSaga));
 
-                var bus = CreateBus(adapter, InputQueueName);
+                var bus = Configure
+                    .With(adapter)
+                    .Transport(t => t.UseMsmq(InputQueueName, ErrorQueueName))
+                    .MessageOwnership(d => d.Use(this))
+                    .Behavior(b => b.HandleMessagesInsideTransactionScope())
+                    .Subscriptions(
+                        s => s.Use(new SqlServerSubscriptionStorage(GetOrCreateConnection, SubscriptionTableName)
+                                       .EnsureTableIsCreated()))
+                    .Sagas(
+                        s => s.Use(new SqlServerSagaPersister(GetOrCreateConnection, SagaTableName, SagaIndexTableName)
+                                       .EnsureTablesAreCreated()))
+                    .CreateBus();
+
                 bus.Start(1).Subscribe<TestSagaMessage>();
                 Thread.Sleep(1000); //Wait for subscription message to be processed
 
@@ -54,7 +62,7 @@ namespace Rebus.Tests.Integration
 
             static void DoSqlStuffToUseImplicitTransaction()
             {
-                using (var connection = new SqlConnection(ConnectionString))
+                using (var connection = new SqlConnection(ConnectionStrings.SqlServer))
                 {
                     connection.Open();
                     using (var command = connection.CreateCommand())

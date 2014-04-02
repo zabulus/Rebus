@@ -27,7 +27,6 @@ namespace Rebus.Tests.Bugs
         protected override void DoSetUp()
         {
             toDispose = new List<IDisposable>();
-            DropTable(SubscriptionsTableName);
         }
 
         protected override void DoTearDown()
@@ -40,12 +39,7 @@ namespace Rebus.Tests.Bugs
         public void CanPublishWithinTransactionScopeWhenProvidingTransactionLessConnectionHolder()
         {
             // arrange
-            var subscriptionStorage = new SqlServerSubscriptionStorage(() =>
-            {
-                var sqlConnection = new SqlConnection(ConnectionString);
-                sqlConnection.Open();
-                return ConnectionHolder.ForNonTransactionalWork(sqlConnection);
-            }, SubscriptionsTableName);
+            var subscriptionStorage = new SqlServerSubscriptionStorage(GetOrCreateConnection, SubscriptionsTableName);
 
             subscriptionStorage.EnsureTableIsCreated();
 
@@ -78,7 +72,8 @@ namespace Rebus.Tests.Bugs
         public void CanPublishWithinTransactionScopeWhenProvidingDefaultConnectionHolder()
         {
             // arrange
-            var subscriptionStorage = new SqlServerSubscriptionStorage(ConnectionString, SubscriptionsTableName);
+            BeginTransaction();
+            var subscriptionStorage = new SqlServerSubscriptionStorage(GetOrCreateConnection, SubscriptionsTableName);
 
             subscriptionStorage.EnsureTableIsCreated();
 

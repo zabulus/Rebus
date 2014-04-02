@@ -5,13 +5,14 @@ using System.Data.SqlClient;
 using System.Linq;
 using Rebus.Logging;
 using Rebus.Timeout;
+using Rebus.Transports.Sql;
 
 namespace Rebus.Persistence.SqlServer
 {
     /// <summary>
     /// Implementaion of <see cref="IStoreTimeouts"/> that uses an SQL Server to store the timeouts
     /// </summary>
-    public class SqlServerTimeoutStorage : IStoreTimeouts
+    public class SqlServerTimeoutStorage : SqlServerStorage, IStoreTimeouts
     {
         static ILog log;
 
@@ -20,18 +21,28 @@ namespace Rebus.Persistence.SqlServer
             RebusLoggerFactory.Changed += f => log = f.GetCurrentClassLogger();
         }
 
-        readonly string connectionString;
         readonly string timeoutsTableName;
 
         /// <summary>
         /// Constructs the timeout storage which will use the specified connection string to connect to a database,
         /// storing the timeouts in the table with the specified name
         /// </summary>
-        public SqlServerTimeoutStorage(string connectionString, string timeoutsTableName)
+        public SqlServerTimeoutStorage(Func<ConnectionHolder> connectionFactoryMethod, string timeoutsTableName)
+            : base(connectionFactoryMethod)
         {
-            this.connectionString = connectionString;
             this.timeoutsTableName = timeoutsTableName;
         }
+
+        /// <summary>
+        /// Constructs the timeout storage which will use the specified connection string to connect to a database,
+        /// storing the timeouts in the table with the specified name
+        /// </summary>
+        public SqlServerTimeoutStorage(string connectionString, string timeoutsTableName)
+            : base(connectionString)
+        {
+            this.timeoutsTableName = timeoutsTableName;
+        }
+
 
         /// <summary>
         /// Gets the name of the table where timeouts are stored
@@ -46,14 +57,11 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public void Add(Timeout.Timeout newTimeout)
         {
-            using (var connection = new SqlConnection(connectionString))
+            var connection = getConnection();
+            using (var command = connection.CreateCommand())
             {
-                connection.Open();
-
-                using (var command = connection.CreateCommand())
-                {
-                    var parameters =
-                        new List<Tuple<string, object, SqlDbType>>
+                var parameters =
+                    new List<Tuple<string, object, SqlDbType>>
                             {
                                 Tuple.Create("time_to_return", (object)newTimeout.TimeToReturn, SqlDbType.DateTime2),
                                 Tuple.Create("correlation_id", (object)newTimeout.CorrelationId, SqlDbType.NVarChar),
@@ -61,26 +69,25 @@ namespace Rebus.Persistence.SqlServer
                                 Tuple.Create("reply_to", (object)newTimeout.ReplyTo, SqlDbType.NVarChar),
                             };
 
-                    if (newTimeout.CustomData != null)
-                    {
-                        parameters.Add(Tuple.Create("custom_data", (object)newTimeout.CustomData, SqlDbType.NVarChar));
-                    }
-                    // generate sql with necessary columns including matching sql parameter names
-                    command.CommandText =
-                        string.Format(
-                            @"insert into [{0}] ({1}) values ({2})",
-                            timeoutsTableName,
-                            string.Join(", ", parameters.Select(c => c.Item1)),
-                            string.Join(", ", parameters.Select(c => "@" + c.Item1)));
-
-                    // set parameters
-                    foreach (var parameter in parameters)
-                    {
-                        command.Parameters.Add(parameter.Item1, parameter.Item3).Value = parameter.Item2;
-                    }
-
-                    command.ExecuteNonQuery();
+                if (newTimeout.CustomData != null)
+                {
+                    parameters.Add(Tuple.Create("custom_data", (object)newTimeout.CustomData, SqlDbType.NVarChar));
                 }
+                // generate sql with necessary columns including matching sql parameter names
+                command.CommandText =
+                    string.Format(
+                        @"insert into [{0}] ({1}) values ({2})",
+                        timeoutsTableName,
+                        string.Join(", ", parameters.Select(c => c.Item1)),
+                        string.Join(", ", parameters.Select(c => "@" + c.Item1)));
+
+                // set parameters
+                foreach (var parameter in parameters)
+                {
+                    command.Parameters.Add(parameter.Item1, parameter.Item3).Value = parameter.Item2;
+                }
+
+                command.ExecuteNonQuery();
             }
         }
 
@@ -89,42 +96,42 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public IEnumerable<DueTimeout> GetDueTimeouts()
         {
-            using (var connection = new SqlConnection(connectionString))
-            {
-                connection.Open();
+            var connection = getConnection();
 
                 var dueTimeouts = new List<DueTimeout>();
 
-                using (var command = connection.CreateCommand())
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText =
+                    string.Format(
+                        @"select id, time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time order by time_to_return asc",
+                        timeoutsTableName);
+
+                command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
+
+                using (var reader = command.ExecuteReader())
                 {
-                    command.CommandText =
-                        string.Format(
-                            @"select id, time_to_return, correlation_id, saga_id, reply_to, custom_data from [{0}] where time_to_return <= @current_time order by time_to_return asc",
-                            timeoutsTableName);
-
-                    command.Parameters.AddWithValue("current_time", RebusTimeMachine.Now());
-
-                    using (var reader = command.ExecuteReader())
+                    while (reader.Read())
                     {
-                        while (reader.Read())
-                        {
-                            var id = (long)reader["id"];
-                            var correlationId = (string)reader["correlation_id"];
-                            var sagaId = (Guid)reader["saga_id"];
-                            var replyTo = (string)reader["reply_to"];
-                            var timeToReturn = (DateTime)reader["time_to_return"];
-                            var customData = (string)(reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
+                        var id = (long) reader["id"];
+                        var correlationId = (string) reader["correlation_id"];
+                        var sagaId = (Guid) reader["saga_id"];
+                        var replyTo = (string) reader["reply_to"];
+                        var timeToReturn = (DateTime) reader["time_to_return"];
+                        var customData = (string) (reader["custom_data"] != DBNull.Value ? reader["custom_data"] : "");
 
-                            var sqlTimeout = new DueSqlTimeout(id, replyTo, correlationId, timeToReturn, sagaId, customData, connectionString, timeoutsTableName);
+                        var sqlTimeout = new DueSqlTimeout(
+                            id, replyTo, correlationId,
+                            timeToReturn, sagaId, customData,
+                            connection.Connection, timeoutsTableName);
 
-                            dueTimeouts.Add(sqlTimeout);
-                        }
+                        dueTimeouts.Add(sqlTimeout);
                     }
-
                 }
+            }
 
                 return dueTimeouts;
-            }
+            
         }
 
         /// <summary>
@@ -134,22 +141,20 @@ namespace Rebus.Persistence.SqlServer
         /// </summary>
         public SqlServerTimeoutStorage EnsureTableIsCreated()
         {
-            using (var connection = new SqlConnection(connectionString))
+            var connection = getConnection();
+
+            var tableNames = connection.GetTableNames();
+
+            if (tableNames.Contains(timeoutsTableName, StringComparer.OrdinalIgnoreCase))
             {
-                connection.Open();
+                return this;
+            }
 
-                var tableNames = connection.GetTableNames();
+            log.Info("Table '{0}' does not exist - it will be created now", timeoutsTableName);
 
-                if (tableNames.Contains(timeoutsTableName, StringComparer.OrdinalIgnoreCase))
-                {
-                    return this;
-                }
-
-                log.Info("Table '{0}' does not exist - it will be created now", timeoutsTableName);
-
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = string.Format(@"
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = string.Format(@"
 
 CREATE TABLE [dbo].[{0}](
     [id] [bigint] IDENTITY(1,1) NOT NULL,
@@ -165,12 +170,12 @@ CREATE TABLE [dbo].[{0}](
 )
 
 ", timeoutsTableName);
-                    command.ExecuteNonQuery();
-                }
+                command.ExecuteNonQuery();
+            }
 
-                using (var command = connection.CreateCommand())
-                {
-                    command.CommandText = string.Format(@"
+            using (var command = connection.CreateCommand())
+            {
+                command.CommandText = string.Format(@"
 
 CREATE CLUSTERED INDEX [IX_{0}_TimeToReturn] ON [dbo].[{0}]
 (
@@ -178,41 +183,33 @@ CREATE CLUSTERED INDEX [IX_{0}_TimeToReturn] ON [dbo].[{0}]
 )
 
 ", timeoutsTableName);
-                    command.ExecuteNonQuery();
-                }
+                command.ExecuteNonQuery();
             }
 
-            return this;
+        return this;
         }
 
         class DueSqlTimeout : DueTimeout
         {
-            readonly string connectionString;
             readonly string timeoutsTableName;
             readonly long id;
+            readonly SqlConnection connection;
 
-            public DueSqlTimeout(long id, string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, string connectionString, string timeoutsTableName)
+            public DueSqlTimeout(long id, string replyTo, string correlationId, DateTime timeToReturn, Guid sagaId, string customData, SqlConnection connection, string timeoutsTableName)
                 : base(replyTo, correlationId, timeToReturn, sagaId, customData)
             {
                 this.id = id;
-                this.connectionString = connectionString;
+                this.connection = connection;
                 this.timeoutsTableName = timeoutsTableName;
             }
 
             public override void MarkAsProcessed()
             {
-                using (var connection = new SqlConnection(connectionString))
+                using (var command = connection.CreateCommand())
                 {
-                    connection.Open();
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.CommandText = string.Format(@"delete from [{0}] where id = @id", timeoutsTableName);
-
-                        command.Parameters.Add("id", SqlDbType.BigInt).Value = id;
-
-                        command.ExecuteNonQuery();
-                    }
+                    command.CommandText = string.Format(@"delete from [{0}] where id = @id", timeoutsTableName);
+                    command.Parameters.Add("id", SqlDbType.BigInt).Value = id;
+                    command.ExecuteNonQuery();
                 }
             }
         }

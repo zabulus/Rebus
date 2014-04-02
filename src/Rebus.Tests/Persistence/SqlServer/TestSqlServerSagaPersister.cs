@@ -13,8 +13,7 @@ namespace Rebus.Tests.Persistence.SqlServer
 
         protected override void DoSetUp()
         {
-            DropSagaTables();
-            persister = new SqlServerSagaPersister(ConnectionStrings.SqlServer, SagaIndexTableName, SagaTableName);
+            persister = new SqlServerSagaPersister(GetOrCreateConnection, SagaIndexTableName, SagaTableName);
         }
 
         [Test]
@@ -108,8 +107,8 @@ namespace Rebus.Tests.Persistence.SqlServer
 
             // assert
             var existingTables = GetTableNames();
-            existingTables.ShouldContain(SagaIndexTableName);
-            existingTables.ShouldContain(SagaTableName);
+            existingTables.ShouldContain(x => x.StartsWith(SagaIndexTableName));
+            existingTables.ShouldContain(x => x.StartsWith(SagaTableName));
         }
 
         [Test]

@@ -37,10 +37,6 @@ Endpoint=sb://someServiceBusSomewhere.servicebus.windows.net/;SharedAccessKeyNam
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 
-        public void CleanUp()
-        {
-            
-        }
 
         public IReceiveMessages CreateReceiver(string queueName)
         {
@@ -50,6 +46,11 @@ Endpoint=sb://someServiceBusSomewhere.servicebus.windows.net/;SharedAccessKeyNam
         AzureServiceBusMessageQueue GetQueue(string queueName)
         {
             return new AzureServiceBusMessageQueue(ConnectionString, queueName).Purge();
+        }
+
+        public void Dispose()
+        {
+            
         }
     }
 }

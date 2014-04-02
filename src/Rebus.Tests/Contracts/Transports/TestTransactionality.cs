@@ -31,7 +31,7 @@ namespace Rebus.Tests.Contracts.Transports
 
         protected override void DoTearDown()
         {
-            factory.CleanUp();
+            factory.Dispose();
         }
 
         [TestCase(true, Description = "Commits the transaction and verifies that both receivers have got a message, and also that the handled message has disappeared from the input queue")]

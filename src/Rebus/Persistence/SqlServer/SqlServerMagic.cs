@@ -17,7 +17,8 @@ namespace Rebus.Persistence.SqlServer
                 {
                     command.Transaction = transaction;
                 }
-                command.CommandText = "select * from sys.Tables";
+
+                command.CommandText = "select * from sys.Tables union select * from tempdb.sys.Tables";
 
                 using (var reader = command.ExecuteReader())
                 {

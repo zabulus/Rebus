@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Linq;
 using System.Threading;
 using NUnit.Framework;
+using Rebus.Bus;
 using Rebus.Configuration;
 using Rebus.Tests.Bugs;
 using Rebus.Tests.Persistence;
@@ -37,9 +38,7 @@ namespace Rebus.Tests.Integration
             Configure
                 .With(adapter1)
                 .Logging(l => l.ColoredConsole(MinLogLevel))
-                .Transport(t => t.UseSqlServer(ConnectionString, InputQueueName1, "error")
-                    .EnsureTableIsCreated()
-                    .PurgeInputQueue())
+                .Transport(t => OnConfigure(t, InputQueueName1))
                 .MessageOwnership(o => o.Use(this))
                 .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
                 .CreateBus()
@@ -48,13 +47,20 @@ namespace Rebus.Tests.Integration
             Configure
                 .With(adapter2)
                 .Logging(l => l.ColoredConsole(MinLogLevel))
-                .Transport(t => t.UseSqlServer(ConnectionString, InputQueueName2, "error")
-                    .EnsureTableIsCreated()
-                    .PurgeInputQueue())
+                .Transport(t => OnConfigure(t, InputQueueName2))
                 .MessageOwnership(o => o.Use(this))
                 .Behavior(b => b.SetMaxRetriesFor<Exception>(0))
                 .CreateBus()
                 .Start(NumberOfWorkers);
+        }
+
+        void OnConfigure(RebusTransportConfigurer t, string inputQueue)
+        {
+            var q = new SqlServerMessageQueue(GetOrCreateConnection, inputQueue, "error")
+                .EnsureTableIsCreated().PurgeInputQueue();
+            t.UseSender(q);
+            t.UseReceiver(q);
+            t.UseErrorTracker(new ErrorTracker(ErrorQueueName));
         }
 
         [TestCase(2)]

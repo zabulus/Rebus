@@ -17,7 +17,7 @@ namespace Rebus.Tests.Bugs
         public void DoesNotLeakConnectionsForEachMessage()
         {
             // Low timeout + pool size will quickly show the issue.
-            var cs = ConnectionString + ";Connect Timeout = 5;Max Pool Size=10";
+            var cs = ConnectionStrings.SqlServer + ";Connect Timeout = 5;Max Pool Size=10";
             var transport = new SqlServerMessageQueue(cs, TableName, InputQueueName);
             transport.EnsureTableIsCreated();
             transport.PurgeInputQueue();

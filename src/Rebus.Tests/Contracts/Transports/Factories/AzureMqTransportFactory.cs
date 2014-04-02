@@ -27,7 +27,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
             return GetQueue(queueName);
         }
 
-        public void CleanUp()
+        public void Dispose()
         {
         }
     }

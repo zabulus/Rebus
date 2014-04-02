@@ -3,115 +3,111 @@ using System.Collections.Generic;
 using System.Data.SqlClient;
 using NUnit.Framework;
 using Rebus.Configuration;
+using Rebus.Persistence.SqlServer;
 using Rebus.Transports.Msmq;
 using log4net.Config;
 using System.Linq;
+using Rebus.Transports.Sql;
 
 namespace Rebus.Tests.Persistence
 {
-    public abstract class SqlServerFixtureBase:IDetermineMessageOwnership
+    public abstract class SqlServerFixtureBase : FixtureBase, IDetermineMessageOwnership, IDisposable
     {
-        protected const string SagaTableName = "testSagaTable";
-        protected const string SagaIndexTableName = "testSagaIndexTable";
+        SqlConnection currentConnection;
+        SqlTransaction currentTransaction;
 
-        const string ErrorQueueName = "error";
+        protected const string SagaTableName = "#testSagaTable";
+        protected const string SagaIndexTableName = "#testSagaIndexTable";
+        protected const string SubscriptionTableName = "#testSubscriptionTable";
+        protected const string TimeoutTableName = "#testTimeoutTable";
+
+        protected const string ErrorQueueName = "error";
         
         static SqlServerFixtureBase()
         {
             XmlConfigurator.Configure();
         }
-
-        public static string ConnectionString
-        {
-            get { return ConnectionStrings.SqlServer; }
-        }
-
-        [SetUp]
-        public void SetUp()
-        {
-            TimeMachine.Reset();
-            DoSetUp();
-        }
-
-        protected virtual void DoSetUp()
-        {
-        }
-
+ 
         [TearDown]
         public void TearDown()
         {
+            base.TearDown();
+            DisposeConnection();
             DoTearDown();
             CleanUpTrackedDisposables();
         }
 
-        protected virtual void DoTearDown()
+        public void Dispose()
         {
+            DisposeConnection();
         }
 
-        public static void DropTable(string tableName)
+        protected ConnectionHolder GetOrCreateConnection()
         {
-            if (!GetTableNames()
-                     .Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
-
-            ExecuteCommand("drop table " + tableName);
-        }
-
-        public static void DeleteRows(string tableName)
-        {
-            if (!GetTableNames()
-                     .Contains(tableName, StringComparer.InvariantCultureIgnoreCase)) return;
-
-            ExecuteCommand("delete from " + tableName);
-        }
-
-        public static List<string> GetTableNames()
-        {
-            var tableNames = new List<string>();
-            using(var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            if (currentConnection != null)
             {
-                conn.Open();
-
-                using(var command = conn.CreateCommand())
-                {
-                    command.CommandText = "select * from sys.Tables";
-                    
-                    using(var reader = command.ExecuteReader())
-                    {
-                        while(reader.Read())
-                        {
-                            tableNames.Add(reader["name"].ToString());
-                        }
-                    }
-                }
+                return currentTransaction == null
+                    ? ConnectionHolder.ForNonTransactionalWork(currentConnection)
+                    : ConnectionHolder.ForTransactionalWork(currentConnection, currentTransaction);
             }
-            return tableNames;
+
+            var newConnection = new SqlConnection(ConnectionStrings.SqlServer);
+            newConnection.Open();
+            currentConnection = newConnection;
+
+            return ConnectionHolder.ForNonTransactionalWork(newConnection);
         }
 
-        public static void ExecuteCommand(string commandText)
+        void DisposeConnection()
         {
-            using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            if (currentConnection != null)
             {
-                conn.Open();
-
-                using (var command = conn.CreateCommand())
-                {
-                    command.CommandText = commandText;
-                    command.ExecuteNonQuery();
-                }
+                currentConnection.Dispose();
+                currentConnection = null;
             }
         }
 
-        public static object ExecuteScalar(string commandText)
+        protected void BeginTransaction()
         {
-            using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            if (currentTransaction != null)
             {
-                conn.Open();
+                throw new InvalidOperationException("Cannot begin new transaction when a transaction has already been started!");
+            }
+            currentTransaction = GetOrCreateConnection().Connection.BeginTransaction();
+        }
 
-                using (var command = conn.CreateCommand())
-                {
-                    command.CommandText = commandText;
-                    return command.ExecuteScalar();
-                }
+        protected void CommitTransaction()
+        {
+            if (currentTransaction == null)
+            {
+                throw new InvalidOperationException("Cannot commit transaction when no transaction has been started!");
+            }
+            currentTransaction.Commit();
+            currentTransaction = null;
+        }
+
+        public List<string> GetTableNames()
+        {
+            return GetOrCreateConnection().GetTableNames();
+        }
+
+        public void ExecuteCommand(string commandText)
+        {
+            var conn = GetOrCreateConnection();
+            using (var command = conn.CreateCommand())
+            {
+                command.CommandText = commandText;
+                command.ExecuteNonQuery();
+            }
+        }
+
+        public object ExecuteScalar(string commandText)
+        {
+            var conn = GetOrCreateConnection();
+            using (var command = conn.CreateCommand())
+            {
+                command.CommandText = commandText;
+                return command.ExecuteScalar();
             }
         }
 
@@ -124,32 +120,6 @@ namespace Rebus.Tests.Persistence
         protected void CleanUpTrackedDisposables()
         {
             DisposableTracker.DisposeTheDisposables();
-        }
-
-        protected static void DropSagaTables()
-        {
-            try { ExecuteCommand("drop table " + SagaTableName); }
-            catch { }
-            try { ExecuteCommand("drop table " + SagaIndexTableName); }
-            catch { }
-        }
-
-        protected IStartableBus CreateBus(BuiltinContainerAdapter adapter, string inputQueueName)
-        {
-            var bus = Configure.With(adapter)
-                               .Transport(t => t.UseMsmq(inputQueueName, ErrorQueueName))
-                               .MessageOwnership(d => d.Use(this))
-                               .Behavior(b => b.HandleMessagesInsideTransactionScope())
-                               .Subscriptions(
-                                   s =>
-                                   s.StoreInSqlServer(ConnectionString, "RebusSubscriptions")
-                                    .EnsureTableIsCreated())
-                               .Sagas(
-                                   s =>
-                                   s.StoreInSqlServer(ConnectionString, SagaTableName, SagaIndexTableName)
-                                    .EnsureTablesAreCreated())
-                               .CreateBus();
-            return bus;
         }
 
         public virtual string GetEndpointFor(Type messageType)

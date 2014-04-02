@@ -16,13 +16,7 @@ namespace Rebus.Tests.Transports.Sql
 
         protected override void DoSetUp()
         {
-            if (GetTableNames()
-                .Contains("messages"))
-            {
-                ExecuteCommand("drop table [messages]");
-            }
-
-            queue = new SqlServerMessageQueue(ConnectionString, "messages", InputQueueName)
+            queue = new SqlServerMessageQueue(GetOrCreateConnection, "#messages", InputQueueName)
                 .EnsureTableIsCreated()
                 .PurgeInputQueue();
         }

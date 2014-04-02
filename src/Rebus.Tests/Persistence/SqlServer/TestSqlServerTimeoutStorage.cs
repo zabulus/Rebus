@@ -8,14 +8,11 @@ namespace Rebus.Tests.Persistence.SqlServer
     public class TestSqlServerTimeoutStorage : SqlServerFixtureBase
     {
         SqlServerTimeoutStorage storage;
-        const string TimeoutsTableName = "timeouts";
+        const string TimeoutsTableName = "#timeouts";
 
         protected override void DoSetUp()
         {
-            // ensure the two tables are dropped
-            DropTable(TimeoutsTableName);
-
-            storage = new SqlServerTimeoutStorage(ConnectionStrings.SqlServer, TimeoutsTableName);
+            storage = new SqlServerTimeoutStorage(GetOrCreateConnection, TimeoutsTableName);
         }
 
         [Test]

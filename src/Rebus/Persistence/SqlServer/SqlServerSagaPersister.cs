@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SqlClient;
+using System.Globalization;
 using System.Linq;
 using Newtonsoft.Json;
 using Ponder;
@@ -43,13 +44,6 @@ namespace Rebus.Persistence.SqlServer
             Initialize(sagaIndexTableName, sagaTableName);
         }
 
-        void Initialize(string sagaIndexTableName, string sagaTableName)
-        {
-            this.sagaIndexTableName = sagaIndexTableName;
-            this.sagaTableName = sagaTableName;
-            idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
-        }
-
         /// <summary>
         /// Constructs the persister with the ability to use an externally provided <see cref="SqlConnection"/>, thus allowing it
         /// to easily enlist in any ongoing SQL transaction magic that might be going on. This means that the perister will assume
@@ -59,6 +53,13 @@ namespace Rebus.Persistence.SqlServer
             : base(connectionFactoryMethod)
         {
             Initialize(sagaIndexTableName, sagaTableName);
+        }
+
+        void Initialize(string sagaIndexTableName, string sagaTableName)
+        {
+            this.sagaIndexTableName = sagaIndexTableName;
+            this.sagaTableName = sagaTableName;
+            idPropertyName = Reflect.Path<ISagaData>(d => d.Id);
         }
 
         /// <summary>
@@ -364,8 +365,8 @@ saga type name.",
                 var tableNames = connection.GetTableNames();
 
                 // bail out if there's already a table in the database with one of the names
-                if (tableNames.Contains(SagaTableName, StringComparer.InvariantCultureIgnoreCase)
-                    || tableNames.Contains(SagaIndexTableName, StringComparer.OrdinalIgnoreCase))
+                if (tableNames.Any(x => x.StartsWith(SagaTableName, true, CultureInfo.InvariantCulture))
+                    || tableNames.Any(x => x.StartsWith(SagaTableName, true, CultureInfo.InvariantCulture)))
                 {
                     return this;
                 }

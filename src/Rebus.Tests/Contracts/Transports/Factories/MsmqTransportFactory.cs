@@ -25,7 +25,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
             return queue;
         }
 
-        public void CleanUp()
+        public void Dispose()
         {
             disposables.ForEach(d => d.Dispose());
         }

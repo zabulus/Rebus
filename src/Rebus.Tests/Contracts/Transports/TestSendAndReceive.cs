@@ -33,7 +33,7 @@ namespace Rebus.Tests.Contracts.Transports
 
         protected override void DoTearDown()
         {
-            factory.CleanUp();
+            factory.Dispose();
         }
 
         [Test]

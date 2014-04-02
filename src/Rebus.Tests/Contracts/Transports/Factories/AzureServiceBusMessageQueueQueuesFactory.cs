@@ -37,7 +37,7 @@ Endpoint=sb://someServiceBusSomewhere.servicebus.windows.net/;SharedAccessKeyNam
             return new Tuple<ISendMessages, IReceiveMessages>(sender, receiver);
         }
 
-        public void CleanUp()
+        public void Dispose()
         {
             
         }

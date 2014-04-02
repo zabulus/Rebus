@@ -15,7 +15,7 @@ using Timer = System.Timers.Timer;
 namespace Rebus.Tests.Bugs
 {
     [TestFixture, Category(TestCategories.Azure)]
-    public class AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction : FixtureBase
+    public class AzureServiceBusDoesNotChokeWhenSendingManyMessagesInOneTransaction : SqlServerFixtureBase
     {
         const string SagaTable = "many_msg_sagas";
         const string SagaIndex = "many_msg_saga_index";
@@ -28,11 +28,7 @@ namespace Rebus.Tests.Bugs
 
         protected override void DoSetUp()
         {
-            SqlServerFixtureBase.DropTable(SagaIndex);
-            SqlServerFixtureBase.DropTable(SagaTable);
-
             var busConnection = AzureServiceBusMessageQueueFactory.ConnectionString;
-            var sqlConnection = SqlServerFixtureBase.ConnectionString;
 
             using (var azureQueue = new AzureServiceBusMessageQueue(busConnection, InputQueueName))
             {
@@ -44,7 +40,8 @@ namespace Rebus.Tests.Bugs
             adapter = new BuiltinContainerAdapter();
             adapter.Register(() => new RequestHandler(adapter.Bus));
 
-            sagaPersister = new SqlServerSagaPersister(sqlConnection, SagaIndex, SagaTable).EnsureTablesAreCreated();
+            sagaPersister = new SqlServerSagaPersister(GetOrCreateConnection, SagaIndex, SagaTable)
+                .EnsureTablesAreCreated();
 
             Configure.With(TrackDisposable(adapter))
                 .Logging(l => l.ColoredConsole(LogLevel.Warn))

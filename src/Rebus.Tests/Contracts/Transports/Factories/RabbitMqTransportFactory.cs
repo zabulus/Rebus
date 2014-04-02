@@ -29,7 +29,7 @@ namespace Rebus.Tests.Contracts.Transports.Factories
             return queue;
         }
 
-        public void CleanUp()
+        public void Dispose()
         {
             queuesToDelete.ForEach(RabbitMqFixtureBase.DeleteQueue);
             disposables.ForEach(d => d.Dispose());
