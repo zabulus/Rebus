@@ -12,7 +12,6 @@ namespace Rebus.Tests.Persistence
     {
         MongoDatabase db;
         Process mongod;
-        string datapath;
 
         static MongoDbFixtureBase()
         {
