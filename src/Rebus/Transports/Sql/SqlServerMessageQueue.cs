@@ -185,10 +185,8 @@ namespace Rebus.Transports.Sql
                 {
                     ReceivedTransportMessage receivedTransportMessage = null;
 
-                    using (var selectCommand = connection.Connection.CreateCommand())
+                    using (var selectCommand = connection.CreateCommand())
                     {
-                        selectCommand.Transaction = connection.Transaction;
-
                         //                    selectCommand.CommandText =
                         //                        string.Format(
                         //                            @"
@@ -257,10 +255,8 @@ namespace Rebus.Transports.Sql
 
                         if (receivedTransportMessage != null)
                         {
-                            using (var deleteCommand = connection.Connection.CreateCommand())
+                            using (var deleteCommand = connection.CreateCommand())
                             {
-                                deleteCommand.Transaction = connection.Transaction;
-
                                 deleteCommand.CommandText =
                                     string.Format(
                                         "delete from [{0}] where [recipient] = @recipient and [priority] = @priority and [seq] = @seq",
@@ -364,10 +360,8 @@ namespace Rebus.Transports.Sql
 
                 log.Info("Table '{0}' does not exist - it will be created now", messageTableName);
 
-                using (var command = connection.Connection.CreateCommand())
+                using (var command = connection.CreateCommand())
                 {
-                    command.Transaction = connection.Transaction;
-
                     command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}](
 	[recipient] [nvarchar](200) NOT NULL,
@@ -409,10 +403,8 @@ CREATE TABLE [dbo].[{0}](
             var connection = getConnection();
             try
             {
-                using (var command = connection.Connection.CreateCommand())
+                using (var command = connection.CreateCommand())
                 {
-                    command.Transaction = connection.Transaction;
-
                     command.CommandText = string.Format(@"delete from [{0}] where recipient = @recipient",
                                                         messageTableName);
 

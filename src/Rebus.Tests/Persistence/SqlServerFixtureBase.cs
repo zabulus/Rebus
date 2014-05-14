@@ -9,10 +9,10 @@ using System.Linq;
 
 namespace Rebus.Tests.Persistence
 {
-    public abstract class SqlServerFixtureBase:IDetermineMessageOwnership
+    public abstract class SqlServerFixtureBase : IDetermineMessageOwnership
     {
-        protected const string SagaTableName = "testSagaTable";
-        protected const string SagaIndexTableName = "testSagaIndexTable";
+        protected const string SagaTableName = "#testSagaTable";
+        protected const string SagaIndexTableName = "#testSagaIndexTable";
 
         const string ErrorQueueName = "error";
         
@@ -23,7 +23,7 @@ namespace Rebus.Tests.Persistence
 
         public static string ConnectionString
         {
-            get { return ConnectionStrings.SqlServer; }
+            get { return "data source=.;Integrated Security=True"; }
         }
 
         [SetUp]
@@ -67,7 +67,7 @@ namespace Rebus.Tests.Persistence
         public static List<string> GetTableNames()
         {
             var tableNames = new List<string>();
-            using(var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            using (var conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
 
@@ -89,7 +89,7 @@ namespace Rebus.Tests.Persistence
 
         public static void ExecuteCommand(string commandText)
         {
-            using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            using (var conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
 
@@ -103,7 +103,7 @@ namespace Rebus.Tests.Persistence
 
         public static object ExecuteScalar(string commandText)
         {
-            using (var conn = new SqlConnection(ConnectionStrings.SqlServer))
+            using (var conn = new SqlConnection(ConnectionString))
             {
                 conn.Open();
 

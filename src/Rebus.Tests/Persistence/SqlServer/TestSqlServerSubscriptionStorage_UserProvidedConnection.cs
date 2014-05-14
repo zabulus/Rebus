@@ -13,7 +13,7 @@ namespace Rebus.Tests.Persistence.SqlServer
         SqlServerSubscriptionStorage storage;
         SqlConnection currentConnection;
         SqlTransaction currentTransaction;
-        const string SubscriptionsTableName = "testSubscriptionsTable";
+        const string SubscriptionsTableName = "#testSubscriptionsTable";
 
         protected override void DoSetUp()
         {
@@ -42,7 +42,7 @@ namespace Rebus.Tests.Persistence.SqlServer
                     : ConnectionHolder.ForTransactionalWork(currentConnection, currentTransaction);
             }
 
-            var newConnection = new SqlConnection(ConnectionStrings.SqlServer);
+            var newConnection = new SqlConnection(ConnectionString);
             newConnection.Open();
             currentConnection = newConnection;
             return ConnectionHolder.ForNonTransactionalWork(newConnection);
@@ -54,7 +54,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             {
                 throw new InvalidOperationException("Cannot begin new transaction when a transaction has already been started!");
             }
-            currentTransaction = GetOrCreateConnection().Connection.BeginTransaction();
+            currentTransaction = GetOrCreateConnection().BeginTransaction();
         }
 
         void CommitTransaction()

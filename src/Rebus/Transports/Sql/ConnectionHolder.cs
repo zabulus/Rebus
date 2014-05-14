@@ -41,12 +41,12 @@ namespace Rebus.Transports.Sql
         /// <summary>
         /// Gets the current open connection to the database
         /// </summary>
-        public SqlConnection Connection { get; private set; }
+        SqlConnection Connection { get; set; }
             
         /// <summary>
         /// Gets the currently ongoing transaction (or null if operating in non-transactional mode)
         /// </summary>
-        public SqlTransaction Transaction { get; private set; }
+        SqlTransaction Transaction { get; set; }
             
         /// <summary>
         /// Creates a new <see cref="SqlCommand"/>, setting the transaction if necessary
@@ -84,6 +84,17 @@ namespace Rebus.Transports.Sql
             if (Transaction == null) return;
             
             Transaction.Commit();
+        }  
+        
+        /// <summary>
+        /// Commits the transaction if one is present
+        /// </summary>
+        public SqlTransaction BeginTransaction()
+        {
+            if (Transaction != null) 
+                return Transaction;
+            
+            return Connection.BeginTransaction();
         }
 
         /// <summary>

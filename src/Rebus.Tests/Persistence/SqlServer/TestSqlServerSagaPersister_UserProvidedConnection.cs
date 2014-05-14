@@ -53,7 +53,7 @@ namespace Rebus.Tests.Persistence.SqlServer
             {
                 throw new InvalidOperationException("Cannot begin new transaction when a transaction has already been started!");
             }
-            currentTransaction = GetOrCreateConnection().Connection.BeginTransaction();
+            currentTransaction = GetOrCreateConnection().BeginTransaction();
         }
 
         void CommitTransaction()
