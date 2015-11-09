@@ -113,6 +113,8 @@
     <Compile Include="Transport\Msmq\MsmqMessageExpiration.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportFactory.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransportMachineAddressing.cs" />
+    <Compile Include="Transport\SqlServer\RingBufferSqlTransportFactory.cs" />
+    <Compile Include="Transport\SqlServer\SqlTransportFactory.cs" />
     <Compile Include="Transport\TransportTap.cs" />
     <Compile Include="Exceptions\TestIgnorant.cs" />
     <Compile Include="Extensions\Ponder.cs" />
@@ -178,6 +180,10 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Rebus.SqlServer\Rebus.SqlServer.csproj">
+      <Project>{ADF0009A-6142-4369-B396-6203036C1604}</Project>
+      <Name>Rebus.SqlServer</Name>
+    </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
       <Project>{7D7B7B36-6298-4E85-9A0E-1B415C5B9D12}</Project>
       <Name>Rebus</Name>
