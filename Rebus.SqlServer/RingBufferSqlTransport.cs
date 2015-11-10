@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Threading.Tasks;
+using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
@@ -50,12 +52,54 @@ namespace Rebus.SqlServer
             return context.GetOrAdd("ringbuffer-sql-server-outgoing-messages", () =>
             {
                 var messagesToSend = new ConcurrentQueue<MessageToSend>();
+
                 context.OnCommitted(async () =>
                 {
-
+                    await SendMessages(messagesToSend);
                 });
+
                 return messagesToSend;
             });
+        }
+
+        async Task SendMessages(ConcurrentQueue<MessageToSend> queue)
+        {
+            var messagesToSend = queue.EmptyIntoList();
+
+            using (var connection = await _connectionProvider.GetConnection())
+            {
+                /*
+	[recipient] [nvarchar](200) NOT NULL,
+	[priority] [int] NOT NULL,
+    [expiration] [datetime2] NOT NULL,
+    [visible] [datetime2] NOT NULL,
+	[headers] [varbinary](max) NOT NULL,
+	[body] [varbinary](max) NOT NULL,
+                */
+                foreach (var message in messagesToSend)
+                {
+                    using (var command = connection.CreateCommand())
+                    {
+                        command.CommandText = string.Format(@"
+
+UPDATE [{0}] SET
+    [recipient] = @recipient,
+    [priority] = @priority,
+    [expiration] = @expiration,
+    [visible] = @visible,
+    [headers] = @headers,
+    [body] = @body
+
+WHERE [
+
+", _tableName);
+
+                        var affectedRows = await command.ExecuteNonQueryAsync();
+                    }
+                }
+
+                await connection.Complete();
+            }
         }
 
         class MessageToSend
@@ -154,12 +198,11 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
 
         public void Initialize()
         {
-            throw new NotImplementedException();
+
         }
 
         public void Dispose()
         {
-            throw new NotImplementedException();
         }
     }
 }

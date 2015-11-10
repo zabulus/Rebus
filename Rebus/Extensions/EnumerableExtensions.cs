@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 
 namespace Rebus.Extensions
@@ -33,6 +34,22 @@ namespace Rebus.Extensions
             {
                 itemAction(item);
             }
+        }
+
+        /// <summary>
+        /// Empties the queue and returns the dequeued items in a list.
+        /// </summary>
+        public static List<TItem> EmptyIntoList<TItem>(this ConcurrentQueue<TItem> queue)
+        {
+            var list = new List<TItem>();
+            TItem item;
+
+            while (queue.TryDequeue(out item))
+            {
+                list.Add(item);
+            }
+
+            return list;
         }
     }
 }
