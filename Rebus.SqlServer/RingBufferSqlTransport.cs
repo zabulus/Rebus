@@ -90,53 +90,53 @@ namespace Rebus.SqlServer
             TransportMessage outputMessage = null;
             using (var connection = await _connectionProvider.GetConnection())
             {
-
-
-
-
                 using (var command = connection.CreateCommand())
                 {
-                    command.CommandText = string.Format(@"
-                     update [dbo].[{0}]
-                        set lease = 1
-                        OUTPUT inserted.id,inserted.headers,inserted.body
-                        where id =(select top 1 id from  [dbo].[{0}] where lease = 0 and visible<getdate() and recipient = @recipient and expiration > getdate() order by [priority])", _tableName);
+                    command.CommandText = $@"
+UPDATE [{_tableName}]
+    SET [lease] = 1
+    OUTPUT INSERTED.[id], INSERTED.[headers], INSERTED.[body]
+    WHERE [id] = (
+        SELECT TOP 1 [id] FROM [{_tableName}] WITH (UPDLOCK, ROWLOCK, READPAST) 
+            WHERE [lease] = 0 AND [visible] < getdate() 
+                AND [recipient] = @recipient 
+                AND expiration > getdate() ORDER BY [priority]
+    )
+";
 
-                    var recipientParameter = new SqlParameter("recipient", SqlDbType.NVarChar, RecipientColumnSize) { Direction = ParameterDirection.Input, Value = _inputQueueAddress };
-                    command.Parameters.Add(recipientParameter);
+                    command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value = _inputQueueAddress;
 
                     using (var reader = await command.ExecuteReaderAsync())
                     {
-
                         if (!await reader.ReadAsync())
                         {
                             return null;
                         }
 
+                        var headerBytes = (byte[])reader["headers"];
+                        var headers = _headerSerializer.Deserialize(headerBytes);
+                        var bodyBytes = (byte[])reader["body"];
 
-                        var headers = _headerSerializer.Deserialize(reader["headers"] as byte[]);
-                        outputMessage = new TransportMessage(headers, reader["body"] as byte[]);
+                        outputMessage = new TransportMessage(headers, bodyBytes);
+
                         var id = (long)reader["id"];
 
                         context.OnCompleted(async () =>
                         {
                             await ResetLease(id, clearRow: true);
                         });
+
                         context.OnAborted(() =>
                         {
                             ResetLease(id).Wait();
                         });
-
-
                     }
-
                 }
 
                 await connection.Complete();
 
             }
             return outputMessage;
-
         }
 
         private async Task ResetLease(long id, bool clearRow = false)
@@ -147,12 +147,12 @@ namespace Rebus.SqlServer
                 if (clearRow)
                 {
                     deleteCommand.CommandText =
-                        $@"update [dbo].[{_tableName}]  set lease = 0 , recipient = '' where id = @id";
+                        $@"update [{_tableName}]  set lease = 0 , recipient = '' where id = @id";
                 }
                 else
                 {
                     deleteCommand.CommandText =
-                        $@"update [dbo].[{_tableName}]  set lease = 0  where id = @id";
+                        $@"update [{_tableName}]  set lease = 0  where id = @id";
                 }
 
                 deleteCommand.Parameters.AddWithValue("id", id);
@@ -215,7 +215,7 @@ UPDATE [{_tableName}] SET
     [lease] =0,
     [seq] = @nextSeq
 
-WHERE id = (select top 1 id from [dbo].[henrik] where ([expiration] <getdate() or [recipient] = '') and lease = 0 order by seq)
+WHERE id = (select top 1 id from [{_tableName}] where ([expiration] <getdate() or [recipient] = '') and lease = 0 order by seq)
 
 ";
                         command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value =
@@ -235,7 +235,7 @@ WHERE id = (select top 1 id from [dbo].[henrik] where ([expiration] <getdate() o
                                 $@"
  declare @nextSeq bigint
  select @nextSeq  =  NEXT VALUE FOR dbo.RebusSequence
-INSERT INTO [dbo].[{_tableName}]
+INSERT INTO [{_tableName}]
            ([recipient]
            ,[priority]
            ,[expiration]
@@ -345,7 +345,7 @@ end
                     using (var command = connection.CreateCommand())
                     {
                         command.CommandText = string.Format(@"
-CREATE TABLE [dbo].[{0}]
+CREATE TABLE [{0}]
 (
 	[id] [bigint] IDENTITY(1,1) NOT NULL,
 	[recipient] [nvarchar](200) NOT NULL,
@@ -367,6 +367,7 @@ CREATE TABLE [dbo].[{0}]
 
                         command.ExecuteNonQuery();
                     }
+
                     for (int i = 0; i < 100; i++)
                     {
                         using (var command = connection.CreateCommand())
@@ -376,7 +377,7 @@ CREATE TABLE [dbo].[{0}]
 
 declare @nextSeq bigint
  select @nextSeq  =  NEXT VALUE FOR dbo.RebusSequence
-INSERT INTO [dbo].[{_tableName}]
+INSERT INTO [{_tableName}]
            ([recipient]
            ,[priority]
            ,[expiration]
@@ -402,7 +403,7 @@ INSERT INTO [dbo].[{_tableName}]
                     {
                         command.CommandText = string.Format(@"
 
-    CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{0}] ON [dbo].[{0}]
+    CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{0}] ON [{0}]
 (
 	[recipient] ASC,
 	[priority] ASC,
@@ -420,7 +421,7 @@ INSERT INTO [dbo].[{_tableName}]
                     {
                         command.CommandText = string.Format(@"
 
-CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
+CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [{0}]
 (
     [expiration] ASC
 )

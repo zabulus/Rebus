@@ -162,7 +162,12 @@ namespace Rebus.Tests
 
         static string GetConnectionStringForDatabase(string databaseName)
         {
-            return string.Format("server=.; database={0}; trusted_connection=true;", databaseName);
+            if (string.Equals(Environment.MachineName, "mhg-pc", StringComparison.InvariantCultureIgnoreCase))
+            {
+                return $"server=.\\SQLEXPRESS; database={databaseName}; trusted_connection=true;";
+            }
+
+            return $"server=.; database={databaseName}; trusted_connection=true;";
         }
     }
 }

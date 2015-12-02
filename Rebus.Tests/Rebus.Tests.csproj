@@ -113,6 +113,7 @@
     <Compile Include="Transport\Msmq\MsmqMessageExpiration.cs" />
     <Compile Include="Transport\Msmq\MsmqTransportFactory.cs" />
     <Compile Include="Transport\Msmq\TestMsmqTransportMachineAddressing.cs" />
+    <Compile Include="Transport\SqlServer\CompareSqlTransportPerformance.cs" />
     <Compile Include="Transport\SqlServer\RingBufferSqlTransportFactory.cs" />
     <Compile Include="Transport\SqlServer\SqlTransportFactory.cs" />
     <Compile Include="Transport\TransportTap.cs" />
