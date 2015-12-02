@@ -1,25 +1,62 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Rebus.Extensions;
 using Rebus.Logging;
 using Rebus.Messages;
 using Rebus.Persistence.SqlServer;
+using Rebus.Time;
 using Rebus.Transport;
 #pragma warning disable 1998
 
 namespace Rebus.SqlServer
 {
+
     public class RingBufferSqlTransport : ITransport, IDisposable
     {
+        public const string MessagePriorityHeaderKey = "rbs2-msg-priority";
+        class HeaderSerializer
+        {
+            static readonly Encoding DefaultEncoding = Encoding.UTF8;
+
+            public byte[] Serialize(Dictionary<string, string> headers)
+            {
+                return DefaultEncoding.GetBytes(JsonConvert.SerializeObject(headers));
+            }
+
+            public Dictionary<string, string> Deserialize(byte[] bytes)
+            {
+                return JsonConvert.DeserializeObject<Dictionary<string, string>>(DefaultEncoding.GetString(bytes));
+            }
+        }
+        int GetMessagePriority(Dictionary<string, string> headers)
+        {
+            var valueOrNull = headers.GetValueOrNull(MessagePriorityHeaderKey);
+            if (valueOrNull == null) return 0;
+
+            try
+            {
+                return int.Parse(valueOrNull);
+            }
+            catch (Exception exception)
+            {
+                throw new FormatException(string.Format("Could not parse '{0}' into an Int32!", valueOrNull), exception);
+            }
+        }
+
         readonly IDbConnectionProvider _connectionProvider;
         readonly string _tableName;
         readonly string _inputQueueAddress;
         readonly ILog _log;
+        const int RecipientColumnSize = 200;
 
+        readonly HeaderSerializer _headerSerializer = new HeaderSerializer();
         public RingBufferSqlTransport(IDbConnectionProvider connectionProvider, string tableName, string inputQueueAddress, IRebusLoggerFactory loggerFactory)
         {
             _connectionProvider = connectionProvider;
@@ -44,7 +81,86 @@ namespace Rebus.SqlServer
 
         public async Task<TransportMessage> Receive(ITransactionContext context)
         {
-            return null;
+            return await ReceiveMessage(context);
+        }
+
+        private async Task<TransportMessage> ReceiveMessage(ITransactionContext context)
+        {
+
+            TransportMessage outputMessage = null;
+            using (var connection = await _connectionProvider.GetConnection())
+            {
+
+
+
+
+                using (var command = connection.CreateCommand())
+                {
+                    command.CommandText = string.Format(@"
+                     update [dbo].[{0}]
+                        set lease = 1
+                        OUTPUT inserted.id,inserted.headers,inserted.body
+                        where id =(select top 1 id from  [dbo].[{0}] where lease = 0 and visible<getdate() and recipient = @recipient and expiration > getdate() order by [priority])", _tableName);
+
+                    var recipientParameter = new SqlParameter("recipient", SqlDbType.NVarChar, RecipientColumnSize) { Direction = ParameterDirection.Input, Value = _inputQueueAddress };
+                    command.Parameters.Add(recipientParameter);
+
+                    using (var reader = await command.ExecuteReaderAsync())
+                    {
+
+                        if (!await reader.ReadAsync())
+                        {
+                            return null;
+                        }
+
+
+                        var headers = _headerSerializer.Deserialize(reader["headers"] as byte[]);
+                        outputMessage = new TransportMessage(headers, reader["body"] as byte[]);
+                        var id = (long)reader["id"];
+
+                        context.OnCompleted(async () =>
+                        {
+                            await ResetLease(id, clearRow: true);
+                        });
+                        context.OnAborted(() =>
+                        {
+                            ResetLease(id).Wait();
+                        });
+
+
+                    }
+
+                }
+
+                await connection.Complete();
+
+            }
+            return outputMessage;
+
+        }
+
+        private async Task ResetLease(long id, bool clearRow = false)
+        {
+            using (var aConnection = await _connectionProvider.GetConnection())
+            using (var deleteCommand = aConnection.CreateCommand())
+            {
+                if (clearRow)
+                {
+                    deleteCommand.CommandText =
+                        $@"update [dbo].[{_tableName}]  set lease = 0 , recipient = '' where id = @id";
+                }
+                else
+                {
+                    deleteCommand.CommandText =
+                        $@"update [dbo].[{_tableName}]  set lease = 0  where id = @id";
+                }
+
+                deleteCommand.Parameters.AddWithValue("id", id);
+
+                await deleteCommand.ExecuteNonQueryAsync();
+
+                await aConnection.Complete();
+            }
         }
 
         ConcurrentQueue<MessageToSend> GetMessagesToSend(ITransactionContext context)
@@ -68,38 +184,117 @@ namespace Rebus.SqlServer
 
             using (var connection = await _connectionProvider.GetConnection())
             {
-                /*
-	[recipient] [nvarchar](200) NOT NULL,
-	[priority] [int] NOT NULL,
-    [expiration] [datetime2] NOT NULL,
-    [visible] [datetime2] NOT NULL,
-	[headers] [varbinary](max) NOT NULL,
-	[body] [varbinary](max) NOT NULL,
-                */
                 foreach (var message in messagesToSend)
                 {
+
+
+                    var headers = message.Headers.Clone();
+
+                    var priority = GetMessagePriority(headers);
+                    var initialVisibilityDelay = GetInitialVisibilityDelay(headers);
+                    var ttlSeconds = GetTtlSeconds(headers);
+
+                    // must be last because the other functions on the headers might change them
+                    var serializedHeaders = _headerSerializer.Serialize(headers);
+
+
+                    int affectedRows = 0;
                     using (var command = connection.CreateCommand())
                     {
-                        command.CommandText = string.Format(@"
-
-UPDATE [{0}] SET
+                        command.CommandText =
+                            $@"
+ declare @nextSeq bigint
+ select @nextSeq  =  NEXT VALUE FOR dbo.RebusSequence
+UPDATE [{_tableName}] SET
     [recipient] = @recipient,
     [priority] = @priority,
     [expiration] = @expiration,
     [visible] = @visible,
     [headers] = @headers,
-    [body] = @body
+    [body] = @body,
+    [lease] =0,
+    [seq] = @nextSeq
 
-WHERE [
+WHERE id = (select top 1 id from [dbo].[henrik] where ([expiration] <getdate() or [recipient] = '') and lease = 0 order by seq)
 
-", _tableName);
+";
+                        command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value =
+                            message.Destination;
+                        command.Parameters.Add("headers", SqlDbType.VarBinary).Value = serializedHeaders;
+                        command.Parameters.Add("body", SqlDbType.VarBinary).Value = message.Body;
+                        command.Parameters.Add("priority", SqlDbType.Int).Value = priority;
+                        command.Parameters.Add("expiration", SqlDbType.DateTime2).Value = RebusTime.Now.AddSeconds(ttlSeconds).DateTime;
+                        command.Parameters.Add("visible", SqlDbType.DateTime2).Value = RebusTime.Now.AddSeconds(initialVisibilityDelay).DateTime;
+                        affectedRows = await command.ExecuteNonQueryAsync();
+                    }
+                    if (affectedRows == 0)
+                    {
+                        using (var command = connection.CreateCommand())
+                        {
+                            command.CommandText =
+                                $@"
+ declare @nextSeq bigint
+ select @nextSeq  =  NEXT VALUE FOR dbo.RebusSequence
+INSERT INTO [dbo].[{_tableName}]
+           ([recipient]
+           ,[priority]
+           ,[expiration]
+           ,[visible]
+           ,[headers]
+           ,[body]
+           ,[seq])
+     VALUES
+           (@recipient
+           ,@priority
+           ,@expiration
+           ,@visible
+           ,@headers
+           ,@body
+           ,@nextSeq)
 
-                        var affectedRows = await command.ExecuteNonQueryAsync();
+";
+                            command.Parameters.Add("recipient", SqlDbType.NVarChar, RecipientColumnSize).Value =
+                                message.Destination;
+                            command.Parameters.Add("headers", SqlDbType.VarBinary).Value = serializedHeaders;
+                            command.Parameters.Add("body", SqlDbType.VarBinary).Value = message.Body;
+                            command.Parameters.Add("priority", SqlDbType.Int).Value = priority;
+                            command.Parameters.Add("expiration", SqlDbType.DateTime2).Value = RebusTime.Now.AddSeconds(ttlSeconds).DateTime;
+                            command.Parameters.Add("visible", SqlDbType.DateTime2).Value = RebusTime.Now.AddSeconds(initialVisibilityDelay).DateTime;
+                            await command.ExecuteNonQueryAsync();
+                        }
+
                     }
                 }
-
                 await connection.Complete();
             }
+        }
+        int GetInitialVisibilityDelay(Dictionary<string, string> headers)
+        {
+            string deferredUntilDateTimeOffsetString;
+
+            if (!headers.TryGetValue(Headers.DeferredUntil, out deferredUntilDateTimeOffsetString))
+            {
+                return 0;
+            }
+
+            var deferredUntilTime = deferredUntilDateTimeOffsetString.ToDateTimeOffset();
+
+            headers.Remove(Headers.DeferredUntil);
+
+            return (int)(deferredUntilTime - RebusTime.Now).TotalSeconds;
+        }
+
+        static int GetTtlSeconds(Dictionary<string, string> headers)
+        {
+            const int defaultTtlSecondsAbout60Years = int.MaxValue;
+
+            if (!headers.ContainsKey(Headers.TimeToBeReceived))
+                return defaultTtlSecondsAbout60Years;
+
+            var timeToBeReceivedStr = headers[Headers.TimeToBeReceived];
+            var timeToBeReceived = TimeSpan.Parse(timeToBeReceivedStr);
+
+            return (int)timeToBeReceived.TotalSeconds;
         }
 
         class MessageToSend
@@ -108,10 +303,15 @@ WHERE [
             {
                 TransportMessage = transportMessage;
                 Destination = destination;
+                Headers = transportMessage.Headers;
+                Body = transportMessage.Body;
             }
 
-            public TransportMessage TransportMessage { get; private set; }
-            public string Destination { get; private set; }
+            public Dictionary<string, string> Headers { get; }
+
+            public TransportMessage TransportMessage { get; }
+            public string Destination { get; }
+            public byte[] Body { get; set; }
         }
 
         public void EnsureTableIsCreated()
@@ -132,6 +332,18 @@ WHERE [
                 {
                     using (var command = connection.CreateCommand())
                     {
+                        command.CommandText = @"
+if not exists(select * from sys.sequences where name = 'RebusSequence')
+begin
+create SEQUENCE dbo.RebusSequence as bigint
+    START WITH 1
+    INCREMENT BY 1 ;
+end
+";
+                        command.ExecuteNonQuery();
+                    }
+                    using (var command = connection.CreateCommand())
+                    {
                         command.CommandText = string.Format(@"
 CREATE TABLE [dbo].[{0}]
 (
@@ -142,6 +354,8 @@ CREATE TABLE [dbo].[{0}]
     [visible] [datetime2] NOT NULL,
 	[headers] [varbinary](max) NOT NULL,
 	[body] [varbinary](max) NOT NULL,
+    [lease] [bit] NOT NULL default(0),
+    [seq] [bigint] NOT NULL
     CONSTRAINT [PK_{0}] PRIMARY KEY CLUSTERED 
     (
 	    [recipient] ASC,
@@ -153,12 +367,42 @@ CREATE TABLE [dbo].[{0}]
 
                         command.ExecuteNonQuery();
                     }
+                    for (int i = 0; i < 100; i++)
+                    {
+                        using (var command = connection.CreateCommand())
+                        {
+                            command.CommandText =
+                                $@"
+
+declare @nextSeq bigint
+ select @nextSeq  =  NEXT VALUE FOR dbo.RebusSequence
+INSERT INTO [dbo].[{_tableName}]
+           ([recipient]
+           ,[priority]
+           ,[expiration]
+           ,[visible]
+           ,[headers]
+           ,[body]
+           ,[seq])
+     VALUES
+           (''
+           ,0
+           ,getdate()
+           ,getdate()
+           ,0x0
+           ,0x0
+           ,@nextSeq)
+";
+                            command.ExecuteNonQuery();
+                        }
+                    }
+
 
                     using (var command = connection.CreateCommand())
                     {
                         command.CommandText = string.Format(@"
 
-CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{0}] ON [dbo].[{0}]
+    CREATE NONCLUSTERED INDEX [IDX_RECEIVE_{0}] ON [dbo].[{0}]
 (
 	[recipient] ASC,
 	[priority] ASC,
@@ -189,7 +433,7 @@ CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [dbo].[{0}]
                 }
                 catch (SqlException exception)
                 {
-                 //if (exception.Number == )   
+                    //if (exception.Number == )   
                 }
 
                 connection.Complete().Wait();

@@ -181,7 +181,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Rebus.SqlServer\Rebus.SqlServer.csproj">
-      <Project>{ADF0009A-6142-4369-B396-6203036C1604}</Project>
+      <Project>{adf0009a-6142-4369-b396-6203036c1604}</Project>
       <Name>Rebus.SqlServer</Name>
     </ProjectReference>
     <ProjectReference Include="..\Rebus\Rebus.csproj">
