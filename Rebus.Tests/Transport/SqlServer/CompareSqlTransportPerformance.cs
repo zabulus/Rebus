@@ -39,7 +39,7 @@ namespace Rebus.Tests.Transport.SqlServer
                 .Start();
         }
 
-        //[TestCase(5, 10000)]
+        [TestCase(5, 1000)]
         [TestCase(1, 10)]
         public async Task CheckPerformance(int numberOfThreads, int numberOfMessages)
         {
@@ -47,12 +47,23 @@ namespace Rebus.Tests.Transport.SqlServer
                 .Select(i => $"THIS IS MESSAGE {i}")
                 .ToList();
 
+            var receivedMessageCount = 0;
+
             var receivedMessages = new ConcurrentDictionary<string, int>();
             var gotAllTheMessages = new ManualResetEvent(false);
 
             _activator.Handle<string>(async messageId =>
             {
+                Console.WriteLine("Received message");
+
                 receivedMessages.AddOrUpdate(messageId, _ => 1, (_, count) => count + 1);
+
+                var newValue = Interlocked.Increment(ref receivedMessageCount);
+
+                if (newValue%100 == 0)
+                {
+                    Console.WriteLine($"Got {receivedMessageCount} msgs");
+                }
 
                 if (receivedMessages.Count >= numberOfMessages)
                 {

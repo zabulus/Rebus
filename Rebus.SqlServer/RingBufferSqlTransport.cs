@@ -86,7 +86,7 @@ namespace Rebus.SqlServer
 
         private async Task<TransportMessage> ReceiveMessage(ITransactionContext context)
         {
-
+            
             TransportMessage outputMessage = null;
             using (var connection = await _connectionProvider.GetConnection())
             {
@@ -147,12 +147,12 @@ UPDATE [{_tableName}]
                 if (clearRow)
                 {
                     deleteCommand.CommandText =
-                        $@"update [{_tableName}]  set lease = 0 , recipient = '' where id = @id";
+                        $@"update [{_tableName}] WITH (ROWLOCK)  set lease = 0 , recipient = '' where id = @id";
                 }
                 else
                 {
                     deleteCommand.CommandText =
-                        $@"update [{_tableName}]  set lease = 0  where id = @id";
+                        $@"update [{_tableName}] WITH (ROWLOCK)   set lease = 0  where id = @id";
                 }
 
                 deleteCommand.Parameters.AddWithValue("id", id);
@@ -416,21 +416,6 @@ INSERT INTO [{_tableName}]
 
                         command.ExecuteNonQuery();
                     }
-
-                    using (var command = connection.CreateCommand())
-                    {
-                        command.CommandText = string.Format(@"
-
-CREATE NONCLUSTERED INDEX [IDX_EXPIRATION_{0}] ON [{0}]
-(
-    [expiration] ASC
-)
-
-", _tableName);
-
-                        command.ExecuteNonQuery();
-                    }
-
                 }
                 catch (SqlException exception)
                 {
