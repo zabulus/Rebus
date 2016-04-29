@@ -149,7 +149,7 @@ namespace Rebus.Config
             PossiblyRegisterDefault<ISerializer>(c => new JsonSerializer());
 
             PossiblyRegisterDefault<IPipelineInvoker>(c => new DefaultPipelineInvoker());
-            
+
             PossiblyRegisterDefault<IBackoffStrategy>(c => new SimpleConstantPollingBackoffStrategy());
 
             PossiblyRegisterDefault<IWorkerFactory>(c =>
@@ -201,22 +201,44 @@ namespace Rebus.Config
                 var rebusLoggerFactory = c.Get<IRebusLoggerFactory>();
 
                 return new DefaultPipeline()
+                    // stage
+                    .OnReceive(new FrontStageMarker())
+                    // stage
+                    .OnReceive(new RetryStageMarker())
                     .OnReceive(c.Get<IRetryStrategyStep>())
                     .OnReceive(c.Get<HandleDeferredMessagesStep>())
+                    // stage
+                    .OnReceive(new SerializationStageMarker())
                     .OnReceive(new DeserializeIncomingMessageStep(serializer))
+                    // stage
+                    .OnReceive(new HandlerInstantiationStageMarker())
                     .OnReceive(new ActivateHandlersStep(c.Get<IHandlerActivator>()))
                     .OnReceive(new LoadSagaDataStep(c.Get<ISagaStorage>(), rebusLoggerFactory))
+                    // stage
+                    .OnReceive(new DispatchStageMarker())
                     .OnReceive(new DispatchIncomingMessageStep())
+                    // stage
+                    .OnReceive(new BackStageMarker())
 
+                    // stage
+                    .OnSend(new FrontStageMarker()) 
+                    // stage
+                    .OnSend(new AssignHeadersStageMarker()) 
                     .OnSend(new AssignGuidMessageIdStep())
                     .OnSend(new AssignReturnAddressStep(transport))
                     .OnSend(new AssignDateTimeOffsetHeader())
                     .OnSend(new FlowCorrelationIdStep())
                     .OnSend(new AutoHeadersOutgoingStep())
                     .OnSend(new AssignTypeHeaderStep())
+                    // stage
+                    .OnSend(new SerializationStageMarker()) 
                     .OnSend(new SerializeOutgoingMessageStep(serializer))
+                    // stage
+                    .OnSend(new SendMessageStageMarker())
                     .OnSend(new ValidateOutgoingMessageStep())
-                    .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory));
+                    .OnSend(new SendOutgoingMessageStep(transport, rebusLoggerFactory))
+                    // stage
+                    .OnSend(new BackStageMarker());
             });
 
             RegisterDecorator<IPipeline>(c => new PipelineCache(c.Get<IPipeline>()));

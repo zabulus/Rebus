@@ -143,7 +143,11 @@ Receive pipeline:
                 pipeline.Select((step, i) =>
                 {
                     var stepType = step.GetType().FullName;
-                    var stepString = $"    {stepType}";
+                    var isStageMarker = IsStageMarker(step);
+
+                    var stepString = isStageMarker
+                        ? $"    {stepType} (STAGE)"
+                        : $"    {stepType}";
 
                     if (verbose)
                     {
@@ -159,6 +163,13 @@ Receive pipeline:
 
                     return stepString;
                 }));
+        }
+
+        static bool IsStageMarker(IStep step)
+        {
+            return step is IOutgoingStageMarker
+                   || step is IIncomingStageMarker;
+
         }
 
         static string GetDocsOrNull(IStep step)
